@@ -1,0 +1,1 @@
+export { default as RegisterPreTest } from "./RegisterPreTest";
