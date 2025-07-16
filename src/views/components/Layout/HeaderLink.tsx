@@ -4,11 +4,26 @@ import { useLocation, Link } from 'react-router-dom';
 interface HeaderLinkProps {
   label: string;
   route: string;
+  mobile?: boolean;
+  onClick?: () => void;
 }
 
-const HeaderLink: React.FC<HeaderLinkProps> = ({ label, route }) => {
+const HeaderLink: React.FC<HeaderLinkProps> = ({ label, route, mobile = false, onClick }) => {
   const location = useLocation();
   const isSelected = location.pathname === route;
+
+  // Mobile styles
+  if (mobile) {
+    return (
+      <Link 
+        to={route} 
+        onClick={onClick}
+        className={`block py-3 text-lg ${isSelected ? 'text-[#3776AB] font-medium' : 'text-gray-700 hover:text-[#3776AB]'}`}
+      >
+        {label}
+      </Link>
+    );
+  }
 
   return (
     <Link to={route}>

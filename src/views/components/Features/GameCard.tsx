@@ -6,7 +6,7 @@ interface GameCardProps {
   description: string;
   category: string;
   comingSoon?: boolean;
-  color: string; // HEX like "#3776AB"
+  color: string; 
 }
 
 const GameCard: React.FC<GameCardProps> = ({title, description, category, comingSoon = false, color}) => {
@@ -21,7 +21,7 @@ const GameCard: React.FC<GameCardProps> = ({title, description, category, coming
 
   return (
     <div className="rounded-lg shadow-md transition-shadow duration-300 bg-white hover:shadow-lg flex flex-col justify-between overflow-hidden">
-      <div className="h-27 w-full bg-[#F1F1F1] flex items-end px-4 py-3">
+      <div className="h-27 w-full bg-[#F1F1F1] flex items-end px-4 py-3 shadow-sm">
         <h3 className="text-lg font-bold" style={{ color }}>
           {title}
         </h3>
@@ -36,7 +36,7 @@ const GameCard: React.FC<GameCardProps> = ({title, description, category, coming
           </span>
 
           <button 
-          className="text-sm px-3 py-1.5 rounded-md hover:brightness-110 flex flex-row items-center gap-3.5 cursor-pointer" style={{backgroundColor: color, color: "#FFFFFF"}}
+          className="text-sm px-3.5 py-1.5 rounded-md hover:brightness-110 flex flex-row items-center gap-3.5 cursor-pointer" style={{backgroundColor: color, color: "#FFFFFF"}}
           onClick={handlePlayClick}
           disabled={comingSoon}>
             {comingSoon ? ("Coming Soon") : (<>Play Now <FaArrowRight size={11} /></>)}
