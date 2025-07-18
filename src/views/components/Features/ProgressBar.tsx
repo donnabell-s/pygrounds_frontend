@@ -21,8 +21,8 @@ const ProgressBar = () => {
         <div className="flex items-center gap-3">
           <div className="bg-[#147C8A] rounded-full h-10 w-10 sm:h-11 sm:w-11 shrink-0" />
           <div className="min-w-0">
-            <p className="font-bold text-lg sm:text-2xl leading-tight">Level 1: Python Basics</p>
-            <p className="text-sm sm:text-md text-wrap">Master the fundamentals of Python programming</p>
+            <p className="font-bold text-lg sm:text-2xl leading-tight">Julien Veniz Cano</p>
+            <p className="text-sm sm:text-md text-wrap">@benizz</p>
           </div>
         </div>
         <div className="bg-[#C5DCE7] rounded-full px-3 py-1 sm:py-1.5 text-center w-fit self-start sm:self-auto">
@@ -32,7 +32,7 @@ const ProgressBar = () => {
 
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <p className="text-sm font-semibold">Overall Progress</p>
+          <p className="text-sm font-semibold">Level 1: Python Basics</p>
           <p className="text-sm font-bold text-[#3776AB]">
             {currentXP}/{maxXP} XP
           </p>

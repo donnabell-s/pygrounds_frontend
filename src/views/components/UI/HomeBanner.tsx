@@ -4,7 +4,7 @@ const HomeBanner = () => {
     const navigate = useNavigate();
 
     const viewProgressClick = () => {
-        navigate('/user/my-skills');
+        navigate('/user/my-profile');
     };
 
     return (
@@ -12,8 +12,8 @@ const HomeBanner = () => {
             <div className="flex flex-col justify-between px-6 py-8 md:px-11 md:py-8 min-h-[300px]">
                 <div className="flex flex-col gap-4">
                     <h1 className="font-bold text-4xl md:text-5xl">
-                        <span className="block">Welcome to the Python</span>
-                        <span className="block">Game Zone</span>
+                        <span className="block font-bold">Welcome to the Python</span>
+                        <span className="block font-bold">Game Zone</span>
                     </h1>
                     <p className="text-base md:text-lg">
                         <span className="block">Pick a game, test your skills, and level up your</span>

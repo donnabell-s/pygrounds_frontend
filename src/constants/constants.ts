@@ -27,9 +27,13 @@ export const PATHS = {
             path: "home",
             label: "Home"
         },
-        MY_SKILLS: {
-            path: "my-skills",
-            label: "My Skills"
+        MY_PROFILE: {
+            path: "my-profile",
+            label: "My Profile"
+        },
+        PYTHON_LEARN: {
+            path: "python-learn",
+            label: "Python Learn"
         },
         LEADERBOARD: {
             path: "leaderboard",

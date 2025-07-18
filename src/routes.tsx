@@ -20,7 +20,8 @@ export const AppRoutes = () => {
 
           <Route path={PATHS.USER_MAIN.path} element={<Views.UserMain />}>
               <Route path={PATHS.USER_VIEW.HOME.path} element={<Views.Home />} />
-              <Route path={PATHS.USER_VIEW.MY_SKILLS.path} element={<Views.MySkills />} />
+              <Route path={PATHS.USER_VIEW.MY_PROFILE.path} element={<Views.MyProfile />} />
+              <Route path={PATHS.USER_VIEW.PYTHON_LEARN.path} element={<Views.PythonLearn />} />
               <Route path={PATHS.USER_VIEW.LEADERBOARD.path} element={<Views.Leaderboard />} />
       
               <Route path=":game/preview" element={<Views.GamePreview />} />

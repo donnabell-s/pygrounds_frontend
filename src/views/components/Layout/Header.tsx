@@ -12,7 +12,8 @@ const Header = () => {
           <div className="font-bold text-2xl text-[#3776AB]">PyGrounds</div>
           <div className="hidden md:flex gap-3">
             <Components.HeaderLink label="Home" route={`/user/home`} />
-            <Components.HeaderLink label="My Skills" route={`/user/my-skills`} />
+            <Components.HeaderLink label="My Profile" route={`/user/my-profile`} />
+            <Components.HeaderLink label="Python Learn" route={`/user/python-learn`} />
             <Components.HeaderLink label="Leaderboard" route={`/user/leaderboard`} />
           </div>
         </div>
@@ -45,8 +46,13 @@ const Header = () => {
             mobile
           />
           <Components.HeaderLink 
-            label="My Skills" 
-            route={`/user/my-skills`} 
+            label="My Profile" 
+            route={`/user/my-profile`} 
+            mobile
+          />
+          <Components.HeaderLink 
+            label="Python Learn" 
+            route={`/user/python-learn`} 
             mobile
           />
           <Components.HeaderLink 

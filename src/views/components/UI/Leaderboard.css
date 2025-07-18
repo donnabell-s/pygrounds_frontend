@@ -1,0 +1,38 @@
+@keyframes pulseGold {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(229, 145, 22, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(229, 145, 22, 0.5);
+  }
+}
+
+@keyframes pulseSilver {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(163, 169, 188, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(163, 169, 188, 0.5);
+  }
+}
+
+@keyframes pulseBronze {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(192, 145, 57, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(192, 145, 57, 0.5);
+  }
+}
+
+.pulse-gold {
+  animation: pulseGold 2s infinite ease-in-out;
+}
+
+.pulse-silver {
+  animation: pulseSilver 2s infinite ease-in-out;
+}
+
+.pulse-bronze {
+  animation: pulseBronze 2s infinite ease-in-out;
+}

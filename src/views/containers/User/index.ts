@@ -1,5 +1,6 @@
 export * from "./Home";
-export * from "./MySkills";
+export * from "./MyProfile";
 export * from "./Leaderboard";
 export * from "./UserMain";
 export * from "./GameView";
+export * from "./PythonLearn";
