@@ -1,8 +1,8 @@
 export const PATHS = {
-    USER_MAIN: {
-        path: "/user",
-        label: "User Main"
-    },
+    USER_MAIN: (userId: string) => ({
+        path: `/users/${userId}`,
+        label: "User Main",
+    }),
     LANDING: {
         path: "/landing",
         label: "Landing"

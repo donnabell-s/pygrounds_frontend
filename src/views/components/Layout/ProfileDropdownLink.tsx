@@ -11,7 +11,7 @@ const ProfileDropdownLink: React.FC<ProfileDropdownLinkProps> = ({ icon, label,m
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3 hover:text-[#3776AB] transition-colors ${
+      className={`flex items-center gap-3 hover:text-[#3776AB] transition-colors cursor-pointer ${
         mobile ? 'py-3 text-lg w-full' : 'text-sm'
       }`}
       aria-label={label}

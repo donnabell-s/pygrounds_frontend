@@ -1,10 +1,14 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from "../../../context/AuthContext";
 
 const HomeBanner = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const viewProgressClick = () => {
-        navigate('/user/my-profile');
+        if (user?.id) {
+        navigate(`/${user.id}/my-profile`);
+        }
     };
 
     return (

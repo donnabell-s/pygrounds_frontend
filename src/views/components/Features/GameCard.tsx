@@ -1,5 +1,6 @@
 import { FaArrowRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 
 interface GameCardProps {
   title: string;
@@ -12,11 +13,11 @@ interface GameCardProps {
 const GameCard: React.FC<GameCardProps> = ({title, description, category, comingSoon = false, color}) => {
   const navigate = useNavigate();
   const gameSlug = title.toLowerCase().replace(/\s+/g, "-");
+  const { user } = useAuth();
 
   const handlePlayClick = () => {
-    if (!comingSoon) {
-      navigate(`/user/${gameSlug}/preview`);
-    }
+    if (!user || comingSoon) return;
+    navigate(`/${user.id}/${gameSlug}/preview`);
   };
 
   return (

@@ -6,10 +6,11 @@ import type { User } from "../types/user";
 type AuthContextType = {
   user: User | null;
   accessToken: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<User>; // ✅ updated
   logout: () => void;
   isLoading: boolean;
 };
+
 
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,18 +26,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
 
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string): Promise<User> => {
     const { data: tokens } = await authApi.login({ username, password });
 
     localStorage.setItem("access", tokens.access);
     localStorage.setItem("refresh", tokens.refresh);
     setAccessToken(tokens.access);
 
-    // set token in header for next request
     const { data: profile } = await authApi.getProfile();
     setUser(profile);
     localStorage.setItem("user", JSON.stringify(profile));
+
+    return profile; // ✅ return the user
   };
+
 
   const logout = () => {
     setUser(null);

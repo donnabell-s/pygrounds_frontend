@@ -18,10 +18,10 @@ const Header = () => {
 
           {isLearner && (
             <div className="hidden md:flex gap-3">
-              <Components.HeaderLink label="Home" route={`/user/home`} />
-              <Components.HeaderLink label="My Profile" route={`/user/my-profile`} />
-              <Components.HeaderLink label="Python Learn" route={`/user/python-learn`} />
-              <Components.HeaderLink label="Leaderboard" route={`/user/leaderboard`} />
+              <Components.HeaderLink label="Home" route={`/${user.id}/home`} />
+              <Components.HeaderLink label="My Profile" route={`/${user.id}/my-profile`} />
+              <Components.HeaderLink label="Python Learn" route={`/${user.id}/python-learn`} />
+              <Components.HeaderLink label="Leaderboard" route={`/${user.id}/leaderboard`} />
             </div>
           )}
         </div>
@@ -48,10 +48,10 @@ const Header = () => {
           ) : (
             // Public header buttons if NOT logged in
             <div className="gap-2.5 flex">
-              <Link to="/login" className="text-sm font-medium text-[#3776AB] border border-[#3776AB] px-3.5 py-1.5 rounded-md">
+              <Link to="/login" className="text-sm font-medium text-[#3776AB] border border-[#3776AB] px-3.5 py-1.5 rounded-md hover:bg-gray-100 ">
                 Login
               </Link>
-              <Link to="/register" className="text-sm font-medium text-white bg-[#3776AB] border border-[#3776AB] px-3.5 py-1.5 rounded-md">
+              <Link to="/register" className="text-sm font-medium text-white bg-[#3776AB] border border-[#3776AB] px-3.5 py-1.5 rounded-md hover:brightness-110">
                 Get Started
               </Link>
             </div>
@@ -62,10 +62,10 @@ const Header = () => {
       {/* Mobile Menu for Learner */}
       {mobileMenuOpen && isLearner && (
         <div className="md:hidden fixed inset-0 bg-white z-40 mt-16 p-6 space-y-4">
-          <Components.HeaderLink label="Home" route={`/user/home`} mobile />
-          <Components.HeaderLink label="My Profile" route={`/user/my-profile`} mobile />
-          <Components.HeaderLink label="Python Learn" route={`/user/python-learn`} mobile />
-          <Components.HeaderLink label="Leaderboard" route={`/user/leaderboard`} mobile />
+          <Components.HeaderLink label="Home" route={`/${user.id}/home`} mobile />
+          <Components.HeaderLink label="My Profile" route={`/${user.id}/my-profile`} mobile />
+          <Components.HeaderLink label="Python Learn" route={`/${user.id}/python-learn`} mobile />
+          <Components.HeaderLink label="Leaderboard" route={`/${user.id}/leaderboard`} mobile />
           <div className="pt-4 border-t border-gray-200">
             <Components.ProfileDropdown mobile />
           </div>

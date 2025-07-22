@@ -4,6 +4,7 @@ import { PATHS } from "../constants";
 import ProtectedRoute from "../routes/ProtectedRoute";
 
 export const AppRoutes = () => {
+  
   return (
     <BrowserRouter>
       <Routes>
@@ -22,7 +23,7 @@ export const AppRoutes = () => {
 
         {/* ✅ Protected Routes */}
         <Route element={<ProtectedRoute roles={['learner']} />}>
-          <Route path={PATHS.USER_MAIN.path} element={<Views.UserMain />}>
+          <Route path="/:userId" element={<Views.UserMain />}>
             <Route path={PATHS.USER_VIEW.HOME.path} element={<Views.Home />} />
             <Route path={PATHS.USER_VIEW.MY_PROFILE.path} element={<Views.MyProfile />} />
             <Route path={PATHS.USER_VIEW.PYTHON_LEARN.path} element={<Views.PythonLearn />} />

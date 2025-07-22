@@ -3,7 +3,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login } = useAuth(); // ✅ get the user
   const navigate = useNavigate();
 
   const [username, setUsername] = useState(""); // changed from email
@@ -13,8 +13,8 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(username, password); // pass username instead of email
-      navigate("/user/home");
+      const loggedInUser = await login(username, password);
+      navigate(`/${loggedInUser.id}/home`);
     } catch (err: any) {
       setError("Login failed. Please check your credentials.");
       console.error(err);
