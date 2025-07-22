@@ -3,6 +3,10 @@ export const PATHS = {
         path: "/user",
         label: "User Main"
     },
+    LANDING: {
+        path: "/landing",
+        label: "Landing"
+    },
     LOGIN: {
         path: "/login",
         label: "Login"

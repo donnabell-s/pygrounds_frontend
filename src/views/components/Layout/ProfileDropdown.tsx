@@ -2,14 +2,21 @@ import React, { useState, useRef, useEffect } from "react";
 import { FiLogOut, FiSettings } from "react-icons/fi";
 import { FaCaretDown } from "react-icons/fa";
 import * as Components from "../../components";
+import { useAuth } from "../../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface ProfileDropdownProps {
   mobile?: boolean;
 }
 
 const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => {
-  // const [open, setOpen] = useState(false);
-  // const dropdownRef = useRef<HTMLDivElement>(null);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/"); // Redirect to landing or login page
+  };
 
   if (mobile) {
     return (
@@ -32,6 +39,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => 
             label="Logout" 
             icon={<FiLogOut size={20}/>}
             mobile={true}
+            onClick={handleLogout}
           />
         </div>
       </div>
@@ -90,6 +98,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => 
           <Components.ProfileDropdownLink 
             label="Logout" 
             icon={<FiLogOut size={16}/>}
+            onClick={handleLogout}
           />
         </div>
       </div>

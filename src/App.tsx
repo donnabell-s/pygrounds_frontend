@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 
-import { AppRoutes } from "./routes";
+import { AppRoutes } from "./routes/routes";
 
 const App = () => {
   return (
