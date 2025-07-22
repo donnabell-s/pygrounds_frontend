@@ -11,11 +11,11 @@ const PythonLearn = () => {
       <div className="flex flex-row items-center gap-2">
       <button 
         onClick={() => setMenuOpen(prev => !prev)} 
-        className={`focus:outline-none ${menuOpen ? 'text-[#3776AB]' : 'text-gray-700 hover:text-[#3776AB]'}`}
+        className={`focus:outline-none ${menuOpen ? 'text-[#3776AB]' : 'text-[#6B7280] hover:text-[#3776AB]'}`}
       >
-        <FiMenu size={22} />
+        <FiMenu size={24} />
       </button>
-        <h1 className="text-2xl font-bold">Python Learning Course</h1>
+        <h1 className="text-3xl font-bold">Python Learning Course</h1>
       </div>
 
     <div className="flex flex-row gap-2">

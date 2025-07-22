@@ -69,7 +69,9 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => 
       </button>
       <div
         className={`absolute right-0 top-full mt-2 w-60 bg-white rounded-md z-50 transform transition-all p-5 duration-300 ease-out shadow-[0_0_9px_rgba(0,0,0,0.1)] ${
-          isOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
+              isOpen
+          ? 'opacity-100 translate-y-0 visible'
+          : 'opacity-0 -translate-y-3 invisible'
         }`}
       >
         <div className="pb-2 flex flex-row gap-2 items-center text-sm">

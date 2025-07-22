@@ -18,13 +18,14 @@ const Leaderboard = () => {
       <div className="bg-white rounded-md shadow-md p-6 flex flex-col gap-3 text-sm">
         {others.map((user, index) => (
           <div key={user.id} className="flex items-center justify-between bg-[#F5F8FB] p-4 rounded-lg shadow-sm">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center">
               <span className="text-[#3776AB] font-bold text-xl w-10">#{index + 4}</span>
-              <div className="w-10 h-10 bg-[#D9D9D9] rounded-full" />
-              <span className="font-semibold">{user.name}</span>
+              <div className="w-12 h-12 bg-[#D9D9D9] rounded-full" />
+              <span className="font-semibold text-lg w-40 ml-3">{user.name}</span>
+              <span className="font-semibold text-md text-[#6B7280]">{user.username}</span>
             </div>
-            <div className="flex items-center justify-between w-50 gap-3">
-              <span className="text-[#6B7280] font-semibold">{user.totalXP} XP</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[#6B7280] font-semibold w-40">{user.totalXP} XP</span>
               <span className="text-[#0077B6] bg-[#0077B626] px-4 py-1 rounded-full text-xs font-medium">
                 Level {user.level}
               </span>
