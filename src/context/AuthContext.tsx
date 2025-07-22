@@ -8,17 +8,22 @@ type AuthContextType = {
   accessToken: string | null;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  isLoading: boolean;
 };
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 type AuthProviderProps = { children: ReactNode };
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem("access")
   );
+
+
 
   const login = async (username: string, password: string) => {
     const { data: tokens } = await authApi.login({ username, password });
@@ -47,8 +52,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setUser(JSON.parse(storedUser));
+    setIsLoading(false);
+  }, []);
+
+
   return (
-    <AuthContext.Provider value={{ user, accessToken, login, logout }}>
+    <AuthContext.Provider value={{ user, accessToken, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
