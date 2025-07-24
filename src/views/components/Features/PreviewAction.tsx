@@ -4,7 +4,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import * as Interfaces from "../../../interfaces";
 import * as Components from "../../components";
 import { useAuth } from "../../../context/AuthContext";
-import { useGame } from "../../../context/GameContext"; 
+import { useGame } from "../../../context/GameContext";
 
 type PreviewActionProps = {
   selectedGame: Interfaces.Minigame;
@@ -12,12 +12,30 @@ type PreviewActionProps = {
 
 const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
   const { user } = useAuth();
-  const { startCrosswordGame } = useGame(); // ✅ Grab this from context
+  const {
+    startCrosswordGame,
+    startWordSearchGame,
+  } = useGame();
+
   const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
 
   const slugifyTitle = (title: string) =>
     title.toLowerCase().replace(/\s+/g, "-");
+
+  const handleStartGame = async () => {
+    const gameSlug = slugifyTitle(selectedGame.title);
+    const lowerTitle = selectedGame.title.toLowerCase();
+
+    if (lowerTitle.includes("crossword")) {
+      await startCrosswordGame();
+    } else if (lowerTitle.includes("wordsearch")) {
+      await startWordSearchGame();
+    }
+
+    setShowConfirm(false);
+    navigate(`/${user?.id}/${gameSlug}/start`);
+  };
 
   return (
     <>
@@ -75,13 +93,7 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
           <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-6 relative">
             <Components.ConfirmGame
               game={selectedGame}
-              onConfirm={async () => {
-                await startCrosswordGame(); // ✅ GET happens here only
-                setShowConfirm(false);
-                navigate(
-                  `/${user?.id}/${slugifyTitle(selectedGame.title)}/start`
-                );
-              }}
+              onConfirm={handleStartGame}
               onCancel={() => setShowConfirm(false)}
             />
           </div>

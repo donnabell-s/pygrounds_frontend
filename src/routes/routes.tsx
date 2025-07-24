@@ -2,6 +2,8 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import * as Views from "../views/containers";
 import { PATHS } from "../constants";
 import ProtectedRoute from "../routes/ProtectedRoute";
+import ProtectedGameRoute from "../routes/ProtectedGameRoute";
+
 
 export const AppRoutes = () => {
   
@@ -29,7 +31,7 @@ export const AppRoutes = () => {
             <Route path={PATHS.USER_VIEW.PYTHON_LEARN.path} element={<Views.PythonLearn />} />
             <Route path={PATHS.USER_VIEW.LEADERBOARD.path} element={<Views.Leaderboard />} />
             <Route path=":game/preview" element={<Views.GamePreview />} />
-            <Route path=":game/start" element={<Views.GameStart />} />
+            <Route path=":game/start" element={<ProtectedGameRoute><Views.GameStart /></ProtectedGameRoute>}/>
           </Route>
         </Route>
       </Routes>

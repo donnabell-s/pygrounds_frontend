@@ -1,4 +1,5 @@
 // src/types/game.ts
+
 export interface Minigame {
   id: number;
   title: string;
@@ -6,23 +7,82 @@ export interface Minigame {
   category: string;
   color: string;
 }
-// src/types/game.ts
+
 export interface GameSession {
-  session_id: string; // Change from id to session_id
+  session_id: string;
+  game_type: string;
+  status: "active" | "completed" | "expired";
+  start_time: string;
+  end_time: string | null;
+  total_score: number;
+  time_limit: number;
+  session_questions: SessionQuestion[];
+}
+
+export interface SessionQuestion {
+  id: number; // GameQuestion ID
+  question: {
+    id: number;
+    text: string;
+    answer: string;
+    difficulty: "easy" | "medium" | "hard";
+  };
+}
+
+export interface CrosswordPlacement {
+  word: string;
+  clue: string;
+  row: number;
+  col: number;
+  direction: "across" | "down";
+}
+
+export interface CrosswordSessionData {
+  session_id: string;
   grid: string[];
-  placements: {
-    word: string;
-    clue: string;
-    row: number;
-    col: number;
-    direction: "across" | "down";
-  }[];
-  timer_seconds: number; // Add this field to match the API response
+  placements: CrosswordPlacement[];
+  timer_seconds: number;
   started_at: string;
 }
 
+export interface WordSearchPlacement {
+  word: string;
+  row: number;
+  col: number;
+  direction: string;
+}
 
-export interface CrosswordResult {
-  answered: string[]; // List of words user answered
-  time_taken: number; // in seconds
+export interface WordSearchSessionData {
+  session_id: string;
+  matrix: string[];
+  placements: WordSearchPlacement[];
+  timer_seconds: number;
+  started_at: string;
+}
+
+export interface AnswerSubmission {
+  question_id: number;
+  user_answer: string;
+  time_taken: number;
+}
+
+export interface QuestionResponse {
+  question: number;
+  user_answer: string;
+  is_correct: boolean;
+  time_taken: number;
+  answered_at: string;
+}
+
+// ───── NEW TYPES ─────
+// Return shape for loading the crossword grid (grid + clues)
+export interface CrosswordGridData {
+  grid: string[];
+  placements: CrosswordPlacement[];
+}
+
+// Return shape for loading the wordsearch matrix (matrix + placements)
+export interface WordSearchMatrixData {
+  matrix: string[];
+  placements: WordSearchPlacement[];
 }

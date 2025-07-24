@@ -1,11 +1,11 @@
-// src/pages/user/game/GameStart.tsx
 import { useParams } from "react-router-dom";
 import * as Components from "../../../../components";
 import { useGame } from "../../../../../context/GameContext";
 
-// Map URL slug keywords to actual components
 const gameTypeMap: Record<string, React.FC> = {
   crossword: Components.Crossword,
+  wordsearch: Components.WordSearch,
+  // Extendable
 };
 
 const extractGameType = (slug: string): string | null =>
@@ -13,27 +13,27 @@ const extractGameType = (slug: string): string | null =>
 
 const GameStart = () => {
   const { game } = useParams();
-  const { activeSession } = useGame(); // Session pulled from context (or localStorage via context useEffect)
+  const { activeSession } = useGame();
   const gameType = game ? extractGameType(game) : null;
   const SelectedGame = gameType ? gameTypeMap[gameType] : null;
 
-  if (!SelectedGame || !activeSession) {
+  if (!SelectedGame) {
     return (
       <div className="text-center py-10 text-red-500">
-        {!SelectedGame ? (
-          <>Game not found for slug: <strong>{game}</strong></>
-        ) : (
-          <>Loading game session...</>
-        )}
+        Game not found for slug: <span className="font-mono">{game}</span>
       </div>
     );
   }
 
-  return (
-    <>
-      <SelectedGame />
-    </>
-  );
+  if (!activeSession) {
+    return (
+      <div className="text-center py-10 text-gray-500">
+        No active session found. Please go back and start the game properly.
+      </div>
+    );
+  }
+
+  return <SelectedGame />;
 };
 
 export default GameStart;

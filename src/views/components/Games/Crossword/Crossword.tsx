@@ -1,201 +1,265 @@
-import { useEffect, useState } from "react";
+// src/pages/user/game/Crossword.tsx
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGame } from "../../../../context/GameContext";
 import { useAuth } from "../../../../context/AuthContext";
+import { useGame } from "../../../../context/GameContext";
+import type { AnswerSubmission, CrosswordPlacement } from "../../../../types/game";
+import * as Component from "../../../components";
 
-interface Placement {
-  word: string;
-  clue: string;
-  row: number;
-  col: number;
-  direction: "across" | "down";
-}
-
-type Cell = {
-  letter: string;
-  readOnly: boolean;
-  partOf: string[];
-  number?: number;
-};
-
-const Crossword = () => {
-  const navigate = useNavigate();
+const Crossword: React.FC = () => {
   const { user } = useAuth();
-  const { activeSession, submitCrosswordResult } = useGame();
-  const [grid, setGrid] = useState<Cell[][]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [clues, setClues] = useState<{ across: Placement[]; down: Placement[] }>({
-    across: [],
-    down: [],
-  });
+  const navigate = useNavigate();
+  const {
+    activeSession,
+    gameEnded,
+    getCrosswordGrid,
+    submitAnswers,
+    clearActiveSession,
+    resetGameEnd,
+  } = useGame();
+
+  const [grid, setGrid] = useState<string[]>([]);
+  const [placements, setPlacements] = useState<CrosswordPlacement[]>([]);
+  const [letters, setLetters] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const storageKey = activeSession ? `crossword-letters-${activeSession.session_id}` : null;
 
   useEffect(() => {
-    if (!activeSession) {
-      navigate(`/${user?.id}/home`);
+    const stored = localStorage.getItem("submitted");
+    if (stored === "true") {
+      setSubmitted(true);
     }
-  }, [activeSession, user, navigate]);
+  }, []);
 
   useEffect(() => {
     if (!activeSession) return;
-
-    const rows = activeSession.grid.length;
-    const cols = activeSession.grid[0]?.length || 0;
-    let clueNumber = 1;
-
-    const numberMap: Record<string, number> = {}; // key = row-col
-
-    const newGrid: Cell[][] = Array.from({ length: rows }, () =>
-      Array.from({ length: cols }, () => ({
-        letter: "",
-        readOnly: true,
-        partOf: [],
-      }))
-    );
-
-    const across: Placement[] = [];
-    const down: Placement[] = [];
-
-    activeSession.placements.forEach(({ word, row, col, direction, clue }) => {
-      const upperWord = word.toUpperCase();
-      const key = `${row}-${col}`;
-
-      if (!numberMap[key]) {
-        numberMap[key] = clueNumber++;
-      }
-
-      if (direction === "across") across.push({ word, clue, row, col, direction });
-      if (direction === "down") down.push({ word, clue, row, col, direction });
-
-      for (let i = 0; i < upperWord.length; i++) {
-        const r = direction === "across" ? row : row + i;
-        const c = direction === "across" ? col + i : col;
-        newGrid[r][c] = {
-          ...newGrid[r][c],
-          letter: "",
-          readOnly: false,
-          partOf: [...(newGrid[r][c]?.partOf || []), word],
-        };
-
-        // Only mark number on the first cell
-        if (i === 0) {
-          newGrid[r][c].number = numberMap[key];
-        }
+    getCrosswordGrid(activeSession.session_id).then((data) => {
+      if (data) {
+        setGrid(data.grid);
+        setPlacements(data.placements);
       }
     });
-
-    setGrid(newGrid);
-    setClues({ across, down });
   }, [activeSession]);
 
-  const handleChange = (r: number, c: number, val: string) => {
-    const char = val.slice(-1).toUpperCase();
-    setGrid((prev) => {
-      const updated = prev.map((row) => row.map((cell) => ({ ...cell })));
-      updated[r][c].letter = char;
-      return updated;
-    });
-  };
+  useEffect(() => {
+    if (!activeSession || submitted || gameEnded) return;
 
-  const handleSubmit = async () => {
-    if (!activeSession || !user) return;
+    const start = new Date(activeSession.start_time).getTime();
+    const duration = activeSession.time_limit * 1000;
+    const end = start + duration;
 
-    const answered: string[] = [];
+    const now = new Date().getTime();
+    const timeout = Math.max(0, end - now);
 
-    for (const { word, row, col, direction } of activeSession.placements) {
-      let built = "";
+    const timer = setTimeout(() => {
+      handleSubmit();
+    }, timeout);
 
-      for (let i = 0; i < word.length; i++) {
-        const r = direction === "across" ? row : row + i;
-        const c = direction === "across" ? col + i : col;
-        built += grid[r][c]?.letter || "";
-      }
+    return () => clearTimeout(timer);
+  }, [activeSession, submitted, gameEnded]);
 
-      if (built.toUpperCase() === word.toUpperCase()) {
-        answered.push(word);
-      }
+  useEffect(() => {
+    if (!activeSession) return;
+    const saved = localStorage.getItem(`crossword-letters-${activeSession.session_id}`);
+    if (saved) {
+      setLetters(JSON.parse(saved));
     }
+  }, [activeSession]);
 
-    const startedAt = new Date(activeSession.started_at).getTime();
-    const timeTaken = Math.floor((Date.now() - startedAt) / 1000);
+  useEffect(() => {
+    if (activeSession) {
+      localStorage.setItem(`crossword-letters-${activeSession.session_id}`, JSON.stringify(letters));
+    }
+  }, [letters, activeSession]);
 
-    setIsSubmitting(true);
-    await submitCrosswordResult(activeSession.session_id, {
-      answered,
-      time_taken: timeTaken,
+  useEffect(() => {
+    if (gameEnded && !submitted && activeSession && activeSession.status === "active") {
+      handleSubmit();
+    }
+  }, [gameEnded, submitted, activeSession]);
+
+  const editableCells = useMemo(() => {
+    const positions = new Set<string>();
+    placements.forEach((p) => {
+      for (let i = 0; i < p.word.length; i++) {
+        const r = p.row + (p.direction === "down" ? i : 0);
+        const c = p.col + (p.direction === "across" ? i : 0);
+        positions.add(`${r}-${c}`);
+      }
     });
-    setIsSubmitting(false);
+    return positions;
+  }, [placements]);
+
+  const numberingMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    placements.forEach((placement, index) => {
+      map[`${placement.row}-${placement.col}`] = index + 1;
+    });
+    return map;
+  }, [placements]);
+
+  const handleCellChange = (key: string, value: string) => {
+    if (gameEnded || !editableCells.has(key)) return;
+    setLetters((prev) => ({
+      ...prev,
+      [key]: value.toUpperCase().slice(0, 1),
+    }));
   };
 
-  if (!activeSession) return null;
+  // const handleSubmit = async () => {
+  //   if (!activeSession) return;
+
+  //   const answers: AnswerSubmission[] = placements
+  //     .map((p) => {
+  //       let guess = "";
+  //       for (let i = 0; i < p.word.length; i++) {
+  //         const r = p.row + (p.direction === "down" ? i : 0);
+  //         const c = p.col + (p.direction === "across" ? i : 0);
+  //         const key = `${r}-${c}`;
+  //         guess += letters[key]?.toUpperCase() || " ";
+  //       }
+
+  //       const gameQuestion = activeSession.session_questions.find(
+  //         (sq) => sq.question.answer.toUpperCase() === p.word.toUpperCase()
+  //       );
+
+  //       return {
+  //         question_id: gameQuestion?.id || -1,
+  //         user_answer: guess.trim(),
+  //         time_taken: 0,
+  //       };
+  //     })
+  //     .filter((a) => a.question_id !== -1);
+
+  //   await submitAnswers(activeSession.session_id, answers);
+  //   setSubmitted(true);
+  //   localStorage.setItem("submitted", "true");
+  //   if (storageKey) localStorage.removeItem(storageKey);
+  // };
+
+const handleSubmit = async () => {
+  if (!activeSession || submitted) return; // ✅ prevent duplicate
+
+  setSubmitted(true); // ✅ mark immediately to block future calls
+  localStorage.setItem("submitted", "true");
+
+  const answers: AnswerSubmission[] = placements
+    .map((p) => {
+      let guess = "";
+      for (let i = 0; i < p.word.length; i++) {
+        const r = p.row + (p.direction === "down" ? i : 0);
+        const c = p.col + (p.direction === "across" ? i : 0);
+        const key = `${r}-${c}`;
+        guess += letters[key]?.toUpperCase() || " ";
+      }
+
+      const gameQuestion = activeSession.session_questions.find(
+        (sq) => sq.question.answer.toUpperCase() === p.word.toUpperCase()
+      );
+
+      return {
+        question_id: gameQuestion?.id || -1,
+        user_answer: guess.trim(),
+        time_taken: 0,
+      };
+    })
+    .filter((a) => a.question_id !== -1);
+
+  await submitAnswers(activeSession.session_id, answers);
+  if (storageKey) localStorage.removeItem(storageKey);
+};
+
+
+  const renderClueList = (dir: "across" | "down") => {
+    return placements
+      .filter((p) => p.direction === dir)
+      .map((p, idx) => {
+        const num = numberingMap[`${p.row}-${p.col}`];
+        return (
+          <div key={`${p.word}-${idx}`} className="text-sm mb-1">
+            <strong className="text-blue-700">{num}.</strong> {p.clue}
+          </div>
+        );
+      });
+  };
+
+  if (!activeSession) return <div>Loading...</div>;
 
   return (
-    <div className="p-4">
-      <h2 className="text-lg font-bold mb-4">Crossword Puzzle</h2>
+    <div className="flex flex-col md:flex-row gap-10 py-6 px-4 justify-center items-start">
+      <div className="grid grid-cols-15 gap-[2px] relative">
+        {grid.map((row, rowIndex) =>
+          row.split("").map((_, colIndex) => {
+            const key = `${rowIndex}-${colIndex}`;
+            const isEditable = editableCells.has(key);
+            const number = numberingMap[key];
 
-      <div className="overflow-x-auto">
-        <div
-          className="relative grid gap-[2px] bg-gray-400 w-fit mx-auto"
-          style={{
-            gridTemplateColumns: `repeat(${grid[0]?.length || 0}, 2rem)`,
-          }}
-        >
-          {grid.flatMap((row, rIdx) =>
-            row.map((cell, cIdx) => (
-              <div key={`${rIdx}-${cIdx}`} className="relative">
-                {cell.readOnly ? (
-                  <div className="w-8 h-8 bg-gray-300" />
-                ) : (
-                  <>
-                    {cell.number && (
-                      <div className="absolute top-[2px] left-[2px] text-[0.5rem] text-gray-500 font-bold">
-                        {cell.number}
-                      </div>
-                    )}
-                    <input
-                      className="w-8 h-8 text-center uppercase border text-sm bg-white"
-                      maxLength={1}
-                      value={cell.letter}
-                      onChange={(e) => handleChange(rIdx, cIdx, e.target.value)}
-                    />
-                  </>
+            return (
+              <div
+                key={key}
+                className={`relative w-8 h-8 border flex items-center justify-center bg-${
+                  isEditable ? "white" : "gray-200"
+                }`}
+              >
+                {number && (
+                  <span className="absolute top-[1px] left-[2px] text-[0.5rem] font-bold text-gray-500">
+                    {number}
+                  </span>
                 )}
+                {isEditable ? (
+                  <input
+                    type="text"
+                    maxLength={1}
+                    value={letters[key] || ""}
+                    disabled={gameEnded}
+                    onChange={(e) => handleCellChange(key, e.target.value)}
+                    className="w-full h-full text-center font-semibold text-sm outline-none"
+                  />
+                ) : null}
               </div>
-            ))
-          )}
-        </div>
+            );
+          })
+        )}
       </div>
 
-
-      <div className="mt-8">
-        <h3 className="font-semibold mb-2 text-lg">Clues</h3>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="font-semibold mb-1">Across</h4>
-            <ul className="text-sm list-disc list-inside">
-              {clues.across.map((clue, idx) => (
-                <li key={`${clue.word}-across`}>{clue.clue}</li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-1">Down</h4>
-            <ul className="text-sm list-disc list-inside">
-              {clues.down.map((clue, idx) => (
-                <li key={`${clue.word}-down`}>{clue.clue}</li>
-              ))}
-            </ul>
-          </div>
+      <div className="flex flex-col gap-4 max-w-sm w-full">
+        <div>
+          <h2 className="text-md font-bold mb-2">Across</h2>
+          {renderClueList("across")}
         </div>
+        <div>
+          <h2 className="text-md font-bold mt-4 mb-2">Down</h2>
+          {renderClueList("down")}
+        </div>
+
+        {!gameEnded && (
+          <button
+            onClick={handleSubmit}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mt-6"
+          >
+            Submit Answers
+          </button>
+        )}
       </div>
 
-      <button
-        onClick={handleSubmit}
-        className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:brightness-110"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? "Submitting..." : "Submit Answers"}
-      </button>
-
+      {gameEnded && submitted && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: "rgba(45, 45, 45, 0.4)" }}
+        >
+          <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-6 relative">
+            <Component.ResultsModal
+              onClose={() => {
+                clearActiveSession();
+                resetGameEnd();
+                localStorage.removeItem("submitted");
+                navigate(`/${user?.id}/home`);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
