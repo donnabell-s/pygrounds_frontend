@@ -29,7 +29,7 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
 
     if (lowerTitle.includes("crossword")) {
       await startCrosswordGame();
-    } else if (lowerTitle.includes("wordsearch")) {
+    } else if (lowerTitle.includes("search")) {
       await startWordSearchGame();
     }
 

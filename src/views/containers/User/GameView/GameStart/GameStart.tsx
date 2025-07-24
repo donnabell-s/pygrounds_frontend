@@ -4,7 +4,7 @@ import { useGame } from "../../../../../context/GameContext";
 
 const gameTypeMap: Record<string, React.FC> = {
   crossword: Components.Crossword,
-  wordsearch: Components.WordSearch,
+  search: Components.WordSearch,
   // Extendable
 };
 
