@@ -117,6 +117,20 @@ const gameApi = {
       return null;
     }
   },
+
+  // Add to gameApi
+  exitSession: async (sessionId: string): Promise<boolean> => {
+    try {
+      const res = await client.post(`/session/${sessionId}/exit/`, {
+        session_id: sessionId,
+      });
+      return res.status === 200;
+    } catch (err) {
+      console.error("gameApi.exitSession error", err);
+      return false;
+    }
+  },
+
 };
 
 export default gameApi;

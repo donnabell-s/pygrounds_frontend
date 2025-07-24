@@ -29,6 +29,7 @@ interface GameContextType {
   ) => Promise<number | null>;
   fetchResponses: (sessionId: string) => Promise<QuestionResponse[] | null>;
   fetchGameSession: (sessionId: string) => Promise<GameSession | null>;
+  exitSession: (sessionId: string) => Promise<boolean>;
 }
 
 const GameContext = createContext<GameContextType>({} as GameContextType);
@@ -157,6 +158,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     return session;
   };
 
+  const exitSession = async (sessionId: string): Promise<boolean> => {
+    const success = await gameApi.exitSession(sessionId);
+    if (success) {
+      clearActiveSession(); // also clears localStorage and resets state
+    }
+    return success;
+  };
+
+
   return (
     <GameContext.Provider
       value={{
@@ -172,6 +182,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         submitAnswers,
         fetchResponses,
         fetchGameSession,
+        exitSession,
       }}
     >
       {children}

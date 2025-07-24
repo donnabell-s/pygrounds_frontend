@@ -107,37 +107,6 @@ const Crossword: React.FC = () => {
     }));
   };
 
-  // const handleSubmit = async () => {
-  //   if (!activeSession) return;
-
-  //   const answers: AnswerSubmission[] = placements
-  //     .map((p) => {
-  //       let guess = "";
-  //       for (let i = 0; i < p.word.length; i++) {
-  //         const r = p.row + (p.direction === "down" ? i : 0);
-  //         const c = p.col + (p.direction === "across" ? i : 0);
-  //         const key = `${r}-${c}`;
-  //         guess += letters[key]?.toUpperCase() || " ";
-  //       }
-
-  //       const gameQuestion = activeSession.session_questions.find(
-  //         (sq) => sq.question.answer.toUpperCase() === p.word.toUpperCase()
-  //       );
-
-  //       return {
-  //         question_id: gameQuestion?.id || -1,
-  //         user_answer: guess.trim(),
-  //         time_taken: 0,
-  //       };
-  //     })
-  //     .filter((a) => a.question_id !== -1);
-
-  //   await submitAnswers(activeSession.session_id, answers);
-  //   setSubmitted(true);
-  //   localStorage.setItem("submitted", "true");
-  //   if (storageKey) localStorage.removeItem(storageKey);
-  // };
-
 const handleSubmit = async () => {
   if (!activeSession || submitted) return; // ✅ prevent duplicate
 
@@ -178,7 +147,7 @@ const handleSubmit = async () => {
         const num = numberingMap[`${p.row}-${p.col}`];
         return (
           <div key={`${p.word}-${idx}`} className="text-sm mb-1">
-            <strong className="text-blue-700">{num}.</strong> {p.clue}
+            <strong className="text-[#0077B6]">{num}.</strong> {p.clue}
           </div>
         );
       });
@@ -198,12 +167,12 @@ const handleSubmit = async () => {
             return (
               <div
                 key={key}
-                className={`relative w-8 h-8 border flex items-center justify-center bg-${
-                  isEditable ? "white" : "gray-200"
+                className={`relative w-10 h-10 border border-[#2D2D2D] flex items-center justify-center ${
+                  isEditable ? "bg-white" : "bg-[#E4ECF7]"
                 }`}
               >
                 {number && (
-                  <span className="absolute top-[1px] left-[2px] text-[0.5rem] font-bold text-gray-500">
+                  <span className="absolute top-[1px] left-[2px] text-[0.5rem] font-bold text-[#6B7280]">
                     {number}
                   </span>
                 )}
@@ -236,7 +205,7 @@ const handleSubmit = async () => {
         {!gameEnded && (
           <button
             onClick={handleSubmit}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mt-6"
+            className="bg-[#0077B6] hover:brightness-110 text-white px-4 py-2 rounded-md mt-6 cursor-pointer"
           >
             Submit Answers
           </button>
