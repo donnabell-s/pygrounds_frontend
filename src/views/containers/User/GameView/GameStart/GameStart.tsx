@@ -5,7 +5,7 @@ import { useGame } from "../../../../../context/GameContext";
 const gameTypeMap: Record<string, React.FC> = {
   crossword: Components.Crossword,
   search: Components.WordSearch,
-  // Extendable
+  hangman: Components.Hangman,
 };
 
 const extractGameType = (slug: string): string | null =>

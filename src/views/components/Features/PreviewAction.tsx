@@ -1,3 +1,4 @@
+// src/pages/user/components/PreviewAction.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
@@ -15,6 +16,7 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
   const {
     startCrosswordGame,
     startWordSearchGame,
+    startHangmanGame,
   } = useGame();
 
   const [showConfirm, setShowConfirm] = useState(false);
@@ -31,6 +33,8 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
       await startCrosswordGame();
     } else if (lowerTitle.includes("search")) {
       await startWordSearchGame();
+    } else if (lowerTitle.includes("hangman")) {
+      await startHangmanGame();
     }
 
     setShowConfirm(false);

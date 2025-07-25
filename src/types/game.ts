@@ -11,6 +11,7 @@ export interface Minigame {
 export interface GameSession {
   session_id: string;
   game_type: string;
+  remaining_lives: number;
   status: "active" | "completed" | "expired";
   start_time: string;
   end_time: string | null;
@@ -21,12 +22,21 @@ export interface GameSession {
 
 export interface SessionQuestion {
   id: number; // GameQuestion ID
-  question: {
-    id: number;
-    text: string;
-    answer: string;
-    difficulty: "easy" | "medium" | "hard";
-  };
+  question: Question;
+}
+
+// Core question type, extended for code-based games
+export interface Question {
+  id: number;
+  text: string;
+  answer: string;
+  difficulty: "easy" | "medium" | "hard";
+
+  // Fields for Hangman coding game
+  function_name?: string;
+  sample_input?: string;
+  sample_output?: string;
+  hidden_tests?: Array<{ input: string; output: any }>;
 }
 
 export interface CrosswordPlacement {
@@ -85,4 +95,13 @@ export interface CrosswordGridData {
 export interface WordSearchMatrixData {
   matrix: string[];
   placements: WordSearchPlacement[];
+}
+
+// Response shape for Hangman code submission
+export interface HangmanSubmissionResponse {
+  success: boolean;
+  message: string;
+  game_over: boolean;
+  remaining_lives: number;
+  traceback?: string;
 }

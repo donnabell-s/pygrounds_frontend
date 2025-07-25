@@ -131,6 +131,46 @@ const gameApi = {
     }
   },
 
+  // ─ start a new hangman session
+  startHangman: async (): Promise<GameSession | null> => {
+    try {
+      const res = await client.post<GameSession>("/hangman/start/");
+      return res.data;
+    } catch (err) {
+      console.error("gameApi.startHangman error", err);
+      return null;
+    }
+  },
+
+  // ─ submit python code for hangman
+  submitHangmanCode: async (
+    sessionId: string,
+    code: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    game_over: boolean;
+    remaining_lives: number;
+    traceback?: string;
+  } | null> => {
+    try {
+      const res = await client.post<{
+        success: boolean;
+        message: string;
+        game_over: boolean;
+        remaining_lives: number;
+        traceback?: string;
+      }>(`/hangman/${sessionId}/submit-code/`, { code });
+
+      return res.data;
+    } catch (err) {
+      console.error("gameApi.submitHangmanCode error", err);
+      return null;
+    }
+  },
+
+
+
 };
 
 export default gameApi;

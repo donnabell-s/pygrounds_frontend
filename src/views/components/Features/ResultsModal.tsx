@@ -11,7 +11,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
   const navigate = useNavigate();
 
   const score = activeSession?.total_score ?? 0;
-  const total = activeSession?.session_questions.length ?? 0;
+  const total = activeSession?.session_questions?.length ?? 0;
   
   const handleClose = () => {
     onClose();

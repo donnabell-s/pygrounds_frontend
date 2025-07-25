@@ -30,6 +30,8 @@ interface GameContextType {
   fetchResponses: (sessionId: string) => Promise<QuestionResponse[] | null>;
   fetchGameSession: (sessionId: string) => Promise<GameSession | null>;
   exitSession: (sessionId: string) => Promise<boolean>;
+  startHangmanGame: () => Promise<GameSession | null>;
+  submitHangmanCode: (sessionId: string, code: string) => Promise<any>;
 }
 
 const GameContext = createContext<GameContextType>({} as GameContextType);
@@ -166,6 +168,41 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     return success;
   };
 
+  // inside GameProvider...
+  const startHangmanGame = async (): Promise<any /* or a HangmanSessionData type */> => {
+    // 1️⃣ kick off a new hangman session
+    const startResp = await gameApi.startHangman();
+    if (!startResp) return null;
+
+    // 2️⃣ now fetch the fully serialized session (including session_questions)
+    const fullSession = await gameApi.getSession(startResp.session_id);
+    if (fullSession) {
+      setActiveSession(fullSession);
+      setGameEnded(false);
+      localStorage.removeItem("gameEnded");
+      localStorage.setItem("activeSession", JSON.stringify(fullSession));
+    }
+
+    return startResp;
+  };
+
+
+  const submitHangmanCode = async (
+    sessionId: string,
+    code: string
+  ): Promise<any> => {
+    const result = await gameApi.submitHangmanCode(sessionId, code);
+    if (result?.success || result?.game_over) {
+      setGameEnded(true);
+      const updated = await gameApi.getSession(sessionId);
+      if (updated) {
+        setActiveSession(updated);
+        localStorage.setItem("activeSession", JSON.stringify(updated));
+      }
+    }
+    return result;
+  };
+
 
   return (
     <GameContext.Provider
@@ -183,6 +220,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         fetchResponses,
         fetchGameSession,
         exitSession,
+        startHangmanGame,
+        submitHangmanCode,
+
       }}
     >
       {children}

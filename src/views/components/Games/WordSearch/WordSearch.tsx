@@ -241,14 +241,14 @@ const finishDrag = () => {
           className="absolute top-0 left-0 z-10 pointer-events-none"
         />
         <div
-          className="absolute top-0 left-0 grid gap-[2px]"
+          className="absolute top-0 left-0 grid gap-[2px] shadow-md"
           style={{ gridTemplateColumns:`repeat(${cols},${CELL_SIZE}px)` }}
         >
           {matrix.map((row,r) =>
             row.split("").map((ch,c) => (
               <div
                 key={`${r}-${c}`}
-                className="w-10 h-10 border border-gray-700 flex items-center justify-center text-sm font-medium bg-white"
+                className="w-10 h-10  flex items-center justify-center text-sm font-medium bg-white shadow-sm"
                 onMouseDown={() => startDrag(r, c)}
                 onMouseEnter={() => moveDrag(r, c)}
                 onMouseUp={finishDrag}
@@ -286,7 +286,7 @@ const finishDrag = () => {
         key={sq.id}
         onClick={() => setSelectedQ(sq.id)}
         className={`
-          text-left px-3 py-2 rounded
+          text-left px-3 py-2 rounded shadow-sm cursor-pointer
           ${borderClass} ${bgClass}
         `}
       >
