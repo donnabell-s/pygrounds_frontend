@@ -5,3 +5,4 @@ export { default as ProfileDropdownLink } from "./ProfileDropdownLink";
 export { default as ConfirmGame } from "./ConfirmGame";
 export { default as GameHeader } from "./GameHeader";
 export { default as ConfirmExit } from "./ConfirmExit";
+export { default as RegisterProgressTracker } from "./RegisterProgressTracker";
