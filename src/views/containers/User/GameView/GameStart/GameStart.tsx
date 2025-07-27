@@ -6,6 +6,7 @@ const gameTypeMap: Record<string, React.FC> = {
   crossword: Components.Crossword,
   search: Components.WordSearch,
   hangman: Components.Hangman,
+  debugging: Components.Debugging,
 };
 
 const extractGameType = (slug: string): string | null =>

@@ -7,7 +7,8 @@ import type {
   AnswerSubmission,
   QuestionResponse,
   CrosswordPlacement,
-  WordSearchPlacement
+  WordSearchPlacement,
+  DebuggingSubmissionResponse
 } from "../types/game";
 
 // ───── helper types ─────
@@ -168,6 +169,35 @@ const gameApi = {
       return null;
     }
   },
+
+  // ─ start a new debugging session
+  startDebugging: async (): Promise<GameSession | null> => {
+    try {
+      const res = await client.post<GameSession>("/debugging/start/");
+      return res.data;
+    } catch (err) {
+      console.error("gameApi.startDebugging error", err);
+      return null;
+    }
+  },
+
+  // ─ submit python code for debugging
+  submitDebuggingCode: async (
+    sessionId: string,
+    code: string
+  ): Promise<DebuggingSubmissionResponse | null> => {
+    try {
+      const res = await client.post<DebuggingSubmissionResponse>(
+        `/debugging/${sessionId}/submit-code/`,
+        { code }
+      );
+      return res.data;
+    } catch (err) {
+      console.error("gameApi.submitDebuggingCode error", err);
+      return null;
+    }
+  },
+
 
 
 

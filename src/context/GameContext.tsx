@@ -32,6 +32,8 @@ interface GameContextType {
   exitSession: (sessionId: string) => Promise<boolean>;
   startHangmanGame: () => Promise<GameSession | null>;
   submitHangmanCode: (sessionId: string, code: string) => Promise<any>;
+  startDebuggingGame: () => Promise<GameSession | null>;
+  submitDebuggingCode: (sessionId: string, code: string) => Promise<any>;
 }
 
 const GameContext = createContext<GameContextType>({} as GameContextType);
@@ -203,6 +205,65 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     return result;
   };
 
+  // const startDebuggingGame = async (): Promise<GameSession | null> => {
+  //   const startResp = await gameApi.startDebugging();
+  //   if (!startResp) return null;
+
+  //   const full = await gameApi.getSession(startResp.session_id);
+  //   if (full) {
+  //     setActiveSession(full);
+  //     setGameEnded(false);
+  //     localStorage.setItem("activeSession", JSON.stringify(full));
+  //   }
+  //   return full;
+  // };
+
+    const startDebuggingGame = async (): Promise<GameSession | null> => {
+      const startResp = await gameApi.startDebugging();
+      if (!startResp) return null;
+
+      // now fetch the full session (with session_questions + remaining_lives)
+      const full = await gameApi.getSession(startResp.session_id);
+      if (full) {
+        setActiveSession(full);
+        setGameEnded(false);
+        localStorage.setItem("activeSession", JSON.stringify(full));
+      }
+      return full;
+    };
+
+  // const submitDebuggingCode = async (
+  //   sessionId: string,
+  //   code: string
+  // ): Promise<any> => {
+  //   const result = await gameApi.submitDebuggingCode(sessionId, code);
+  //   if (result?.success || result?.game_over) {
+  //     setGameEnded(true);
+  //     const updated = await gameApi.getSession(sessionId);
+  //     if (updated) {
+  //       setActiveSession(updated);
+  //       localStorage.setItem("activeSession", JSON.stringify(updated));
+  //     }
+  //   }
+  //   return result;
+  // };
+
+    const submitDebuggingCode = async (
+      sessionId: string,
+      code: string
+    ): Promise<any> => {
+      const result = await gameApi.submitDebuggingCode(sessionId, code);
+      if (result?.success || result?.game_over) {
+        setGameEnded(true);
+        const updated = await gameApi.getSession(sessionId);
+        if (updated) {
+          setActiveSession(updated);
+          localStorage.setItem("activeSession", JSON.stringify(updated));
+        }
+      }
+      return result;
+    };
+
 
   return (
     <GameContext.Provider
@@ -222,7 +283,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         exitSession,
         startHangmanGame,
         submitHangmanCode,
-
+        startDebuggingGame,
+        submitDebuggingCode,
       }}
     >
       {children}

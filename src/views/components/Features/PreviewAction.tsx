@@ -17,6 +17,7 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
     startCrosswordGame,
     startWordSearchGame,
     startHangmanGame,
+    startDebuggingGame,
   } = useGame();
 
   const [showConfirm, setShowConfirm] = useState(false);
@@ -35,6 +36,8 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
       await startWordSearchGame();
     } else if (lowerTitle.includes("hangman")) {
       await startHangmanGame();
+    } else if (lowerTitle.includes("debugging")) {
+      await startDebuggingGame();
     }
 
     setShowConfirm(false);

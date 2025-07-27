@@ -37,6 +37,7 @@ export interface Question {
   sample_input?: string;
   sample_output?: string;
   hidden_tests?: Array<{ input: string; output: any }>;
+  broken_code?: string;
 }
 
 export interface CrosswordPlacement {
@@ -105,3 +106,5 @@ export interface HangmanSubmissionResponse {
   remaining_lives: number;
   traceback?: string;
 }
+
+export type DebuggingSubmissionResponse = HangmanSubmissionResponse;
