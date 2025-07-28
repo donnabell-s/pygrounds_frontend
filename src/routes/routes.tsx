@@ -4,7 +4,6 @@ import { PATHS } from "../constants";
 import ProtectedRoute from "../routes/ProtectedRoute";
 import ProtectedGameRoute from "../routes/ProtectedGameRoute";
 
-
 export const AppRoutes = () => {
   
   return (
@@ -16,6 +15,7 @@ export const AppRoutes = () => {
         
         <Route path={PATHS.LOGIN.path} element={<Views.Login />} />
 
+        
         <Route path={PATHS.REGISTER.path} element={<Views.RegisterMain />}>
           <Route path={PATHS.REGISTER.USER_INFO.path} element={<Views.RegisterUserInfo />} />
           <Route path={PATHS.REGISTER.PRE_TEST.path} element={<Views.RegisterPreTest />} />

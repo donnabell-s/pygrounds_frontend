@@ -34,6 +34,7 @@ interface GameContextType {
   submitHangmanCode: (sessionId: string, code: string) => Promise<any>;
   startDebuggingGame: () => Promise<GameSession | null>;
   submitDebuggingCode: (sessionId: string, code: string) => Promise<any>;
+  submitPreAssessmentAnswers: (answers: Record<number, string>) => Promise<any | null>;
 }
 
 const GameContext = createContext<GameContextType>({} as GameContextType);
@@ -264,6 +265,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       return result;
     };
 
+    const submitPreAssessmentAnswers = async (
+      answers: Record<number, string>
+    ): Promise<any | null> => {
+      const result = await gameApi.submitPreAssessmentAnswers(answers);
+      return result;
+    };
+
+
 
   return (
     <GameContext.Provider
@@ -285,6 +294,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         submitHangmanCode,
         startDebuggingGame,
         submitDebuggingCode,
+        submitPreAssessmentAnswers,
       }}
     >
       {children}

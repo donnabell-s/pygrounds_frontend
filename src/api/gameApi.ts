@@ -198,6 +198,21 @@ const gameApi = {
     }
   },
 
+  // ─ submit pre-assessment answers ─
+  submitPreAssessmentAnswers: async (
+    answers: Record<number, string>
+  ): Promise<any | null> => {
+    try {
+      const res = await client.post<{ result: any }>(
+        '/preassessment/submit/',
+        answers
+      );
+      return res.data;
+    } catch (err) {
+      console.error('gameApi.submitPreAssessmentAnswers error', err);
+      return null;
+    }
+  },
 
 
 

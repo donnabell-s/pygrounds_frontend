@@ -17,9 +17,10 @@ export interface LoginCredentials {
 
 // Used for signup POST request
 export interface SignupData {
-    username: string;
-    fname: string;
-    lname: string;
-    email: string;
-    password: string;
+  username:    string;
+  first_name:  string;
+  last_name:   string;
+  email:       string;
+  password:    string;
+  password2:   string;
 }
