@@ -1,64 +1,50 @@
+// src/contexts/AuthContext.tsx
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import { authApi } from "../api";
-import type { User } from "../types/user";
-import type { SignupData } from "../types/user"; // ✅ import RegisterPayload if defined
+import type { User, SignupData } from "../types/user";
+import { authService } from "../services/authService";
 
 type AuthContextType = {
   user: User | null;
-  accessToken: string | null;
-  login: (username: string, password: string) => Promise<User>;
-  register: (data: SignupData) => Promise<User>; // ✅ new function
+  login: (u: string, p: string) => Promise<User>;
+  register: (d: SignupData) => Promise<User>;
   logout: () => void;
   isLoading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-type AuthProviderProps = { children: ReactNode };
-
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [isLoading, setIsLoading] = useState(true);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(
-    localStorage.getItem("access")
-  );
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = async (username: string, password: string): Promise<User> => {
-    const { data: tokens } = await authApi.login({ username, password });
-
-    localStorage.setItem("access", tokens.access);
-    localStorage.setItem("refresh", tokens.refresh);
-    setAccessToken(tokens.access);
-
-    const { data: profile } = await authApi.getProfile();
-    setUser(profile);
-    localStorage.setItem("user", JSON.stringify(profile));
-
-    return profile;
+  const login = async (username: string, password: string) => {
+    const u = await authService.login(username, password);
+    setUser(u);
+    localStorage.setItem("user", JSON.stringify(u));
+    return u;
   };
 
-  const register = async (data: SignupData): Promise<User> => {
-    await authApi.register(data); // ✅ perform registration
-    return await login(data.username, data.password); // ✅ auto-login
+  const register = async (data: SignupData) => {
+    const u = await authService.register(data);
+    setUser(u);
+    localStorage.setItem("user", JSON.stringify(u));
+    return u;
   };
 
   const logout = () => {
     setUser(null);
-    setAccessToken(null);
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    localStorage.removeItem("user");
+    localStorage.clear();
   };
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    const stored = localStorage.getItem("user");
+    if (stored) setUser(JSON.parse(stored));
     setIsLoading(false);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

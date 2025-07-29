@@ -1,22 +1,19 @@
+// src/api/authApi.ts
 import client from "./client";
 import type { User, SignupData } from "../types/user";
 
-export interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-export interface TokenResponse {
-  access: string;
-  refresh: string;
-}
-
 export const authApi = {
-  login: (data: LoginCredentials) =>
-    client.post<TokenResponse>("/token/", data),
+  login: async (credentials: { username: string; password: string }): Promise<{ access: string; refresh: string }> => {
+    const res = await client.post<{ access: string; refresh: string }>("/token/", credentials);
+    return res.data;
+  },
 
-  getProfile: () => client.get<User>("/user/profile/"),
+  register: async (data: SignupData): Promise<void> => {
+    await client.post("/user/register/", data);
+  },
 
-  register: (data: SignupData) =>
-    client.post<User>("/user/register/", data), // returns created user
+  getProfile: async (): Promise<User> => {
+    const res = await client.get<User>("user/profile/");
+    return res.data;
+  },
 };

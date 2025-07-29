@@ -1,6 +1,6 @@
-// src/context/GameContext.tsx
-import React, { createContext, useContext, useEffect, useState } from "react";
-import gameApi from "../api/gameApi";
+// src/contexts/GameContext.tsx
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { gameService } from "../services/gameService";
 import type {
   GameSession,
   CrosswordSessionData,
@@ -11,63 +11,46 @@ import type {
   QuestionResponse,
 } from "../types/game";
 
-interface GameContextType {
+export interface GameContextType {
   activeSession: GameSession | null;
   gameEnded: boolean;
   setGameEnded: (ended: boolean) => void;
   resetGameEnd: () => void;
   clearActiveSession: () => void;
+
   startCrosswordGame: () => Promise<CrosswordSessionData | null>;
   getCrosswordGrid: (sessionId: string) => Promise<CrosswordGridData | null>;
+
   startWordSearchGame: () => Promise<WordSearchSessionData | null>;
-  getWordSearchMatrix: (
-    sessionId: string
-  ) => Promise<WordSearchMatrixData | null>;
-  submitAnswers: (
-    sessionId: string,
-    answers: AnswerSubmission[]
-  ) => Promise<number | null>;
+  getWordSearchMatrix: (sessionId: string) => Promise<WordSearchMatrixData | null>;
+
+  submitAnswers: (sessionId: string, answers: AnswerSubmission[]) => Promise<number | null>;
   fetchResponses: (sessionId: string) => Promise<QuestionResponse[] | null>;
+
   fetchGameSession: (sessionId: string) => Promise<GameSession | null>;
   exitSession: (sessionId: string) => Promise<boolean>;
-  startHangmanGame: () => Promise<GameSession | null>;
-  submitHangmanCode: (sessionId: string, code: string) => Promise<any>;
-  startDebuggingGame: () => Promise<GameSession | null>;
-  submitDebuggingCode: (sessionId: string, code: string) => Promise<any>;
+
   submitPreAssessmentAnswers: (answers: Record<number, string>) => Promise<any | null>;
 }
 
 const GameContext = createContext<GameContextType>({} as GameContextType);
 
-export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeSession, setActiveSession] = useState<GameSession | null>(null);
   const [gameEnded, setGameEnded] = useState(false);
 
-  // ✅ Hydrate from localStorage and auto-end if session expired
+  // Hydrate from localStorage on mount
   useEffect(() => {
-    const storedSession = localStorage.getItem("activeSession");
-    const storedGameEnded = localStorage.getItem("gameEnded");
-
-    if (storedSession) {
-      const session = JSON.parse(storedSession);
-      const start = new Date(session.start_time).getTime();
-      const now = new Date().getTime();
-      const duration = session.time_limit * 1000;
-
-      if (now >= start + duration) {
-        setGameEnded(true);
-      }
-
-      setActiveSession(session);
+    const stored = localStorage.getItem("activeSession");
+    if (stored) {
+      setActiveSession(JSON.parse(stored));
     }
-
-    if (storedGameEnded === "true") {
+    if (localStorage.getItem("gameEnded") === "true") {
       setGameEnded(true);
     }
   }, []);
 
+  // Persist activeSession
   useEffect(() => {
     if (activeSession) {
       localStorage.setItem("activeSession", JSON.stringify(activeSession));
@@ -76,6 +59,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [activeSession]);
 
+  // Persist gameEnded
   useEffect(() => {
     if (gameEnded) {
       localStorage.setItem("gameEnded", "true");
@@ -87,192 +71,76 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   const clearActiveSession = () => {
     setActiveSession(null);
     setGameEnded(false);
-    localStorage.removeItem("activeSession");
-    localStorage.removeItem("gameEnded");
   };
 
   const resetGameEnd = () => {
     setGameEnded(false);
-    localStorage.removeItem("gameEnded");
   };
 
   const startCrosswordGame = async (): Promise<CrosswordSessionData | null> => {
-    const gridResp = await gameApi.startCrossword();
-    if (!gridResp) return null;
+    const resp = await gameService.startCrossword();
+    if (!resp) return null;
 
-    const session = await gameApi.getSession(gridResp.session_id);
+    const session = await gameService.getSession(resp.session_id);
     if (session) {
       setActiveSession(session);
-      setGameEnded(false); // ✅ Reset game state
-      localStorage.removeItem("gameEnded");
-      localStorage.setItem("activeSession", JSON.stringify(session));
+      setGameEnded(false);
     }
-
-    return gridResp;
+    return resp;
   };
 
-  const getCrosswordGrid = (sessionId: string) =>
-    gameApi.getCrosswordGrid(sessionId);
+  const getCrosswordGrid = (sessionId: string): Promise<CrosswordGridData | null> =>
+    gameService.getCrosswordGrid(sessionId);
 
   const startWordSearchGame = async (): Promise<WordSearchSessionData | null> => {
-    const matrixResp = await gameApi.startWordSearch();
-    if (!matrixResp) return null;
+    const resp = await gameService.startWordSearch();
+    if (!resp) return null;
 
-    const session = await gameApi.getSession(matrixResp.session_id);
+    const session = await gameService.getSession(resp.session_id);
     if (session) {
       setActiveSession(session);
-      setGameEnded(false); // ✅ Reset game state
-      localStorage.removeItem("gameEnded");
-      localStorage.setItem("activeSession", JSON.stringify(session));
+      setGameEnded(false);
     }
-
-    return matrixResp;
+    return resp;
   };
 
-  const getWordSearchMatrix = (sessionId: string) =>
-    gameApi.getWordSearchMatrix(sessionId);
+  const getWordSearchMatrix = (sessionId: string): Promise<WordSearchMatrixData | null> =>
+    gameService.getWordSearchMatrix(sessionId);
 
-  const submitAnswers = async (
-    sessionId: string,
-    answers: AnswerSubmission[]
-  ): Promise<number | null> => {
-    const result = await gameApi.submitAnswers(sessionId, answers);
+  const submitAnswers = async (sessionId: string, answers: AnswerSubmission[]): Promise<number | null> => {
+    const result = await gameService.submitAnswers(sessionId, answers);
     if (result?.score !== undefined) {
       setGameEnded(true);
-      const updated = await gameApi.getSession(sessionId);
+      const updated = await gameService.getSession(sessionId);
       if (updated) {
         setActiveSession(updated);
-        localStorage.setItem("activeSession", JSON.stringify(updated));
       }
       return result.score;
     }
     return null;
   };
 
-  const fetchResponses = (sessionId: string) =>
-    gameApi.getResponses(sessionId);
+  const fetchResponses = (sessionId: string): Promise<QuestionResponse[] | null> =>
+    gameService.getResponses(sessionId);
 
-  const fetchGameSession = async (
-    sessionId: string
-  ): Promise<GameSession | null> => {
-    const session = await gameApi.getSession(sessionId);
+  const fetchGameSession = async (sessionId: string): Promise<GameSession | null> => {
+    const session = await gameService.getSession(sessionId);
     if (session) {
       setActiveSession(session);
-      localStorage.setItem("activeSession", JSON.stringify(session));
     }
     return session;
   };
 
   const exitSession = async (sessionId: string): Promise<boolean> => {
-    const success = await gameApi.exitSession(sessionId);
-    if (success) {
-      clearActiveSession(); // also clears localStorage and resets state
+    const ok = await gameService.exitSession(sessionId);
+    if (ok) {
+      clearActiveSession();
     }
-    return success;
+    return ok;
   };
 
-  // inside GameProvider...
-  const startHangmanGame = async (): Promise<any /* or a HangmanSessionData type */> => {
-    // 1️⃣ kick off a new hangman session
-    const startResp = await gameApi.startHangman();
-    if (!startResp) return null;
-
-    // 2️⃣ now fetch the fully serialized session (including session_questions)
-    const fullSession = await gameApi.getSession(startResp.session_id);
-    if (fullSession) {
-      setActiveSession(fullSession);
-      setGameEnded(false);
-      localStorage.removeItem("gameEnded");
-      localStorage.setItem("activeSession", JSON.stringify(fullSession));
-    }
-
-    return startResp;
-  };
-
-
-  const submitHangmanCode = async (
-    sessionId: string,
-    code: string
-  ): Promise<any> => {
-    const result = await gameApi.submitHangmanCode(sessionId, code);
-    if (result?.success || result?.game_over) {
-      setGameEnded(true);
-      const updated = await gameApi.getSession(sessionId);
-      if (updated) {
-        setActiveSession(updated);
-        localStorage.setItem("activeSession", JSON.stringify(updated));
-      }
-    }
-    return result;
-  };
-
-  // const startDebuggingGame = async (): Promise<GameSession | null> => {
-  //   const startResp = await gameApi.startDebugging();
-  //   if (!startResp) return null;
-
-  //   const full = await gameApi.getSession(startResp.session_id);
-  //   if (full) {
-  //     setActiveSession(full);
-  //     setGameEnded(false);
-  //     localStorage.setItem("activeSession", JSON.stringify(full));
-  //   }
-  //   return full;
-  // };
-
-    const startDebuggingGame = async (): Promise<GameSession | null> => {
-      const startResp = await gameApi.startDebugging();
-      if (!startResp) return null;
-
-      // now fetch the full session (with session_questions + remaining_lives)
-      const full = await gameApi.getSession(startResp.session_id);
-      if (full) {
-        setActiveSession(full);
-        setGameEnded(false);
-        localStorage.setItem("activeSession", JSON.stringify(full));
-      }
-      return full;
-    };
-
-  // const submitDebuggingCode = async (
-  //   sessionId: string,
-  //   code: string
-  // ): Promise<any> => {
-  //   const result = await gameApi.submitDebuggingCode(sessionId, code);
-  //   if (result?.success || result?.game_over) {
-  //     setGameEnded(true);
-  //     const updated = await gameApi.getSession(sessionId);
-  //     if (updated) {
-  //       setActiveSession(updated);
-  //       localStorage.setItem("activeSession", JSON.stringify(updated));
-  //     }
-  //   }
-  //   return result;
-  // };
-
-    const submitDebuggingCode = async (
-      sessionId: string,
-      code: string
-    ): Promise<any> => {
-      const result = await gameApi.submitDebuggingCode(sessionId, code);
-      if (result?.success || result?.game_over) {
-        setGameEnded(true);
-        const updated = await gameApi.getSession(sessionId);
-        if (updated) {
-          setActiveSession(updated);
-          localStorage.setItem("activeSession", JSON.stringify(updated));
-        }
-      }
-      return result;
-    };
-
-    const submitPreAssessmentAnswers = async (
-      answers: Record<number, string>
-    ): Promise<any | null> => {
-      const result = await gameApi.submitPreAssessmentAnswers(answers);
-      return result;
-    };
-
-
+  const submitPreAssessmentAnswers = (answers: Record<number, string>): Promise<any | null> =>
+    gameService.submitPreAssessmentAnswers(answers);
 
   return (
     <GameContext.Provider
@@ -290,10 +158,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         fetchResponses,
         fetchGameSession,
         exitSession,
-        startHangmanGame,
-        submitHangmanCode,
-        startDebuggingGame,
-        submitDebuggingCode,
         submitPreAssessmentAnswers,
       }}
     >
@@ -302,4 +166,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useGame = () => useContext(GameContext);
+export const useGame = (): GameContextType => {
+  const ctx = useContext(GameContext);
+  if (!ctx) {
+    throw new Error("useGame must be used within a GameProvider");
+  }
+  return ctx;
+};
