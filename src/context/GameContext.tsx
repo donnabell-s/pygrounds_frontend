@@ -30,6 +30,11 @@ export interface GameContextType {
   fetchGameSession: (sessionId: string) => Promise<GameSession | null>;
   exitSession: (sessionId: string) => Promise<boolean>;
 
+  startHangmanGame: () => Promise<GameSession | null>;
+  submitHangmanCode: (sessionId: string, code: string) => Promise<any>;
+  startDebuggingGame: () => Promise<GameSession | null>;
+  submitDebuggingCode: (sessionId: string, code: string) => Promise<any>;
+
   submitPreAssessmentAnswers: (answers: Record<number, string>) => Promise<any | null>;
 }
 
@@ -39,15 +44,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [activeSession, setActiveSession] = useState<GameSession | null>(null);
   const [gameEnded, setGameEnded] = useState(false);
 
-  // Hydrate from localStorage on mount
+  // Hydrate from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("activeSession");
-    if (stored) {
-      setActiveSession(JSON.parse(stored));
-    }
-    if (localStorage.getItem("gameEnded") === "true") {
-      setGameEnded(true);
-    }
+    if (stored) setActiveSession(JSON.parse(stored));
+    if (localStorage.getItem("gameEnded") === "true") setGameEnded(true);
   }, []);
 
   // Persist activeSession
@@ -71,10 +72,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearActiveSession = () => {
     setActiveSession(null);
     setGameEnded(false);
+    localStorage.removeItem("activeSession");
+    localStorage.removeItem("gameEnded");
   };
 
   const resetGameEnd = () => {
     setGameEnded(false);
+    localStorage.removeItem("gameEnded");
   };
 
   const startCrosswordGame = async (): Promise<CrosswordSessionData | null> => {
@@ -89,8 +93,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return resp;
   };
 
-  const getCrosswordGrid = (sessionId: string): Promise<CrosswordGridData | null> =>
-    gameService.getCrosswordGrid(sessionId);
+  const getCrosswordGrid = (sessionId: string) => gameService.getCrosswordGrid(sessionId);
 
   const startWordSearchGame = async (): Promise<WordSearchSessionData | null> => {
     const resp = await gameService.startWordSearch();
@@ -104,42 +107,76 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return resp;
   };
 
-  const getWordSearchMatrix = (sessionId: string): Promise<WordSearchMatrixData | null> =>
-    gameService.getWordSearchMatrix(sessionId);
+  const getWordSearchMatrix = (sessionId: string) => gameService.getWordSearchMatrix(sessionId);
 
-  const submitAnswers = async (sessionId: string, answers: AnswerSubmission[]): Promise<number | null> => {
+  const submitAnswers = async (sessionId: string, answers: AnswerSubmission[]) => {
     const result = await gameService.submitAnswers(sessionId, answers);
     if (result?.score !== undefined) {
       setGameEnded(true);
       const updated = await gameService.getSession(sessionId);
-      if (updated) {
-        setActiveSession(updated);
-      }
+      if (updated) setActiveSession(updated);
       return result.score;
     }
     return null;
   };
 
-  const fetchResponses = (sessionId: string): Promise<QuestionResponse[] | null> =>
-    gameService.getResponses(sessionId);
+  const fetchResponses = (sessionId: string) => gameService.getResponses(sessionId);
 
-  const fetchGameSession = async (sessionId: string): Promise<GameSession | null> => {
+  const fetchGameSession = async (sessionId: string) => {
     const session = await gameService.getSession(sessionId);
-    if (session) {
-      setActiveSession(session);
-    }
+    if (session) setActiveSession(session);
     return session;
   };
 
-  const exitSession = async (sessionId: string): Promise<boolean> => {
+  const exitSession = async (sessionId: string) => {
     const ok = await gameService.exitSession(sessionId);
-    if (ok) {
-      clearActiveSession();
-    }
+    if (ok) clearActiveSession();
     return ok;
   };
 
-  const submitPreAssessmentAnswers = (answers: Record<number, string>): Promise<any | null> =>
+  const startHangmanGame = async (): Promise<GameSession | null> => {
+    const resp = await gameService.startHangman();
+    if (!resp) return null;
+    const session = await gameService.getSession(resp.session_id);
+    if (session) {
+      setActiveSession(session);
+      setGameEnded(false);
+    }
+    return resp;
+  };
+
+  const submitHangmanCode = async (sessionId: string, code: string): Promise<any> => {
+    const result = await gameService.submitHangmanCode(sessionId, code);
+    if (result?.success || result?.game_over) {
+      setGameEnded(true);
+      const updated = await gameService.getSession(sessionId);
+      if (updated) setActiveSession(updated);
+    }
+    return result;
+  };
+
+  const startDebuggingGame = async (): Promise<GameSession | null> => {
+    const resp = await gameService.startDebugging();
+    if (!resp) return null;
+    const session = await gameService.getSession(resp.session_id);
+    if (session) {
+      setActiveSession(session);
+      setGameEnded(false);
+    }
+    return resp;
+  };
+
+  const submitDebuggingCode = async (sessionId: string, code: string): Promise<any> => {
+    const result = await gameService.submitDebuggingCode(sessionId, code);
+    if (result?.success || result?.game_over) {
+      setGameEnded(true);
+      const updated = await gameService.getSession(sessionId);
+      if (updated) setActiveSession(updated);
+    }
+    return result;
+  };
+
+  const submitPreAssessmentAnswers = (answers: Record<number, string>) =>
     gameService.submitPreAssessmentAnswers(answers);
 
   return (
@@ -158,6 +195,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchResponses,
         fetchGameSession,
         exitSession,
+        startHangmanGame,
+        submitHangmanCode,
+        startDebuggingGame,
+        submitDebuggingCode,
         submitPreAssessmentAnswers,
       }}
     >
@@ -166,10 +207,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useGame = (): GameContextType => {
+export const useGame = () => {
   const ctx = useContext(GameContext);
-  if (!ctx) {
-    throw new Error("useGame must be used within a GameProvider");
-  }
+  if (!ctx) throw new Error("useGame must be used within GameProvider");
   return ctx;
 };
