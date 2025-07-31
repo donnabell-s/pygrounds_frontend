@@ -34,17 +34,52 @@ const Debugging: React.FC = () => {
       }
       if (session) {
         setLives(session.remaining_lives);
-        const broken = session.session_questions[0].question.broken_code;
+        const broken = session.session_questions[0].question.game_data?.buggy_code;
         setCode(broken || "");
       }
       setLoading(false);
     })();
   }, []);
 
+  // 3️⃣ Auto-submit on timeout
+useEffect(() => {
+  if (!activeSession || submitted) return;
+
+  const startMs = new Date(activeSession.start_time).getTime();
+  const endMs = startMs + activeSession.time_limit * 1000;
+  const delay = Math.max(0, endMs - Date.now());
+
+  const timer = setTimeout(async () => {
+    // Auto-submit current code
+    if (!submitted) {
+      const result = await submitDebuggingCode(activeSession.session_id, code);
+      if (result) {
+        setLives(result.remaining_lives);
+        setSubmitted(true);
+        setOutput(
+          result.success
+            ? `⏰ Time's up, but your last submission passed all tests!`
+            : `⏰ Time's up. Game over.\n${result.message}`
+        );
+        if (result.traceback) {
+          setOutput(prev => prev + `\n\nTraceback:\n${result.traceback}`);
+        }
+      } else {
+        setOutput("⏰ Time's up. Game over.");
+        setSubmitted(true);
+      }
+    }
+  }, delay);
+
+  return () => clearTimeout(timer);
+}, [activeSession, submitted, code]);
+
+
   const question = activeSession?.session_questions?.[0]?.question;
-  const prompt = question?.text ?? "";
-  const sampleInput = question?.sample_input ?? "";
-  const sampleOutput = question?.sample_output ?? "";
+  const prompt = question?.question_text ?? "";
+  const sampleInput = question?.game_data?.sample_input ?? "";
+  const sampleOutput = question?.game_data?.sample_output ?? "";
+
 
   const handleSubmit = async () => {
     if (!activeSession || submitted) return;

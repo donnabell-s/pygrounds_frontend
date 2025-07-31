@@ -180,9 +180,10 @@ const Crossword: React.FC = () => {
           guess += letters[key]?.toUpperCase() || " ";
         }
 
-        const gameQuestion = activeSession.session_questions.find(
-          (sq) => sq.question.answer.toUpperCase() === p.word.toUpperCase()
-        );
+        const gameQuestion = activeSession.session_questions.find((sq) => {
+          const sanitized = sq.question.correct_answer.replace(/[^A-Za-z]/g, "").toUpperCase();
+          return sanitized === p.word.toUpperCase();
+        });
 
         return {
           question_id: gameQuestion?.id || -1,
@@ -191,6 +192,7 @@ const Crossword: React.FC = () => {
         };
       })
       .filter((a) => a.question_id !== -1);
+
 
     await submitAnswers(activeSession.session_id, answers);
     if (storageKey) localStorage.removeItem(storageKey);

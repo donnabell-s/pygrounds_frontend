@@ -44,9 +44,11 @@ const Hangman: React.FC = () => {
 
   // Extract question
   const question = activeSession?.session_questions?.[0]?.question;
-  const prompt = question?.text ?? "";
-  const sampleInput = question?.sample_input ?? "";
-  const sampleOutput = question?.sample_output ?? "";
+  const prompt = question?.question_text ?? "";
+  const sampleInput = question?.game_data?.sample_input ?? "";
+  const sampleOutput = question?.game_data?.sample_output ?? "";
+  const functionName = question?.game_data?.function_name ?? "";
+
 
   // 2️⃣ Submit code
   const handleSubmit = async () => {
@@ -65,6 +67,26 @@ const Hangman: React.FC = () => {
       setOutput(prev => prev + `\n\nTraceback:\n${result.traceback}`);
     }
   };
+
+useEffect(() => {
+  if (question?.game_data?.function_name) {
+    const fnName = question.game_data.function_name;
+
+    // Try to extract parameters from buggy_code function definition
+    let params = "";
+    const buggy = question.game_data.buggy_code || "";
+    const match = buggy.match(/def\s+\w+\s*\(([^)]*)\)/); 
+    if (match) {
+      params = match[1].trim();  // get actual parameter list
+    }
+
+    // Starter function template
+    setCode(`def ${fnName}(${params}):\n    # Write your code here`);
+  }
+}, [activeSession]);
+
+
+
 
   // 3️⃣ Auto-submit on timeout
   useEffect(() => {
@@ -130,7 +152,13 @@ const Hangman: React.FC = () => {
         <div className="bg-white p-5 rounded-md shadow-md text-sm">
           <p className="mb-4 text-lg">
             <strong>Prompt:</strong> {prompt}
+            {functionName && (
+              <span className="ml-2 text-blue-600">
+                (Function: <code>{functionName}</code>)
+              </span>
+            )}
           </p>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-[#E6F2F8] p-3 rounded-md">
               <p className="font-semibold">Sample Input:</p>

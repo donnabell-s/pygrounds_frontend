@@ -290,7 +290,7 @@ const finishDrag = () => {
           ${borderClass} ${bgClass}
         `}
       >
-        {sq.question.text}
+        {sq.question.question_text}
       </button>
     );
   })}

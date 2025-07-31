@@ -28,17 +28,18 @@ export interface SessionQuestion {
 // Core question type, extended for code-based games
 export interface Question {
   id: number;
-  text: string;
-  answer: string;
-  difficulty: "easy" | "medium" | "hard";
-
-  // Fields for Hangman coding game
-  function_name?: string;
-  sample_input?: string;
-  sample_output?: string;
-  hidden_tests?: Array<{ input: string; output: any }>;
-  broken_code?: string;
+  question_text: string;
+  correct_answer: string;
+  game_data?: {
+    function_name?: string;
+    sample_input?: string;
+    sample_output?: string;
+    buggy_code?: string;
+    hidden_tests?: { input: string; output: string }[];
+  };
 }
+
+
 
 export interface CrosswordPlacement {
   word: string;
