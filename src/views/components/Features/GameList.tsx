@@ -13,12 +13,14 @@ const GameList = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {mockGames.map((game, index) => (
             <Components.GameCard
-                key={index}
-                title={game.title}
-                description={game.description}
-                category={game.category}
-                color={gameColors[index % gameColors.length]}
+            key={index}
+            title={game.title}
+            description={game.description}
+            category={game.category}
+            color={gameColors[index % gameColors.length]}
+            image={game.image} // ✅ optional if provided in mockGames
             />
+
             ))}
             <Components.GameCard
             title="More Games Coming"

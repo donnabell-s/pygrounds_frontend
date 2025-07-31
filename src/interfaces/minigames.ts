@@ -8,7 +8,11 @@ export interface Minigame {
   challenges: number;
   lives: number;
   time_limit_seconds: number | null;
+  image?: string; // ✅ Add this
 }
+
+import wordsearchImg from "../assets/images/wordsearch.png";
+import crosswordImg from "../assets/images/crossword.png";
 
 export const mockGames: Minigame[] = [
   {
@@ -63,6 +67,7 @@ export const mockGames: Minigame[] = [
     description:
       "Find Python terms and concepts hidden in dynamically generated word grids.",
     category: "Concept",
+    image: wordsearchImg,
     instructions: [
       "Each round presents a question or clue.",
       "Find the corresponding Python term in the word grid.",
@@ -83,6 +88,7 @@ export const mockGames: Minigame[] = [
     description:
       "Complete crossword puzzles using Python terminology, functions, and concepts.",
     category: "Concept",
+    image: crosswordImg,
     instructions: [
       "Fill in the crossword puzzle using provided clues.",
       "Clues may relate to function names, syntax, or behavior.",

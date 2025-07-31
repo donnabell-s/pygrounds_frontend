@@ -16,8 +16,8 @@ const HomeBanner = () => {
             <div className="flex flex-col justify-between px-6 py-8 md:px-11 md:py-8 min-h-[300px]">
                 <div className="flex flex-col gap-4">
                     <h1 className="font-bold text-4xl md:text-5xl">
-                        <span className="block font-bold">Welcome to the Python</span>
-                        <span className="block font-bold">Game Zone</span>
+                        <span className="block font-bold font-asap">Welcome to the Python</span>
+                        <span className="block font-bold font-asap">Game Zone</span>
                     </h1>
                     <p className="text-base md:text-lg">
                         <span className="block">Pick a game, test your skills, and level up your</span>

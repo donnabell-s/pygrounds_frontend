@@ -63,7 +63,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => 
     <div className="relative flex items-center h-full" ref={desktopDropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)} 
-        className="focus:outline-none flex flex-row justify-center items-center gap-2"
+        className="focus:outline-none flex flex-row justify-center items-center gap-2 cursor-pointer"
       >
         <div className="flex items-center gap-2">
           <img className="h-10 w-10 bg-[#D9D9D9] rounded-full" alt="Profile" />

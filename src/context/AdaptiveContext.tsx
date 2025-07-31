@@ -1,10 +1,12 @@
 // src/contexts/AdaptiveContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { adaptiveService } from "../services/adaptiveService";
-import type { PreAssessmentQuestion } from "../types/adaptive";
+import type { PreAssessmentQuestion, GameZone, Topic } from "../types/adaptive";
 
 type AdaptiveContextType = {
   preAssessmentQuestions: PreAssessmentQuestion[] | null;
+  zoneProgress: GameZone[] | null;
+  topicProgress: Topic[] | null;
   isLoading: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
@@ -14,29 +16,56 @@ const AdaptiveContext = createContext<AdaptiveContextType | undefined>(undefined
 
 export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [preAssessmentQuestions, setPreAssessmentQuestions] = useState<PreAssessmentQuestion[] | null>(null);
+  const [zoneProgress, setZoneProgress] = useState<GameZone[] | null>(null);
+  const [topicProgress, setTopicProgress] = useState<Topic[] | null>(null);
+
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchQuestions = async () => {
+  const fetchAdaptiveData = async () => {
     setLoading(true);
     try {
-      const qs = await adaptiveService.getPreAssessmentQuestions();
+      // Fetch all adaptive data in parallel
+      const [qs, zones, topics] = await Promise.all([
+        adaptiveService.getPreAssessmentQuestions(),
+        adaptiveService.getUserZoneProgress(),
+        adaptiveService.getUserTopicProgress(),
+      ]);
+      
+      console.log("Zones:", zones);
+      console.log("Topics:", topics);
+
+
       setPreAssessmentQuestions(qs);
+      setZoneProgress(zones);
+      setTopicProgress(topics);
       setError(null);
     } catch (e) {
-      setPreAssessmentQuestions([]);
+      console.error("Adaptive fetch error:", e);
       setError(e as Error);
+      setPreAssessmentQuestions(null);
+      setZoneProgress(null);
+      setTopicProgress(null);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchQuestions();
+    fetchAdaptiveData();
   }, []);
 
   return (
-    <AdaptiveContext.Provider value={{ preAssessmentQuestions, isLoading, error, refresh: fetchQuestions }}>
+    <AdaptiveContext.Provider
+      value={{
+        preAssessmentQuestions,
+        zoneProgress,
+        topicProgress,
+        isLoading,
+        error,
+        refresh: fetchAdaptiveData,
+      }}
+    >
       {children}
     </AdaptiveContext.Provider>
   );

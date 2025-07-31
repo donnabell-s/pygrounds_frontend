@@ -7,6 +7,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { useGame } from "../../../../context/GameContext";
 import * as Component from "../../../components";
 import { RxCross1 } from "react-icons/rx";
+import snakeImg from "../../../../assets/images/snake.png"
 
 const Hangman: React.FC = () => {
   const navigate = useNavigate();
@@ -91,9 +92,15 @@ const Hangman: React.FC = () => {
 
   return (
     <div className="flex flex-row my-6 gap-6  mx-auto">
-      {/* Lives indicator */}
-      <div className="flex flex-col items-center">
-        <div className="flex flex-row items-center w-full gap-2.5">
+
+      <div className="flex flex-col items-center justify-between">
+        {/* Snake at the top */}
+        <div className="w-full flex justify-center">
+          <img className="h-90 w-90" src={snakeImg} />
+        </div>
+
+        {/* Lives indicator at bottom */}
+        <div className="flex flex-row items-center justify-center gap-2.5">
           {Array.from({ length: 3 }).map((_, idx) => {
             const lost = 3 - lives;
             const isLost = idx < lost;
@@ -101,18 +108,23 @@ const Hangman: React.FC = () => {
               <div
                 key={idx}
                 className={
-                  `w-15 h-15 rounded-full flex items-center justify-center border-2 mb-2 ` +
+                  `w-15 h-15 rounded-full flex items-center justify-center border-2 ` +
                   (isLost
                     ? "bg-red-100 border-red-500"
                     : "bg-[#ECECEF] border-[#6B7280]")
                 }
               >
-                {isLost && <span className="text-red-500 font-bold"><RxCross1 size={30}/></span>}
+                {isLost && (
+                  <span className="text-red-500 font-bold">
+                    <RxCross1 size={30} />
+                  </span>
+                )}
               </div>
             );
           })}
         </div>
       </div>
+
       {/* Main content */}
       <div className="flex flex-col flex-1 gap-6 max-w-4xl">
         <div className="bg-white p-5 rounded-md shadow-md text-sm">

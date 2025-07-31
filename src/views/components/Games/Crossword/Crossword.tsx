@@ -22,6 +22,7 @@ const Crossword: React.FC = () => {
   const [placements, setPlacements] = useState<CrosswordPlacement[]>([]);
   const [letters, setLetters] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [selectedPlacement, setSelectedPlacement] = useState<CrosswordPlacement | null>(null);
 
   const storageKey = activeSession ? `crossword-letters-${activeSession.session_id}` : null;
 
@@ -44,11 +45,9 @@ const Crossword: React.FC = () => {
 
   useEffect(() => {
     if (!activeSession || submitted || gameEnded) return;
-
     const start = new Date(activeSession.start_time).getTime();
     const duration = activeSession.time_limit * 1000;
     const end = start + duration;
-
     const now = new Date().getTime();
     const timeout = Math.max(0, end - now);
 
@@ -99,65 +98,133 @@ const Crossword: React.FC = () => {
     return map;
   }, [placements]);
 
-  const handleCellChange = (key: string, value: string) => {
-    if (gameEnded || !editableCells.has(key)) return;
-    setLetters((prev) => ({
-      ...prev,
-      [key]: value.toUpperCase().slice(0, 1),
-    }));
+  const getCellsForPlacement = (placement: CrosswordPlacement) => {
+    const cells: string[] = [];
+    for (let i = 0; i < placement.word.length; i++) {
+      const r = placement.row + (placement.direction === "down" ? i : 0);
+      const c = placement.col + (placement.direction === "across" ? i : 0);
+      cells.push(`${r}-${c}`);
+    }
+    return cells;
   };
 
-const handleSubmit = async () => {
-  if (!activeSession || submitted) return; // ✅ prevent duplicate
+  const getCellClass = (key: string, isEditable: boolean) => {
+    if (!isEditable) return "bg-[#E4ECF7]";
+    if (!selectedPlacement) return "bg-white";
+    const cells = getCellsForPlacement(selectedPlacement);
+    return cells.includes(key) ? "bg-yellow-200" : "bg-white";
+  };
 
-  setSubmitted(true); // ✅ mark immediately to block future calls
-  localStorage.setItem("submitted", "true");
+  const handleCellChange = (key: string, value: string) => {
+    if (gameEnded || !editableCells.has(key)) return;
+    const char = value.toUpperCase().slice(0, 1);
 
-  const answers: AnswerSubmission[] = placements
-    .map((p) => {
-      let guess = "";
-      for (let i = 0; i < p.word.length; i++) {
-        const r = p.row + (p.direction === "down" ? i : 0);
-        const c = p.col + (p.direction === "across" ? i : 0);
-        const key = `${r}-${c}`;
-        guess += letters[key]?.toUpperCase() || " ";
+    setLetters((prev) => ({
+      ...prev,
+      [key]: char,
+    }));
+
+    if (char && selectedPlacement) {
+      const cells = getCellsForPlacement(selectedPlacement);
+      const idx = cells.indexOf(key);
+      if (idx !== -1 && idx < cells.length - 1) {
+        const nextKey = cells[idx + 1];
+        const nextInput = document.querySelector<HTMLInputElement>(
+          `input[data-cell="${nextKey}"]`
+        );
+        nextInput?.focus();
       }
+    }
+  };
 
-      const gameQuestion = activeSession.session_questions.find(
-        (sq) => sq.question.answer.toUpperCase() === p.word.toUpperCase()
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, key: string) => {
+    if (!selectedPlacement) return;
+
+    const cells = getCellsForPlacement(selectedPlacement);
+    const idx = cells.indexOf(key);
+    if (idx === -1) return;
+
+    let nextIdx = idx;
+    if (e.key === "ArrowRight" && selectedPlacement.direction === "across") {
+      nextIdx = Math.min(idx + 1, cells.length - 1);
+    } else if (e.key === "ArrowLeft" && selectedPlacement.direction === "across") {
+      nextIdx = Math.max(idx - 1, 0);
+    } else if (e.key === "ArrowDown" && selectedPlacement.direction === "down") {
+      nextIdx = Math.min(idx + 1, cells.length - 1);
+    } else if (e.key === "ArrowUp" && selectedPlacement.direction === "down") {
+      nextIdx = Math.max(idx - 1, 0);
+    }
+
+    if (nextIdx !== idx) {
+      const nextKey = cells[nextIdx];
+      const nextInput = document.querySelector<HTMLInputElement>(
+        `input[data-cell="${nextKey}"]`
       );
+      nextInput?.focus();
+      e.preventDefault();
+    }
+  };
 
-      return {
-        question_id: gameQuestion?.id || -1,
-        user_answer: guess.trim(),
-        time_taken: 0,
-      };
-    })
-    .filter((a) => a.question_id !== -1);
+  const handleSubmit = async () => {
+    if (!activeSession || submitted) return;
+    setSubmitted(true);
+    localStorage.setItem("submitted", "true");
 
-  await submitAnswers(activeSession.session_id, answers);
-  if (storageKey) localStorage.removeItem(storageKey);
-};
+    const answers: AnswerSubmission[] = placements
+      .map((p) => {
+        let guess = "";
+        for (let i = 0; i < p.word.length; i++) {
+          const r = p.row + (p.direction === "down" ? i : 0);
+          const c = p.col + (p.direction === "across" ? i : 0);
+          const key = `${r}-${c}`;
+          guess += letters[key]?.toUpperCase() || " ";
+        }
 
+        const gameQuestion = activeSession.session_questions.find(
+          (sq) => sq.question.answer.toUpperCase() === p.word.toUpperCase()
+        );
+
+        return {
+          question_id: gameQuestion?.id || -1,
+          user_answer: guess.trim(),
+          time_taken: 0,
+        };
+      })
+      .filter((a) => a.question_id !== -1);
+
+    await submitAnswers(activeSession.session_id, answers);
+    if (storageKey) localStorage.removeItem(storageKey);
+  };
 
   const renderClueList = (dir: "across" | "down") => {
     return placements
       .filter((p) => p.direction === dir)
       .map((p, idx) => {
         const num = numberingMap[`${p.row}-${p.col}`];
+        const isSelected = selectedPlacement === p;
         return (
-          <div key={`${p.word}-${idx}`} className="text-sm mb-1">
-            <strong className="text-[#0077B6]">{num}.</strong> {p.clue}
+          <div
+            key={`${p.word}-${idx}`}
+            className={`text-sm mb-1 cursor-pointer px-3 py-2 rounded transition-all border shadow-sm ${
+              isSelected
+                ? "bg-yellow-100 border-yellow-300 "
+                : "bg-white hover:bg-gray-100 border-gray-200"
+            }`}
+            onClick={() => setSelectedPlacement(p)}
+          >
+            <strong className="text-[#0077B6] mr-1">{num}.</strong> {p.clue}
           </div>
         );
       });
   };
 
-  if (!activeSession) return <div>Loading...</div>;
+  if (!activeSession) return <div className="text-center py-10">Loading...</div>;
 
   return (
-    <div className="flex flex-col md:flex-row gap-10 py-6 px-4 justify-center items-start">
-      <div className="grid grid-cols-15 gap-[2px] relative">
+    <div className="flex flex-col md:flex-row gap-10 py-6 px-4 justify-center items-start bg-[#F8FAFC] min-h-screen">
+
+      {/* Crossword Grid */}
+      {/* <div className="grid grid-cols-15 gap-[2px] relative  rounded-sm overflow-hidden bg-gray-300 p-[2px]">
         {grid.map((row, rowIndex) =>
           row.split("").map((_, colIndex) => {
             const key = `${rowIndex}-${colIndex}`;
@@ -167,12 +234,13 @@ const handleSubmit = async () => {
             return (
               <div
                 key={key}
-                className={`relative w-10 h-10 border border-[#2D2D2D] flex items-center justify-center ${
-                  isEditable ? "bg-white" : "bg-[#E4ECF7]"
-                }`}
+                className={`relative w-10 h-10 border border-[#6B7280] flex items-center justify-center ${getCellClass(
+                  key,
+                  isEditable
+                )} transition-all duration-150`}
               >
                 {number && (
-                  <span className="absolute top-[1px] left-[2px] text-[0.5rem] font-bold text-[#6B7280]">
+                  <span className="absolute top-[2px] left-[3px] text-[0.55rem] font-bold text-[#6B7280]">
                     {number}
                   </span>
                 )}
@@ -182,8 +250,49 @@ const handleSubmit = async () => {
                     maxLength={1}
                     value={letters[key] || ""}
                     disabled={gameEnded}
+                    data-cell={key}
                     onChange={(e) => handleCellChange(key, e.target.value)}
-                    className="w-full h-full text-center font-semibold text-sm outline-none"
+                    onKeyDown={(e) => handleKeyDown(e, key)}
+                    className="w-full h-full text-center font-semibold text-sm outline-none focus:bg-yellow-100"
+                  />
+                ) : null}
+              </div>
+            );
+          })
+        )}
+      </div> */}
+
+      <div className="inline-block overflow-hidden border border-[#6B7280]">
+      <div className="grid grid-cols-15">
+        {grid.map((row, rowIndex) =>
+          row.split("").map((_, colIndex) => {
+            const key = `${rowIndex}-${colIndex}`;
+            const isEditable = editableCells.has(key);
+            const number = numberingMap[key];
+
+            return (
+              <div
+                key={key}
+                className={`relative w-10 h-10 border border-[#6B7280] flex items-center justify-center 
+                  ${getCellClass(key, isEditable)} 
+                  transition-all duration-150`}
+              >
+                {number && (
+                  <span className="absolute top-[2px] left-[3px] text-[0.55rem] font-bold text-[#6B7280]">
+                    {number}
+                  </span>
+                )}
+                {isEditable ? (
+                  <input
+                    type="text"
+                    maxLength={1}
+                    value={letters[key] || ""}
+                    disabled={gameEnded}
+                    data-cell={key}
+                    onChange={(e) => handleCellChange(key, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, key)}
+                    className="w-full h-full text-center font-semibold text-sm outline-none
+                              focus:bg-yellow-100 focus:ring-1 focus:ring-[#6B7280]"
                   />
                 ) : null}
               </div>
@@ -191,21 +300,24 @@ const handleSubmit = async () => {
           })
         )}
       </div>
+</div>
 
+
+      {/* Clues Section */}
       <div className="flex flex-col gap-4 max-w-sm w-full">
         <div>
-          <h2 className="text-md font-bold mb-2">Across</h2>
+          <h2 className="text-md font-bold mb-2 text-[#0077B6]">Across</h2>
           {renderClueList("across")}
         </div>
         <div>
-          <h2 className="text-md font-bold mt-4 mb-2">Down</h2>
+          <h2 className="text-md font-bold mt-4 mb-2 text-[#0077B6]">Down</h2>
           {renderClueList("down")}
         </div>
 
         {!gameEnded && (
           <button
             onClick={handleSubmit}
-            className="bg-[#0077B6] hover:brightness-110 text-white px-4 py-2 rounded-md mt-6 cursor-pointer"
+            className="bg-[#0077B6] hover:brightness-110 text-white px-4 py-2 rounded-md mt-6 cursor-pointer transition-all duration-150 shadow hover:shadow-lg active:scale-95"
           >
             Submit Answers
           </button>
@@ -214,10 +326,10 @@ const handleSubmit = async () => {
 
       {gameEnded && submitted && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
           style={{ backgroundColor: "rgba(45, 45, 45, 0.4)" }}
         >
-          <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-6 relative">
+          <div className="bg-white rounded-lg shadow-xl w-[90%] max-w-md p-6 relative border border-gray-200">
             <Component.ResultsModal
               onClose={() => {
                 clearActiveSession();

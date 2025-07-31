@@ -5,6 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false); 
   const { user } = useAuth();
   const location = useLocation();
 
@@ -13,10 +14,8 @@ const Header = () => {
 
   return (
     <>
-      {/* Header */}
       <div className="sticky top-0 bg-[#FFFFFF] h-16 flex items-center shadow-sm px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 z-50">
         <div className="flex items-center gap-7">
-          {/* ✅ Logo links to landing page */}
           <Link to="/" className="font-bold text-2xl text-[#3776AB]">
             PyGrounds
           </Link>
@@ -53,12 +52,12 @@ const Header = () => {
           ) : (
             !isRegisterPage && (
               <div className="gap-2.5 flex">
-                <Link
-                  to="/login"
-                  className="text-sm font-medium text-[#3776AB] border border-[#3776AB] px-3.5 py-1.5 rounded-md hover:bg-gray-100"
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="text-sm font-medium text-[#3776AB] border border-[#3776AB] px-3.5 py-1.5 rounded-md hover:bg-gray-100 cursor-pointer"
                 >
                   Login
-                </Link>
+                </button>
                 <Link
                   to="/register"
                   className="text-sm font-medium text-white bg-[#3776AB] border border-[#3776AB] px-3.5 py-1.5 rounded-md hover:brightness-110"
@@ -71,7 +70,7 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Menu for Learner */}
+      {/* Mobile Menu */}
       {mobileMenuOpen && isLearner && (
         <div className="md:hidden fixed inset-0 bg-white z-40 mt-16 p-6 space-y-4">
           <Components.HeaderLink label="Home" route={`/${user.id}/home`} mobile />
@@ -83,6 +82,23 @@ const Header = () => {
           </div>
         </div>
       )}
+
+      {/* ✅ Login Modal */}
+      {showLoginModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: "rgba(0,0,0,0.2)" }}
+          onClick={() => setShowLoginModal(false)} // Close when clicking the backdrop
+        >
+          <div
+            className="bg-white rounded-2xl shadow-lg w-[90%] max-w-sm p-9 relative"
+            onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside modal
+          >
+            <Components.Login onSuccess={() => setShowLoginModal(false)} />
+          </div>
+        </div>
+      )}
+
     </>
   );
 };

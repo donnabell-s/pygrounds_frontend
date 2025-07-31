@@ -15,7 +15,7 @@ const PythonLearn = () => {
       >
         <FiMenu size={24} />
       </button>
-        <h1 className="text-3xl font-bold">Python Learning Course</h1>
+        <h1 className="text-3xl font-semibold font-asap">Python Learning Course</h1>
       </div>
 
     <div className="flex flex-row gap-2">

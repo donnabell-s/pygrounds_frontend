@@ -1,4 +1,4 @@
-import { proficiencies } from "../../../interfaces";
+import { useAdaptive } from "../../../context/AdaptiveContext";
 
 const getRating = (percent: number) => {
   if (percent === 0) return { label: "Not Started", color: "#8B0000" };
@@ -37,7 +37,9 @@ const ProficiencyCard = ({ topic, percentMastery }: { topic: string; percentMast
         <div className="flex flex-col gap-2">
           <div className="flex justify-between text-xs mt-1">
             <span className="font-bold text-[#6B7280]">Proficiency</span>
-            <span className="font-bold" style={{ color }}>{percentMastery}%</span>
+            <span className="font-bold" style={{ color }}>
+              {percentMastery.toFixed(0)}%
+            </span>
           </div>
 
           <div className="w-full h-3 bg-white rounded-full overflow-hidden">
@@ -53,6 +55,26 @@ const ProficiencyCard = ({ topic, percentMastery }: { topic: string; percentMast
 };
 
 const ProficiencyList = () => {
+  const { topicProgress, isLoading } = useAdaptive();
+
+  if (isLoading) {
+    return (
+      <div className="bg-[#FFFFFF] w-full rounded-lg shadow-md p-6">
+        <p className="text-gray-500">Loading topic proficiency...</p>
+      </div>
+    );
+  }
+
+  if (!topicProgress || topicProgress.length === 0) {
+    return (
+      <div className="bg-[#FFFFFF] w-full rounded-lg shadow-md p-6">
+        <p className="text-gray-500">No topic progress found.</p>
+      </div>
+    );
+  }
+
+  const sortedTopics = [...topicProgress].sort((a, b) => a.topic.id - b.topic.id);
+
   return (
     <div className="bg-[#FFFFFF] w-full rounded-lg shadow-md">
       <div className="flex flex-col px-6 py-3.5 bg-[#F1F5FA] gap-1 shadow-sm">
@@ -63,8 +85,12 @@ const ProficiencyList = () => {
       </div>
 
       <div className="p-6 flex flex-col gap-4">
-        {proficiencies.map((p) => (
-          <ProficiencyCard key={p.id} topic={p.topic} percentMastery={p.percentMastery} />
+        {sortedTopics.map((p, idx) => (
+          <ProficiencyCard
+            key={idx}
+            topic={p.topic.name}
+            percentMastery={p.proficiency_percent}
+          />
         ))}
       </div>
     </div>
