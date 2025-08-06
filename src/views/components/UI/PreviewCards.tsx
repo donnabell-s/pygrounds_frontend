@@ -15,9 +15,9 @@ const PreviewCards = ({
 }: PreviewCardsProps) => {
   const getBgColor = () => {
     switch(variant) {
-      case "instructions": return "bg-[#E6F2F8] text-[#0077B6]";
-      case "stats": return "bg-[#FBEBEB] text-[#CF3535]";
-      case "tips": return "bg-[#EBF4EF] text-[#2E8B57]";
+      case "instructions": return "bg-[#2563EB]/20 text-[#0077B6]";
+      case "stats": return "bg-[#DC2626]/20 text-[#DC2626]";
+      case "tips": return "bg-[#15803D]/20 text-[#15803D]";
       default: return "text-[#6B7280]";
     }
   };
@@ -25,7 +25,7 @@ const PreviewCards = ({
 
 
   return (
-    <div className={`bg-white rounded-lg shadow-md overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-xl shadow-md overflow-hidden ${className}`}>
       <h3 className={`text-xl font-semibold shadow-sm px-6 py-3.5 ${getBgColor()}`}>
         {title}
       </h3>
@@ -44,15 +44,15 @@ const StatsCard = ({ challenges, lives, timeLimit }: StatsCardProps) => (
   <PreviewCards title="Game Stats" variant="stats">
     <div className="grid grid-cols-3 gap-4 text-center text-sm">
       <div className="flex flex-col items-center">
-        <span className="text-[#2E8B57] font-bold text-lg">{challenges}</span>
+        <span className="text-[#2563EB] font-bold text-lg">{challenges}</span>
         <span className="text-xs text-[#6B7280]">Challenges</span>
       </div>
       <div className="flex flex-col items-center">
-        <span className="text-[#0077B6] font-bold text-lg">{lives}</span>
+        <span className="text-[#DC2626] font-bold text-lg">{lives}</span>
         <span className="text-xs text-[#6B7280]">Lives</span>
       </div>
       <div className="flex flex-col items-center">
-        <span className="text-[#CF3535] font-bold text-lg">
+        <span className="text-[#15803D] font-bold text-lg">
           {timeLimit ? `${timeLimit}s` : "None"}
         </span>
         <span className="text-xs text-[#6B7280]">Time Limit</span>

@@ -32,7 +32,7 @@ const RegisterMain: React.FC = () => {
 
       <main className="flex flex-1">
         <div className="w-full max-w-screen-xl px-4 sm:px-6 md:px-10 lg:px-16 xl:px-25 mx-auto">
-          <div className="my-8 p-7 bg-white rounded-md shadow-md">
+          <div className="my-8 p-7 bg-white rounded-xl shadow-md">
             <Component.RegisterProgressTracker />
 
             {/* pass our 4 values to all nested <Route> components */}

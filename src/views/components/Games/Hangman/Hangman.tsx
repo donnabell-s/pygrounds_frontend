@@ -153,18 +153,18 @@ useEffect(() => {
           <p className="mb-4 text-lg">
             <strong>Prompt:</strong> {prompt}
             {functionName && (
-              <span className="ml-2 text-blue-600">
+              <span className="ml-2 text-[#704EE7">
                 (Function: <code>{functionName}</code>)
               </span>
             )}
           </p>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#E6F2F8] p-3 rounded-md">
+            <div className="bg-[#704EE7]/10 p-3 rounded-md">
               <p className="font-semibold">Sample Input:</p>
               <code className="block bg-white mt-2 max-w-max">{sampleInput}</code>
             </div>
-            <div className="bg-[#E6F2F8] p-3 rounded-md">
+            <div className="bg-[#704EE7]/10 p-3 rounded-md">
               <p className="font-semibold">Expected Output:</p>
               <code className="block bg-white mt-2 max-w-max">{sampleOutput}</code>
             </div>
@@ -187,12 +187,13 @@ useEffect(() => {
         />
 
         {!submitted && (
-          <button
-            className="bg-[#0077B6] hover:brightness-110 text-white px-4 py-2 rounded-md self-start w-full"
-            onClick={handleSubmit}
-          >
-            Submit Code
-          </button>
+          // <button
+          //   className="bg-[#0077B6] hover:brightness-110 text-white px-4 py-2 rounded-md self-start w-full"
+          //   onClick={handleSubmit}
+          // >
+          //   Submit Code
+          // </button>
+          <Component.PrimaryButton label="Submit Answers" onClick={handleSubmit} py="py-2" fontSize="text-md"/>
         )}
       </div>
 

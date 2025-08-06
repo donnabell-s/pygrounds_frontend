@@ -1,7 +1,6 @@
 // src/pages/user/components/PreviewAction.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
 import * as Interfaces from "../../../interfaces";
 import * as Components from "../../components";
 import { useAuth } from "../../../context/AuthContext";
@@ -50,13 +49,13 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
         <div className="flex-1 flex flex-col gap-4">
           <div className="flex items-center text-sm text-[#9CA3AF]">
             <span
-              className="hover:text-[#0077B6] cursor-pointer"
+              className="hover:text-[#704EE7] cursor-pointer"
               onClick={() => navigate(`/${user?.id}/home`)}
             >
               Home
             </span>
             <span className="mx-2">/</span>
-            <span className="text-[#0077B6] font-medium">
+            <span className="text-[#704EE7] font-medium">
               {selectedGame.title}
             </span>
           </div>
@@ -71,23 +70,24 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
 
           <div className="flex gap-4 mt-4">
             <button
-              className="px-6 py-2 bg-[#0077B6] text-white font-semibold rounded-md hover:brightness-110 transition-colors cursor-pointer"
+              className="px-6 py-2 bg-[#704EE7] text-white font-semibold rounded-lg hover:brightness-110 transition-colors cursor-pointer"
               onClick={() => setShowConfirm(true)}
             >
               Start Game
             </button>
 
-            <button
-              className="px-6 py-2 bg-[#FFFFFF] border border-[#D1D5DB] rounded-md hover:bg-gray-100 transition-colors cursor-pointer shadow-sm flex flex-row justify-center items-center gap-2"
+            <Components.BackButton 
               onClick={() => navigate(`/${user?.id}/home`)}
-            >
-              <FaArrowLeft size={11} />
-              Back to Games
-            </button>
+              label="Back to Games"
+              fontSize="text-base"
+              fontWeight="font-semibold"
+              iconSize={12}
+            />
+
           </div>
         </div>
 
-        <div className="w-full md:w-[350px] h-[230px] bg-[#F1F1F1] rounded-lg flex items-center justify-center shadow-md">
+        <div className="w-full md:w-[350px] h-[230px] bg-[#F1F1F1] rounded-xl flex items-center justify-center shadow-md">
           <span className="text-[#A8A8A8]">Game Thumbnail</span>
         </div>
       </div>

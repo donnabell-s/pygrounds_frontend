@@ -17,7 +17,7 @@ const PreTestQuestionCard: React.FC<PreTestQuestionCardProps> = ({
     <div className="mb-2 p-4">
       {/* Question header */}
       <div className="flex items-center mb-4">
-        <div className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-[#D7E4EE] text-[#3776AB] text-sm font-semibold mr-3">
+        <div className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-[#704EE7]/10 text-[#704EE7] text-sm font-semibold mr-3">
           {question.order+1}
         </div>
         <p className="text-lg font-semibold">
@@ -42,8 +42,8 @@ const PreTestQuestionCard: React.FC<PreTestQuestionCardProps> = ({
           return (
             <label
               key={option}
-              className={`flex items-center border border-[#95B7D2] bg-[#F5F8FB] rounded-lg p-3 cursor-pointer transition 
-                ${isSelected ? "border-[#3776AB] bg-blue-50" : "border-gray-300 hover:border-blue-300"}`}
+              className={`flex items-center border border-[#95B7D2] rounded-lg p-3 cursor-pointer transition 
+                ${isSelected ? "border-[#704EE7] bg-[#704EE7]/10" : "border-gray-300 hover:border-blue-300"}`}
             >
               <input
                 type="radio"

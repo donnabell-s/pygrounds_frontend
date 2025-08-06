@@ -108,13 +108,13 @@ const RegisterTermsAndConditions: React.FC = () => {
           id="agree"
           checked={agreed}
           onChange={() => setAgreed((prev) => !prev)}
-          className="mt-1"
+          className="mt-1 bg-[#704EE7]"
         />
         <label htmlFor="agree" className="text-sm leading-tight">
           I agree to the{" "}
-          <span className="text-[#3776AB] font-semibold">Terms and Conditions</span>{" "}
+          <span className="text-[#704EE7] font-semibold">Terms and Conditions</span>{" "}
           and{" "}
-          <span className="text-[#3776AB] font-semibold">Privacy Policy</span>.
+          <span className="text-[#704EE7] font-semibold">Privacy Policy</span>.
         </label>
       </div>
 
@@ -126,7 +126,7 @@ const RegisterTermsAndConditions: React.FC = () => {
         <button
           onClick={handleBack}
           disabled={loading}
-          className="border border-[#D1D5DB] px-4 py-2 rounded-md flex items-center gap-2 text-sm"
+          className="border border-[#D1D5DB] px-4 py-2 rounded-md flex items-center gap-2 text-sm cursor-pointer"
         >
           <FaArrowLeft size={11} />
           Back
@@ -135,9 +135,9 @@ const RegisterTermsAndConditions: React.FC = () => {
           onClick={handleSubmit}
           disabled={!agreed || loading}
           className={`
-            px-4 py-2 rounded-md flex items-center gap-2 text-sm transition
+            px-4 py-2 rounded-md flex items-center gap-2 text-sm transition cursor-pointer
             ${agreed && !loading
-              ? "bg-[#3776AB] text-white hover:brightness-110"
+              ? "bg-[#704EE7] text-white hover:brightness-110"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }
           `}

@@ -166,12 +166,13 @@ useEffect(() => {
 
       {/* Central Button */}
       {!submitted && (
-        <button
-          className="mt-8 bg-[#0077B6] hover:brightness-125 text-white px-6 py-3 rounded-md shadow-lg border-b-4 border-[#004d75] active:translate-y-[2px]"
-          onClick={handleSubmit}
-        >
-          Submit Fix
-        </button>
+        // <button
+        //   className="mt-8 bg-[#0077B6] hover:brightness-125 text-white px-6 py-3 rounded-md shadow-lg border-b-4 border-[#004d75] active:translate-y-[2px]"
+        //   onClick={handleSubmit}
+        // >
+        //   Submit Fix
+        // </button>
+        <Component.PrimaryButton label="Submit Answers" onClick={handleSubmit} py="py-2" fontSize="text-md" m="mt-8"/>
       )}
 
       {submitted && (

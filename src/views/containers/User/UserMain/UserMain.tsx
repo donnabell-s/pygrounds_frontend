@@ -10,7 +10,7 @@ const UserMain = () => {
   const isGameRoute = location.pathname === `/${user?.id}/${location.pathname.split("/")[2]}/start`;
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-[#F9FAFB] text-[#2D2D2D]">
+    <div className="min-h-screen w-full flex flex-col">
       {isGameRoute ? <Components.GameHeader /> : <Components.Header />}
 
       <main className="flex flex-1 ">

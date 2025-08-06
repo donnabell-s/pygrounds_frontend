@@ -296,12 +296,13 @@ const finishDrag = () => {
   })}
 
   {!gameEnded && (
-    <button
-      onClick={doSubmit}
-      className="bg-[#0077B6] hover:brightness-110 text-white px-4 py-2 rounded-md mt-6 cursor-pointer"
-    >
-      Submit Answers
-    </button>
+    // <button
+    //   onClick={doSubmit}
+    //   className="bg-[#0077B6] hover:brightness-110 text-white px-4 py-2 rounded-md mt-6 cursor-pointer"
+    // >
+    //   Submit Answers
+    // </button>
+    <Component.PrimaryButton label="Submit Answers" onClick={doSubmit} py="py-2" fontSize="text-md" m="mt-6"/>
   )}
 
   {gameEnded && submitted && (

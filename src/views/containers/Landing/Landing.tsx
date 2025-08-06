@@ -1,4 +1,7 @@
 import * as Components from "../../components";
+import { FaArrowRight } from "react-icons/fa";
+import HeroImage from "../../../assets/images/landing-hero.png";
+
 
 const Landing = () => {
   const features = [
@@ -20,58 +23,35 @@ const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-gradient-to-b from-[#E4ECF7] to-[#FFFBEC] text-gray-900">
+    <div className="min-h-screen w-full flex flex-col bg-gradient-to-b from-[#704EE7]/10 to-[#4497FF]/10">
       <Components.Header />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 lg:py-28">
-        <div className="w-full max-w-screen-xl px-4 sm:px-6 md:px-10 lg:px-16 xl:px-25 mx-auto flex flex-col lg:flex-row items-center justify-center lg:justify-between lg:space-x-16">
+        <div className="w-full max-w-screen-xl px-4 sm:px-6 md:px-10 lg:px-16 xl:pl-25 xl:pr-15 mx-auto flex flex-col lg:flex-row items-center justify-center lg:justify-between lg:space-x-16">
           {/* Left Text */}
           <div className="max-w-xl text-center lg:text-left">
-            <h1 className="text-4xl lg:text-6xl font-bold font-asap leading-tight mb-6">
-              Master Python Through <span className="text-[#3776AB]">Interactive Gaming</span>
+            <h1 className="text-4xl lg:text-6xl font-bold leading-tight mb-6">
+              Master Python Through <span className="text-[#704EE7]">Interactive Gaming</span>
             </h1>
             <p className="text-lg text-gray-700 mb-8">
               Level up your Python skills with adaptive minigames, real-time progress tracking, and personalized learning paths that adapt to you.
             </p>
-            <button className="bg-[#3776AB] text-white px-6 py-3 rounded-lg text-lg font-semibold hover:brightness-110 transition">
-              Start Learning
-            </button>
+            <Components.PrimaryButton
+              label="Start Learning"
+              icon={<FaArrowRight size={16} />}
+              iconPosition="right"
+            />
           </div>
 
-          {/* Right Asymmetric Cards */}
-          <div className="relative mt-12 lg:mt-0 transform lg:-translate-x-12">
-            {/* Backdrop Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#3776AB]/10 to-[#FFB703]/10 blur-3xl rounded-full"></div>
+          {/* Right Image */}
+          <div className="relative mt-12 lg:mt-0 flex justify-center">
+          <img
+            src={HeroImage}
+            alt="Learning Python"
+            className="max-w-md w-full object-cover"
+          />
 
-            <div className="relative w-full flex justify-center items-center h-[320px] lg:h-[360px]">
-              {/* Top Right Card */}
-              <div className="absolute transform -rotate-3 lg:-rotate-6 -top-6 lg:-top-15 right-30 lg:right-25 w-48 h-60 bg-white rounded-2xl shadow-xl p-3 overflow-hidden lg:z-10">
-                <img
-                  src="https://source.unsplash.com/200x300/?python,code"
-                  alt="XP Boost"
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              </div>
-
-              {/* Center Card */}
-              <div className="relative transform rotate-2 lg:rotate-2 w-56 h-80 bg-white rounded-2xl shadow-2xl p-4 z-20 overflow-hidden">
-                <img
-                  src="https://source.unsplash.com/300x400/?learning,technology"
-                  alt="Current Level"
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              </div>
-
-              {/* Bottom Left Card */}
-              <div className="absolute transform rotate-3 lg:rotate-4 bottom-7 lg:-bottom-13 left-30 lg:left-30 w-48 h-64 bg-white rounded-2xl shadow-xl p-3 overflow-hidden lg:z-5">
-                <img
-                  src="https://source.unsplash.com/220x350/?gaming,education"
-                  alt="Challenges Completed"
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -79,7 +59,7 @@ const Landing = () => {
       {/* Features Section */}
       <section className="bg-white shadow-md py-16">
         <div className="w-full max-w-screen-xl px-4 sm:px-6 md:px-10 lg:px-16 xl:px-25 mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12 font-asap">Why Choose PyGrounds?</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Why Choose PyGrounds?</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((f, idx) => (
               <div
@@ -98,10 +78,10 @@ const Landing = () => {
       {/* Footer CTA */}
       <footer className="py-12">
         <div className="w-full max-w-screen-xl px-4 sm:px-6 md:px-10 lg:px-16 xl:px-25 mx-auto text-center">
-          <h3 className="text-2xl font-bold mb-6 font-asap">Start Your Coding Journey Today!</h3>
-          <button className="bg-[#3776AB] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:brightness-110 transition">
-            Get Started
-          </button>
+          <h3 className="text-2xl font-bold mb-6">Start Your Coding Journey Today!</h3>
+          <div className="flex flex-row justify-center">
+            <Components.PrimaryButton label="Get Started" px="px-8" />
+          </div>
         </div>
       </footer>
     </div>

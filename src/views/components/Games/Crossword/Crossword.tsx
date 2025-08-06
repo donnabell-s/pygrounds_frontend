@@ -317,12 +317,13 @@ const Crossword: React.FC = () => {
         </div>
 
         {!gameEnded && (
-          <button
-            onClick={handleSubmit}
-            className="bg-[#0077B6] hover:brightness-110 text-white px-4 py-2 rounded-md mt-6 cursor-pointer transition-all duration-150 shadow hover:shadow-lg active:scale-95"
-          >
-            Submit Answers
-          </button>
+          // <button
+          //   onClick={handleSubmit}
+          //   className="bg-[#0077B6] hover:brightness-110 text-white px-4 py-2 rounded-md mt-6 cursor-pointer transition-all duration-150 shadow hover:shadow-lg active:scale-95"
+          // >
+          //   Submit Answers
+          // </button>
+          <Component.PrimaryButton label="Submit Answers" onClick={handleSubmit} py="py-2" fontSize="text-md" m="mt-6"/>
         )}
       </div>
 

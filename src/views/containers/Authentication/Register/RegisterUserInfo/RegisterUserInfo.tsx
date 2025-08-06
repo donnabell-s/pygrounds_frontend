@@ -155,9 +155,9 @@ const RegisterUserInfo: React.FC = () => {
           onClick={handleNext}
           disabled={!canProceed}
           className={`
-            px-4 py-2 rounded-md flex items-center gap-2 text-sm transition
+            px-4 py-2 rounded-md flex items-center gap-2 text-sm transition cursor-pointer
             ${canProceed
-              ? "bg-[#3776AB] text-white hover:brightness-110"
+              ? "bg-[#704EE7] text-white hover:brightness-110"
               : "bg-gray-300 text-gray-600 cursor-not-allowed"
             }
           `}

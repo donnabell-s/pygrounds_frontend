@@ -1,4 +1,5 @@
 import { FaArrowRight } from "react-icons/fa";
+import { FaPlay } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -29,7 +30,7 @@ const GameCard: React.FC<GameCardProps> = ({
   };
 
   return (
-    <div className="rounded-lg shadow-md transition-shadow duration-300 bg-white hover:shadow-lg flex flex-col justify-between overflow-hidden">
+    <div className="rounded-xl shadow-md transition-shadow duration-300 bg-white hover:shadow-lg flex flex-col justify-between overflow-hidden">
       {/* Card Header */}
       <div
         className="relative h-28 w-full shadow-sm overflow-hidden"
@@ -67,12 +68,12 @@ const GameCard: React.FC<GameCardProps> = ({
           </span>
 
           <button
-            className="text-sm px-3.5 py-1.5 rounded-md hover:brightness-110 flex flex-row items-center gap-3.5 cursor-pointer"
+            className="text-sm font-semibold px-3.5 py-1.5 rounded-lg hover:brightness-110 flex flex-row items-center gap-2 cursor-pointer"
             style={{ backgroundColor: color, color: "#FFFFFF" }}
             onClick={handlePlayClick}
             disabled={comingSoon}
           >
-            {comingSoon ? "Coming Soon" : <>Play Now <FaArrowRight size={11} /></>}
+            {comingSoon ? "Coming Soon" : <>Play Now <FaPlay size={9} /></>}
           </button>
         </div>
       </div>

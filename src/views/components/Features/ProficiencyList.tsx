@@ -1,10 +1,20 @@
 import { useAdaptive } from "../../../context/AdaptiveContext";
 
-const getRating = (percent: number) => {
-  if (percent === 0) return { label: "Not Started", color: "#8B0000" };
-  if (percent < 40) return { label: "Beginner", color: "#0077B6" };
-  if (percent < 75) return { label: "Intermediate", color: "#F39C12" };
-  return { label: "Advanced", color: "#2E8B57" };
+// ✅ Config for proficiency levels
+const PROFICIENCY_LEVELS = [
+  { threshold: 0, label: "No Progress", color: "#6B7280" },
+  { threshold: 1, label: "Beginner", color: "#2563EB" },
+  { threshold: 33, label: "Intermediate", color: "#CA8A04" },
+  { threshold: 66, label: "Advanced", color: "#15803D" },
+  { threshold: 100, label: "Master", color: "#7E5CE3" },
+];
+
+// ✅ Utility functions
+const getProficiencyLevel = (percent: number) => {
+  for (let i = PROFICIENCY_LEVELS.length - 1; i >= 0; i--) {
+    if (percent >= PROFICIENCY_LEVELS[i].threshold) return PROFICIENCY_LEVELS[i];
+  }
+  return PROFICIENCY_LEVELS[0];
 };
 
 const hexToRgba = (hex: string, opacity: number) => {
@@ -15,20 +25,18 @@ const hexToRgba = (hex: string, opacity: number) => {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
-const ProficiencyCard = ({ topic, percentMastery }: { topic: string; percentMastery: number }) => {
-  const { label, color } = getRating(percentMastery);
+// ✅ Reusable Card
+const ProficiencyCard = ({ topic, percent }: { topic: string; percent: number }) => {
+  const { label, color } = getProficiencyLevel(percent);
 
   return (
-    <div className="flex items-start gap-4 px-4 py-5 bg-[#F1F5FA] border border-[#E4ECF7] rounded-lg shadow-sm">
+    <div className="flex items-start gap-4 px-4 py-5 bg-[#704EE7]/10 border border-[#E4ECF7] rounded-xl shadow-sm">
       <div className="flex flex-col w-full gap-3">
         <div className="flex justify-between items-center">
           <h4 className="text-md font-bold text-[#111827]">{topic}</h4>
           <span
             className="text-xs font-semibold px-3 py-1 rounded-full"
-            style={{
-              color: color,
-              backgroundColor: hexToRgba(color, 0.15),
-            }}
+            style={{ color, backgroundColor: hexToRgba(color, 0.15) }}
           >
             {label}
           </span>
@@ -38,15 +46,14 @@ const ProficiencyCard = ({ topic, percentMastery }: { topic: string; percentMast
           <div className="flex justify-between text-xs mt-1">
             <span className="font-bold text-[#6B7280]">Proficiency</span>
             <span className="font-bold" style={{ color }}>
-              {percentMastery.toFixed(0)}%
+              {percent.toFixed(0)}%
             </span>
           </div>
-
           <div className="w-full h-3 bg-white rounded-full overflow-hidden">
             <div
               className="h-full transition-all duration-500"
-              style={{ width: `${percentMastery}%`, backgroundColor: color }}
-            ></div>
+              style={{ width: `${percent}%`, backgroundColor: color }}
+            />
           </div>
         </div>
       </div>
@@ -59,15 +66,15 @@ const ProficiencyList = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-[#FFFFFF] w-full rounded-lg shadow-md p-6">
+      <div className="bg-[#FFFFFF] w-full rounded-xl shadow-md p-6">
         <p className="text-gray-500">Loading topic proficiency...</p>
       </div>
     );
   }
 
-  if (!topicProgress || topicProgress.length === 0) {
+  if (!topicProgress?.length) {
     return (
-      <div className="bg-[#FFFFFF] w-full rounded-lg shadow-md p-6">
+      <div className="bg-[#FFFFFF] w-full rounded-xl shadow-md p-6">
         <p className="text-gray-500">No topic progress found.</p>
       </div>
     );
@@ -76,8 +83,8 @@ const ProficiencyList = () => {
   const sortedTopics = [...topicProgress].sort((a, b) => a.topic.id - b.topic.id);
 
   return (
-    <div className="bg-[#FFFFFF] w-full rounded-lg shadow-md">
-      <div className="flex flex-col px-6 py-3.5 bg-[#F1F5FA] gap-1 shadow-sm">
+    <div className="bg-[#FFFFFF] w-full rounded-xl shadow-md">
+      <div className="flex flex-col px-6 py-3.5 bg-[#704EE7]/10 gap-1 shadow-sm rounded-t-xl">
         <h3 className="text-xl font-semibold">Topic Proficiency</h3>
         <p className="text-sm text-[#6B7280]">
           Track your mastery across Python concepts
@@ -85,11 +92,11 @@ const ProficiencyList = () => {
       </div>
 
       <div className="p-6 flex flex-col gap-4">
-        {sortedTopics.map((p, idx) => (
+        {sortedTopics.map((p) => (
           <ProficiencyCard
-            key={idx}
+            key={p.topic.id}
             topic={p.topic.name}
-            percentMastery={p.proficiency_percent}
+            percent={p.proficiency_percent}
           />
         ))}
       </div>

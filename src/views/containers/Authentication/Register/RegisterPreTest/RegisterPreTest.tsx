@@ -82,7 +82,7 @@ const RegisterPreTest: React.FC = () => {
       <div className="flex justify-between mt-6">
         <button
           onClick={handleBack}
-          className="border border-[#D1D5DB] px-4 py-2 rounded-md flex items-center gap-2 text-sm"
+          className="border border-[#D1D5DB] px-4 py-2 rounded-md flex items-center gap-2 text-sm cursor-pointer"
         >
           <FaArrowLeft size={11} />
           Back
@@ -91,9 +91,9 @@ const RegisterPreTest: React.FC = () => {
           onClick={handleNext}
           disabled={!allAnswered}
           className={`
-            px-4 py-2 rounded-md flex items-center gap-2 text-sm transition
+            px-4 py-2 rounded-md flex items-center gap-2 text-sm transition cursor-pointer
             ${allAnswered
-              ? "bg-[#3776AB] text-white hover:brightness-110"
+              ? "bg-[#704EE7] text-white hover:brightness-110"
               : "bg-gray-300 text-gray-600 cursor-not-allowed"
             }
           `}

@@ -3,10 +3,10 @@ import { mockGames } from "../../../interfaces/minigames";
 
 const GameList = () => {
     const gameColors = [
-    "#0077B6",
-    "#CF3535",
-    "#2E8B57",
-    "#8E7CC3",
+    "#4498FF",
+    "#FC4D66",
+    "#42BFAB",
+    "#7E5CE3",
     ];
 
     return (

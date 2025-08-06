@@ -10,7 +10,7 @@ interface ProfileDropdownProps {
 }
 
 const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -18,14 +18,32 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => 
     navigate("/"); // Redirect to landing or login page
   };
 
+  const displayName = user
+    ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
+    : "Guest";
+
+  const username = user ? `@${user.username}` : "";
+
+  const firstLetter =
+    user && user.first_name ? user.first_name.charAt(0).toUpperCase() : "?";
+
+  const ProfileCircle = (
+    <div className="h-9 w-9 rounded-full flex items-center justify-center text-white font-bold"
+      style={{ backgroundColor: "#704EE7" }}
+    >
+      {firstLetter}
+    </div>
+  );
+
+  // ───── Mobile Dropdown ─────
   if (mobile) {
     return (
       <div className="w-full">
         <div className="pb-2 flex flex-row gap-2 items-center text-sm">
-          <img className="h-9 w-9 rounded-full bg-[#D9D9D9]" alt="Profile" />
+          {ProfileCircle}
           <div>
-            <p>Julien Veniz</p>
-            <p className="text-xs text-[#6B7280]">@benizz</p>
+            <p>{displayName}</p>
+            <p className="text-xs text-[#6B7280]">{username}</p>
           </div>
         </div>
         <div className="border-t border-[#D9D9D9] my-2"></div>
@@ -46,6 +64,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => 
     );
   }
 
+  // ───── Desktop Dropdown ─────
   const [isOpen, setIsOpen] = useState(false);
   const desktopDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -66,8 +85,8 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => 
         className="focus:outline-none flex flex-row justify-center items-center gap-2 cursor-pointer"
       >
         <div className="flex items-center gap-2">
-          <img className="h-10 w-10 bg-[#D9D9D9] rounded-full" alt="Profile" />
-          <p className="text-sm">Julien Veniz</p>
+          {ProfileCircle}
+          <p className="text-sm">{displayName}</p>
         </div>
         <FaCaretDown
           className={`text-sm transition-transform duration-200 ${
@@ -83,10 +102,10 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => 
         }`}
       >
         <div className="pb-2 flex flex-row gap-2 items-center text-sm">
-          <img className="h-9 w-9 rounded-full bg-[#D9D9D9]" alt="Profile" />
+          {ProfileCircle}
           <div>
-            <p>Julien Veniz</p>
-            <p className="text-xs text-[#6B7280]">@benizz</p>
+            <p>{displayName}</p>
+            <p className="text-xs text-[#6B7280]">{username}</p>
           </div>
         </div>
         <div className="border-t border-[#D9D9D9] my-2"></div>
