@@ -1,8 +1,12 @@
 export const PATHS = {
-    USER_MAIN: (userId: string) => ({
-        path: `/users/${userId}`,
-        label: "User Main",
-    }),
+    ADMIN_MAIN: {
+        path: "admin/:adminId",
+        label: "Admin Main"
+    },
+    USER_MAIN: {
+        path: "users/:userId",
+        label: "User Main"
+    },
     LANDING: {
         path: "/landing",
         label: "Landing"
@@ -10,6 +14,10 @@ export const PATHS = {
     LOGIN: {
         path: "/login",
         label: "Login"
+    },
+    ADMIN_LOGIN: {
+        path: "/admin-login",
+        label: "Admin Login"
     },
     REGISTER: {
         path: "/register",
@@ -44,17 +52,59 @@ export const PATHS = {
             label: "Leaderboard"
         }
     },
-    GAME_VIEW(gameName: string) {
-        return {
-            GAME_Preview: {
-            path: `/user/${gameName}/preview`,
-            label: "Game Preview"
+    ADMIN_VIEW: {
+        ADMIN_VIEWS: {
+            DASHBOARD: {
+            path: "dashboard",
+            label: "Dashboard"
             },
-            GAME_START: {
-            path: `/user/${gameName}/start`,
-            label: "Game Start"
+            NOTIFICATIONS: {
+            path: "notifications",
+            label: "Notifications"
             }
-        };
+        },
+        TOPIC_MANAGEMENT: {
+            ZONE: {
+                path: "topics/zones/",
+                label: "View Zones"
+            },
+            TOPIC: {
+                path: "topics/",
+                label: "View Topics"
+
+            },
+            SUBTOPIC: {
+                path: "topics/subtopics",
+                label: "View Subtopics"
+            }
+        },
+        QUESTION_MANAGEMENT: {
+            VIEW_QUESTIONS: {
+                path: "questions/view",
+                label: "Question Bank"
+            }
+        },
+        CONTENT_UPLOAD: {
+            path: "content-upload",
+            label: "Uploaded Files"
+        },
+        USER_MANAGEMENT: {
+            VIEW_USERS: {
+            path: "users/view/:userId",
+            label: "View Users"
+            }
+        }
+    },
+    GAME_VIEW: {
+        GAME_PREVIEW: {
+            path: ":game/preview",
+            label: "Game Preview"
+        },
+        GAME_START: {
+            path: ":game/start",
+            label: "Game Start"
+        }
     }
+
 
 }

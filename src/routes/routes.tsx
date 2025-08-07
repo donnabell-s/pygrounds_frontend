@@ -25,14 +25,25 @@ export const AppRoutes = () => {
 
         {/* ✅ Protected Routes */}
         <Route element={<ProtectedRoute roles={['learner']} />}>
-          <Route path="/:userId" element={<Views.UserMain />}>
+          <Route path={PATHS.USER_MAIN.path} element={<Views.UserMain />}>
             <Route path={PATHS.USER_VIEW.HOME.path} element={<Views.Home />} />
             <Route path={PATHS.USER_VIEW.MY_PROFILE.path} element={<Views.MyProfile />} />
             <Route path={PATHS.USER_VIEW.PYTHON_LEARN.path} element={<Views.PythonLearn />} />
             <Route path={PATHS.USER_VIEW.LEADERBOARD.path} element={<Views.Leaderboard />} />
-            <Route path=":game/preview" element={<Views.GamePreview />} />
-            <Route path=":game/start" element={<ProtectedGameRoute><Views.GameStart /></ProtectedGameRoute>}/>
+            <Route path={PATHS.GAME_VIEW.GAME_PREVIEW.path} element={<Views.GamePreview />} />
+            <Route path={PATHS.GAME_VIEW.GAME_START.path} element={<ProtectedGameRoute><Views.GameStart /></ProtectedGameRoute>}/>
           </Route>
+        </Route>
+
+        <Route path={PATHS.ADMIN_MAIN.path} element={<Views.AdminMain />}>
+          <Route path={PATHS.ADMIN_VIEW.ADMIN_VIEWS.DASHBOARD.path} element={<Views.Dashboard />} />
+          <Route path={PATHS.ADMIN_VIEW.ADMIN_VIEWS.NOTIFICATIONS.path} element={<Views.Notifications />} />
+          <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.ZONE.path} element={<Views.ViewZone />} />
+          <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.TOPIC.path} element={<Views.ViewTopic />} />
+          <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.SUBTOPIC.path} element={<Views.ViewSubtopic />} />
+          <Route path={PATHS.ADMIN_VIEW.CONTENT_UPLOAD.path} element={<Views.UploadedFiles />} />
+          <Route path={PATHS.ADMIN_VIEW.USER_MANAGEMENT.VIEW_USERS.path} element={<Views.ViewUsers />} />
+          <Route path={PATHS.ADMIN_VIEW.QUESTION_MANAGEMENT.VIEW_QUESTIONS.path} element={<Views.QuestionBank />} />
         </Route>
       </Routes>
     </BrowserRouter>

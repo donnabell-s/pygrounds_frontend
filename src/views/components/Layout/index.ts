@@ -7,3 +7,6 @@ export { default as GameHeader } from "./GameHeader";
 export { default as ConfirmExit } from "./ConfirmExit";
 export { default as RegisterProgressTracker } from "./RegisterProgressTracker";
 export { default as Login } from "./Login";
+export { default as AdminSideNav } from "./AdminSideNav";
+export { default as AdminSideNavLink } from "./AdminSideNavLink";
+export { default as AdminSideNavLinkDropdown } from "./AdminSideNavLinkDropdown";
