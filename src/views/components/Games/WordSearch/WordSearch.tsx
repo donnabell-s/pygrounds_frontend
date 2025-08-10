@@ -1,6 +1,6 @@
 // src/pages/user/game/WordSearch.tsx
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
 import { useGame } from "../../../../context/GameContext";
@@ -21,6 +21,8 @@ const COLORS_RGBA = [
   "rgba(251,146,60,0.5)","rgba(165,180,252,0.5)",
 ];
 
+const sanitize = (s?: string | null) => (s ?? "").replace(/[^A-Za-z]/g, "").toUpperCase();
+
 const WordSearch: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -32,10 +34,14 @@ const WordSearch: React.FC = () => {
 
   // ─── state ─────────────────────────────────────────────────────────
   const [matrix, setMatrix] = useState<string[]>([]);
-  const [, setPlacements] = useState<WordSearchPlacement[]>([]);
+  const [placements, setPlacements] = useState<WordSearchPlacement[]>([]);
 
+  // Map(GameQuestion.id -> color class/rgba)
   const [questionCss, setQuestionCss] = useState<Record<number,string>>({});
   const [questionRgba, setQuestionRgba] = useState<Record<number,string>>({});
+
+  // Only questions actually placed on the grid, ordered by session_questions order
+  const [placedIds, setPlacedIds] = useState<number[]>([]);
 
   const [selectedQ, setSelectedQ] = useState<number|null>(null);
   const [highlighted, setHighlighted] = useState<Record<number,string[]>>({});
@@ -47,6 +53,23 @@ const WordSearch: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Derived helpers
+  const placedQuestions = useMemo(() => {
+    const all = activeSession?.session_questions ?? [];
+    const set = new Set(placedIds);
+    return all.filter(sq => set.has(sq.id));
+  }, [activeSession, placedIds]);
+
+  // Build word -> GameQuestion.id map from session payload
+  const wordToGqId = useMemo(() => {
+    const m = new Map<string, number>();
+    const sqs = activeSession?.session_questions ?? [];
+    for (const sq of sqs) {
+      const key = sanitize(sq?.question?.correct_answer);
+      if (key && !m.has(key)) m.set(key, sq.id);
+    }
+    return m;
+  }, [activeSession]);
 
   const getDirection = (
     [r0,c0]:[number,number],
@@ -56,6 +79,7 @@ const WordSearch: React.FC = () => {
     if (dy === 0 && dx === 0) return null;
     return [Math.sign(dy), Math.sign(dx)];
   };
+
   const getCellsInLine = (
     [sr,sc]:[number,number],
     [dy,dx]:[number,number],
@@ -74,28 +98,43 @@ const WordSearch: React.FC = () => {
     return path;
   };
 
-  // ─── session setup ──────────────────────────────────────────────────
+  // ─── fetch matrix + placements and derive placed IDs ───────────────
   useEffect(() => {
     if (!activeSession) return;
-    const css:Record<number,string> = {};
-    const rgba:Record<number,string> = {};
-    activeSession.session_questions.forEach((q,i) => {
-      css[q.id]  = COLORS_CSS[i % COLORS_CSS.length];
-      rgba[q.id] = COLORS_RGBA[i % COLORS_RGBA.length];
-    });
-    setQuestionCss(css);
-    setQuestionRgba(rgba);
-  }, [activeSession]);
+    (async () => {
+      const data = await getWordSearchMatrix(activeSession.session_id);
+      if (!data) return;
 
-  useEffect(() => {
-    if (!activeSession) return;
-    getWordSearchMatrix(activeSession.session_id).then(data => {
-      if (data) {
-        setMatrix(data.matrix);
-        setPlacements(data.placements);
+      setMatrix(data.matrix || []);
+      const rawPlacements: WordSearchPlacement[] = data.placements || [];
+      setPlacements(rawPlacements);
+
+      // Derive placed GameQuestion IDs from placements' words
+      const idsSet = new Set<number>();
+      for (const p of rawPlacements) {
+        const id = wordToGqId.get(sanitize((p as any).word));
+        if (id) idsSet.add(id);
       }
-    });
-  }, [activeSession]);
+      // Preserve the original session order but keep only placed ones
+      const ordered = (activeSession.session_questions ?? [])
+        .map(sq => sq.id)
+        .filter(id => idsSet.has(id));
+      setPlacedIds(ordered);
+
+      // Build color maps only for placed IDs (keeps sidebar & canvas consistent)
+      const css:Record<number,string> = {};
+      const rgba:Record<number,string> = {};
+      ordered.forEach((id, i) => {
+        css[id]  = COLORS_CSS[i % COLORS_CSS.length];
+        rgba[id] = COLORS_RGBA[i % COLORS_RGBA.length];
+      });
+      setQuestionCss(css);
+      setQuestionRgba(rgba);
+
+      // If current selection isn't in placed set, pick the first placed (if any)
+      setSelectedQ(prev => (prev && idsSet.has(prev) ? prev : (ordered[0] ?? null)));
+    })();
+  }, [activeSession, getWordSearchMatrix, wordToGqId]);
 
   // ─── auto-submit timers ──────────────────────────────────────────────
   useEffect(() => {
@@ -171,7 +210,8 @@ const WordSearch: React.FC = () => {
     setIsDragging(true);
     setDragStart([r, c]);
     setDragPath([`${r}-${c}`]);
-  };  
+  };
+
   const moveDrag = (r: number, c: number) => {
     if (!isDragging || !dragStart) return;
 
@@ -186,16 +226,17 @@ const WordSearch: React.FC = () => {
     const line = getCellsInLine(dragStart, dir, [r, c]);
     setDragPath(line);
   };
-const finishDrag = () => {
-  if (!isDragging || selectedQ === null) return;
-  setHighlighted((prev) => ({
-    ...prev,
-    [selectedQ]: [...dragPath],
-  }));
-  setIsDragging(false);
-  setDragStart(null);
-  setDragPath([]);
-};
+
+  const finishDrag = () => {
+    if (!isDragging || selectedQ === null) return;
+    setHighlighted((prev) => ({
+      ...prev,
+      [selectedQ]: [...dragPath],
+    }));
+    setIsDragging(false);
+    setDragStart(null);
+    setDragPath([]);
+  };
 
   // ─── submit logic ───────────────────────────────────────────────────
   const doSubmit = async () => {
@@ -260,70 +301,67 @@ const finishDrag = () => {
         </div>
       </div>
 
-{/* SIDEBAR */}
-<div className="flex flex-col gap-2 w-full max-w-sm">
-  <h2 className="text-lg font-bold">Questions</h2>
-  {activeSession.session_questions.map((sq) => {
-    const isSelected = selectedQ === sq.id;
-    const isAnswered = Array.isArray(highlighted[sq.id]) && highlighted[sq.id].length > 1;
+      {/* SIDEBAR */}
+      <div className="flex flex-col gap-2 w-full max-w-sm">
+        <h2 className="text-lg font-bold">Questions</h2>
 
-    // 1) Selected gets full color + black border
-    // 2) Answered (but not selected) gets half-opacity color, no heavy border
-    // 3) Otherwise white with hover state
-    const bgClass = isSelected
-      ? questionCss[sq.id]
-      : isAnswered
-      ? `${questionCss[sq.id]} bg-opacity-50`
-      : "bg-white hover:bg-gray-100";
-    const borderClass = isSelected
-      ? "border-black"
-      : isAnswered
-      ? "border-transparent"
-      : "border-gray-300";
+        {placedQuestions.map((sq) => {
+          const isSelected = selectedQ === sq.id;
+          const isAnswered = Array.isArray(highlighted[sq.id]) && highlighted[sq.id].length > 1;
 
-    return (
-      <button
-        key={sq.id}
-        onClick={() => setSelectedQ(sq.id)}
-        className={`
-          text-left px-3 py-2 rounded shadow-sm cursor-pointer
-          ${borderClass} ${bgClass}
-        `}
-      >
-        {sq.question.question_text}
-      </button>
-    );
-  })}
+          // 1) Selected gets full color + black border
+          // 2) Answered (but not selected) gets half-opacity color, no heavy border
+          // 3) Otherwise white with hover state
+          const bgClass = isSelected
+            ? questionCss[sq.id]
+            : isAnswered
+            ? `${questionCss[sq.id]} bg-opacity-50`
+            : "bg-white hover:bg-gray-100";
+          const borderClass = isSelected
+            ? "border-black"
+            : isAnswered
+            ? "border-transparent"
+            : "border-gray-300";
 
-  {!gameEnded && (
-    // <button
-    //   onClick={doSubmit}
-    //   className="bg-[#0077B6] hover:brightness-110 text-white px-4 py-2 rounded-md mt-6 cursor-pointer"
-    // >
-    //   Submit Answers
-    // </button>
-    <Component.PrimaryButton label="Submit Answers" onClick={doSubmit} py="py-2" fontSize="text-md" m="mt-6"/>
-  )}
+          return (
+            <button
+              key={sq.id}
+              onClick={() => setSelectedQ(sq.id)}
+              className={`text-left px-3 py-2 rounded shadow-sm cursor-pointer border ${borderClass} ${bgClass}`}
+            >
+              {sq.question.question_text}
+            </button>
+          );
+        })}
 
-  {gameEnded && submitted && (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ backgroundColor: "rgba(45, 45, 45, 0.4)" }}
-    >
-      <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-6 relative">
-        <Component.ResultsModal
-          onClose={() => {
-            clearActiveSession();
-            resetGameEnd();
-            localStorage.removeItem("submitted");
-            navigate(`/${user?.id}/home`);
-          }}
-        />
+        {!gameEnded && (
+          <Component.PrimaryButton
+            label="Submit Answers"
+            onClick={doSubmit}
+            py="py-2"
+            fontSize="text-md"
+            m="mt-6"
+          />
+        )}
+
+        {gameEnded && submitted && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ backgroundColor: "rgba(45, 45, 45, 0.4)" }}
+          >
+            <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-6 relative">
+              <Component.ResultsModal
+                onClose={() => {
+                  clearActiveSession();
+                  resetGameEnd();
+                  localStorage.removeItem("submitted");
+                  navigate(`/${user?.id}/home`);
+                }}
+              />
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  )}
-</div>
-
     </div>
   );
 };
