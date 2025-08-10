@@ -4,7 +4,7 @@ export const PATHS = {
         label: "Admin Main"
     },
     USER_MAIN: {
-        path: "users/:userId",
+        path: "/:userId",
         label: "User Main"
     },
     LANDING: {

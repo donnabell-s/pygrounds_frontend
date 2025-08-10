@@ -326,10 +326,10 @@ const Crossword: React.FC = () => {
           <Component.PrimaryButton label="Submit Answers" onClick={handleSubmit} py="py-2" fontSize="text-md" m="mt-6"/>
         )}
       </div>
-
+ {/* backdrop-blur-sm */}
       {gameEnded && submitted && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center"
           style={{ backgroundColor: "rgba(45, 45, 45, 0.4)" }}
         >
           <div className="bg-white rounded-lg shadow-xl w-[90%] max-w-md p-6 relative border border-gray-200">

@@ -45,6 +45,7 @@ export const AppRoutes = () => {
           <Route path={PATHS.ADMIN_VIEW.USER_MANAGEMENT.VIEW_USERS.path} element={<Views.ViewUsers />} />
           <Route path={PATHS.ADMIN_VIEW.QUESTION_MANAGEMENT.VIEW_QUESTIONS.path} element={<Views.QuestionBank />} />
         </Route>
+        
       </Routes>
     </BrowserRouter>
   );
