@@ -3,21 +3,15 @@ import * as Components from "../../../components";
 import "./Leaderboard.css";
 import { useAdaptive } from "../../../../context/AdaptiveContext";
 import { useAuth } from "../../../../context/AuthContext";
+import { LEVELS } from "../../../../types/game"; // ← use centralized thresholds
+import type { LevelName } from "../../../../types/game";
 
-// ---- LEVEL mapping (your config, trimmed to what we need here) ----
-const LEVELS = [
-  { maxXP: 100, label: "Beginner" },
-  { maxXP: 150, label: "Intermediate" },
-  { maxXP: 150, label: "Advanced" },
-  { maxXP: 100, label: "Master" },
-] as const;
-
-// Local level colors for dynamic badges
-const LEVEL_COLORS: Record<string, { color: string; bg: string }> = {
-  Beginner: { color: "#3776AB", bg: "#3776AB20" },      // blue
+// Local level colors (unchanged styling)
+const LEVEL_COLORS: Record<LevelName, { color: string; bg: string }> = {
+  Beginner: { color: "#3776AB", bg: "#3776AB20" }, // blue
   Intermediate: { color: "#EAB308", bg: "#EAB30820" }, // yellow
-  Advanced: { color: "#22C55E", bg: "#22C55E20" },     // green
-  Master: { color: "#A855F7", bg: "#A855F720" },       // purple
+  Advanced: { color: "#22C55E", bg: "#22C55E20" }, // green
+  Master: { color: "#A855F7", bg: "#A855F720" }, // purple
 };
 
 // Shape we pass to UI (and TopThree)
@@ -26,30 +20,24 @@ type UIUser = {
   name: string;
   username: string;
   totalXP: number;
-  level: string;
+  level: LevelName;
 };
 
 // Compute XP/Level from the user's CURRENT ZONE (mirrors ProgressBar)
-const computeXPFromCurrentZone = (progresses: {
-  zone_id: number;
-  zone_name: string;
-  zone_order: number | null;
-  completion_percent: number;
-}[]) => {
+const computeXPFromCurrentZone = (
+  progresses: { zone_id: number; zone_name: string; zone_order: number | null; completion_percent: number }[],
+) => {
   if (!progresses || progresses.length === 0) {
-    return { totalXP: 0, level: LEVELS[0].label as typeof LEVELS[number]["label"] };
+    return { totalXP: 0, level: LEVELS[0].label as LevelName };
   }
-  const sorted = [...progresses].sort(
-    (a, b) => (a.zone_order ?? 999) - (b.zone_order ?? 999)
-  );
-  const current =
-    sorted.find(p => (p.completion_percent ?? 0) < 100) ?? sorted[sorted.length - 1];
+  const sorted = [...progresses].sort((a, b) => (a.zone_order ?? 999) - (b.zone_order ?? 999));
+  const current = sorted.find((p) => (p.completion_percent ?? 0) < 100) ?? sorted[sorted.length - 1];
 
   const levelIndex = Math.max(0, Math.min((current.zone_order ?? 1) - 1, LEVELS.length - 1));
-  const level = LEVELS[levelIndex];
-  const totalXP = Math.round(((current.completion_percent ?? 0) / 100) * level.maxXP);
+  const tier = LEVELS[levelIndex];
+  const totalXP = Math.round(((current.completion_percent ?? 0) / 100) * tier.maxXP);
 
-  return { totalXP, level: level.label as typeof LEVELS[number]["label"] };
+  return { totalXP, level: tier.label as LevelName };
 };
 
 const Leaderboard = () => {
@@ -70,13 +58,7 @@ const Leaderboard = () => {
   const entries: UIUser[] = (leaderboardZoneProgress ?? []).map((e: any) => {
     const name = [e.first_name, e.last_name].filter(Boolean).join(" ") || e.username;
     const { totalXP, level } = computeXPFromCurrentZone(e.progresses || []);
-    return {
-      id: e.user_id,
-      name,
-      username: e.username,
-      totalXP,
-      level,
-    };
+    return { id: e.user_id, name, username: e.username, totalXP, level };
   });
 
   if (entries.length === 0) {
@@ -87,12 +69,13 @@ const Leaderboard = () => {
   const sortedUsers = [...entries].sort((a, b) => b.totalXP - a.totalXP);
 
   const meIndex = sortedUsers.findIndex(
-    u => (authUser?.id && u.id === authUser.id) || (!!authUser?.username && u.username === authUser.username)
+    (u) => (authUser?.id && u.id === authUser.id) || (!!authUser?.username && u.username === authUser.username),
   );
   const myRank = meIndex >= 0 ? meIndex + 1 : null;
   const me = meIndex >= 0 ? sortedUsers[meIndex] : null;
 
   const topThree = sortedUsers.slice(0, 3);
+
   // Show ranks 4–10 in the list
   const others = sortedUsers.slice(3, 10);
 
@@ -110,9 +93,7 @@ const Leaderboard = () => {
           {/* If I'm in Top 3, show a subtle badge */}
           {myRank && myRank <= 3 && (
             <div className="flex justify-center -mt-2">
-              <span className="px-3 py-1 rounded-full bg-[#704EE7]/10 text-[#704EE7] text-xs font-semibold">
-                You are #{myRank}
-              </span>
+              <span className="px-3 py-1 rounded-full bg-[#704EE7]/10 text-[#704EE7] text-xs font-semibold">You are #{myRank}</span>
             </div>
           )}
         </>
@@ -130,17 +111,13 @@ const Leaderboard = () => {
               key={user.id}
               className={[
                 "flex items-center justify-between bg-white/80 backdrop-blur-sm border p-5 rounded-2xl shadow-md transition-all duration-300 group",
-                isMe
-                  ? "border-[#704EE7] ring-2 ring-[#704EE7]/40 bg-[#704EE7]/5"
-                  : "border-[#704EE7]/25 hover:border-[#704EE7]/35 hover:shadow-lg",
+                isMe ? "border-[#704EE7] ring-2 ring-[#704EE7]/40 bg-[#704EE7]/5" : "border-[#704EE7]/25 hover:border-[#704EE7]/35 hover:shadow-lg",
               ].join(" ")}
             >
               {/* Left Side: Rank + Avatar + Name */}
               <div className="flex items-center gap-4">
                 {/* Rank Number */}
-                <span className="text-[#3776AB] font-bold text-xl w-10 text-center">
-                  #{rankNumber}
-                </span>
+                <span className="text-[#3776AB] font-bold text-xl w-10 text-center">#{rankNumber}</span>
 
                 {/* Avatar */}
                 <div className="w-14 h-14 rounded-full flex items-center justify-center bg-[#704EE7] text-white 
@@ -153,9 +130,7 @@ const Leaderboard = () => {
                   <span className="font-semibold text-lg">
                     {user.name}
                     {isMe && (
-                      <span className="ml-2 align-middle text-xs px-2 py-0.5 rounded-full bg-[#704EE7]/10 text-[#704EE7] font-semibold">
-                        You
-                      </span>
+                      <span className="ml-2 align-middle text-xs px-2 py-0.5 rounded-full bg-[#704EE7]/10 text-[#704EE7] font-semibold">You</span>
                     )}
                   </span>
                   <span className="text-gray-500 text-sm">@{user.username}</span>
@@ -164,10 +139,7 @@ const Leaderboard = () => {
 
               {/* Right Side: Dynamic Level + XP */}
               <div className="flex flex-col items-end w-28 gap-1.5">
-                <span
-                  className="px-4 py-1 rounded-full text-xs font-semibold text-center"
-                  style={{ color: levelStyle.color, backgroundColor: levelStyle.bg }}
-                >
+                <span className="px-4 py-1 rounded-full text-xs font-semibold text-center" style={{ color: levelStyle.color, backgroundColor: levelStyle.bg }}>
                   {user.level}
                 </span>
                 <span className="text-gray-600 font-semibold">{user.totalXP} XP</span>
@@ -185,10 +157,8 @@ const Leaderboard = () => {
               <div className="h-px bg-gray-200 flex-1" />
             </div>
 
-            <div
-              className="flex items-center justify-between bg-white/80 backdrop-blur-sm border p-5 rounded-2xl 
-                         shadow-md ring-2 ring-[#704EE7]/40 border-[#704EE7] bg-[#704EE7]/5"
-            >
+            <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm border p-5 rounded-2xl 
+                         shadow-md ring-2 ring-[#704EE7]/40 border-[#704EE7] bg-[#704EE7]/5">
               {/* Left Side: Rank + Avatar + Name */}
               <div className="flex items-center gap-4">
                 <span className="text-[#3776AB] font-bold text-xl w-10 text-center">#{myRank}</span>
@@ -199,9 +169,7 @@ const Leaderboard = () => {
                 <div className="flex flex-col">
                   <span className="font-semibold text-lg">
                     {me.name}
-                    <span className="ml-2 align-middle text-xs px-2 py-0.5 rounded-full bg-[#704EE7]/10 text-[#704EE7] font-semibold">
-                      You
-                    </span>
+                    <span className="ml-2 align-middle text-xs px-2 py-0.5 rounded-full bg-[#704EE7]/10 text-[#704EE7] font-semibold">You</span>
                   </span>
                   <span className="text-gray-500 text-sm">@{me.username}</span>
                 </div>
@@ -213,10 +181,7 @@ const Leaderboard = () => {
                   const style = LEVEL_COLORS[me.level] || { color: "#704EE7", bg: "#704EE720" };
                   return (
                     <>
-                      <span
-                        className="px-4 py-1 rounded-full text-xs font-semibold text-center"
-                        style={{ color: style.color, backgroundColor: style.bg }}
-                      >
+                      <span className="px-4 py-1 rounded-full text-xs font-semibold text-center" style={{ color: style.color, backgroundColor: style.bg }}>
                         {me.level}
                       </span>
                       <span className="text-gray-600 font-semibold">{me.totalXP} XP</span>

@@ -1,5 +1,3 @@
-// src/pages/user/game/Hangman.tsx
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Editor from "@monaco-editor/react";
@@ -7,19 +5,12 @@ import { useAuth } from "../../../../context/AuthContext";
 import { useGame } from "../../../../context/GameContext";
 import * as Component from "../../../components";
 import { RxCross1 } from "react-icons/rx";
-import snakeImg from "../../../../assets/images/snake.png"
+import snakeImg from "../../../../assets/images/snake.png";
 
 const Hangman: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const {
-    activeSession,
-    fetchGameSession,       // new
-    startHangmanGame,
-    submitHangmanCode,
-    clearActiveSession,
-    resetGameEnd,
-  } = useGame();
+  const { activeSession, fetchGameSession, startHangmanGame, submitHangmanCode, clearActiveSession, resetGameEnd } = useGame();
 
   const [lives, setLives] = useState<number>(3);
   const [code, setCode] = useState<string>("");
@@ -27,30 +18,23 @@ const Hangman: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // 1️⃣ On mount: ensure a session exists, then fetch full session
   useEffect(() => {
     (async () => {
       if (!activeSession || activeSession.game_type !== "hangman") {
         await startHangmanGame();
       }
-      // Now pull the full session (with remaining_lives)
       const session = await fetchGameSession(activeSession!.session_id);
-      if (session?.remaining_lives !== undefined) {
-        setLives(session.remaining_lives);
-      }
+      if (session?.remaining_lives !== undefined) setLives(session.remaining_lives);
       setLoading(false);
     })();
   }, []);
 
-  // Extract question
   const question = activeSession?.session_questions?.[0]?.question;
   const prompt = question?.question_text ?? "";
   const sampleInput = question?.game_data?.sample_input ?? "";
   const sampleOutput = question?.game_data?.sample_output ?? "";
   const functionName = question?.game_data?.function_name ?? "";
 
-
-  // 2️⃣ Submit code
   const handleSubmit = async () => {
     if (!activeSession || submitted) return;
     const result = await submitHangmanCode(activeSession.session_id, code);
@@ -61,34 +45,24 @@ const Hangman: React.FC = () => {
     setOutput(
       result.success
         ? `✅ Correct! All test cases passed.\nLives left: ${result.remaining_lives}`
-        : `❌ ${result.message}\nLives left: ${result.remaining_lives}`
+        : `❌ ${result.message}\nLives left: ${result.remaining_lives}`,
     );
-    if (result.traceback) {
-      setOutput(prev => prev + `\n\nTraceback:\n${result.traceback}`);
-    }
+    if (result.traceback) setOutput((prev) => prev + `\n\nTraceback:\n${result.traceback}`);
   };
 
-useEffect(() => {
-  if (question?.game_data?.function_name) {
-    const fnName = question.game_data.function_name;
+  useEffect(() => {
+    if (question?.game_data?.function_name) {
+      const fnName = question.game_data.function_name;
 
-    // Try to extract parameters from buggy_code function definition
-    let params = "";
-    const buggy = question.game_data.buggy_code || "";
-    const match = buggy.match(/def\s+\w+\s*\(([^)]*)\)/); 
-    if (match) {
-      params = match[1].trim();  // get actual parameter list
+      let params = "";
+      const buggy = question.game_data.buggy_code || "";
+      const match = buggy.match(/def\s+\w+\s*\(([^)]*)\)/);
+      if (match) params = match[1].trim();
+
+      setCode(`def ${fnName}(${params}):\n    # Write your code here`);
     }
+  }, [activeSession]);
 
-    // Starter function template
-    setCode(`def ${fnName}(${params}):\n    # Write your code here`);
-  }
-}, [activeSession]);
-
-
-
-
-  // 3️⃣ Auto-submit on timeout
   useEffect(() => {
     if (!activeSession || submitted) return;
     const startMs = new Date(activeSession.start_time).getTime();
@@ -101,27 +75,21 @@ useEffect(() => {
     return () => clearTimeout(timer);
   }, [activeSession, submitted]);
 
-  // 4️⃣ Close handler clears session
   const handleClose = () => {
     clearActiveSession();
     resetGameEnd();
     navigate(`/${user?.id}/home`);
   };
 
-  if (loading || !activeSession) {
-    return <div className="p-6">Loading...</div>;
-  }
+  if (loading || !activeSession) return <div className="p-6">Loading...</div>;
 
   return (
     <div className="flex flex-row my-6 gap-6  mx-auto">
-
       <div className="flex flex-col items-center justify-between">
-        {/* Snake at the top */}
         <div className="w-full flex justify-center">
           <img className="h-90 w-90" src={snakeImg} />
         </div>
 
-        {/* Lives indicator at bottom */}
         <div className="flex flex-row items-center justify-center gap-2.5">
           {Array.from({ length: 3 }).map((_, idx) => {
             const lost = 3 - lives;
@@ -129,12 +97,7 @@ useEffect(() => {
             return (
               <div
                 key={idx}
-                className={
-                  `w-15 h-15 rounded-full flex items-center justify-center border-2 ` +
-                  (isLost
-                    ? "bg-red-100 border-red-500"
-                    : "bg-[#ECECEF] border-[#6B7280]")
-                }
+                className={`w-15 h-15 rounded-full flex items-center justify-center border-2 ${isLost ? "bg-red-100 border-red-500" : "bg-[#ECECEF] border-[#6B7280]"}`}
               >
                 {isLost && (
                   <span className="text-red-500 font-bold">
@@ -147,13 +110,12 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="flex flex-col flex-1 gap-6 max-w-4xl">
         <div className="bg-white p-5 rounded-md shadow-md text-sm">
           <p className="mb-4 text-lg">
             <strong>Prompt:</strong> {prompt}
             {functionName && (
-              <span className="ml-2 text-[#704EE7">
+              <span className="ml-2 text-[#704EE7]">
                 (Function: <code>{functionName}</code>)
               </span>
             )}
@@ -171,36 +133,17 @@ useEffect(() => {
           </div>
         </div>
 
-        {output && (
-          <pre className="bg-gray-100 text-sm p-4 rounded whitespace-pre-wrap border">
-            {output}
-          </pre>
-        )}
+        {output && <pre className="bg-gray-100 text-sm p-4 rounded whitespace-pre-wrap border">{output}</pre>}
 
-        <Editor
-          height="250px"
-          language="python"
-          value={code}
-          onChange={val => setCode(val || "")}
-          theme="vs-dark"
-          defaultValue="# Write your function here"
-        />
+        <Editor height="250px" language="python" value={code} onChange={(val) => setCode(val || "")} theme="vs-dark" defaultValue="# Write your function here" />
 
-        {!submitted && (
-          // <button
-          //   className="bg-[#0077B6] hover:brightness-110 text-white px-4 py-2 rounded-md self-start w-full"
-          //   onClick={handleSubmit}
-          // >
-          //   Submit Code
-          // </button>
-          <Component.PrimaryButton label="Submit Answers" onClick={handleSubmit} py="py-2" fontSize="text-md"/>
-        )}
+        {!submitted && <Component.PrimaryButton label="Submit Answers" onClick={handleSubmit} py="py-2" fontSize="text-md" />}
       </div>
 
       {submitted && (
         <div>
-            <Component.ResultsModal onClose={handleClose} />
-          </div>
+          <Component.ResultsModal onClose={handleClose} />
+        </div>
       )}
     </div>
   );

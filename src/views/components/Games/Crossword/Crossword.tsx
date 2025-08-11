@@ -1,4 +1,3 @@
-// src/views/components/Games/Crossword/Crossword.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
@@ -22,14 +21,7 @@ const norm = (s?: string | null) => (s ?? "").replace(/[^A-Za-z]/g, "").toUpperC
 const Crossword: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const {
-    activeSession,
-    gameEnded,
-    getCrosswordGrid,
-    submitAnswers,
-    clearActiveSession,
-    resetGameEnd,
-  } = useGame();
+  const { activeSession, gameEnded, getCrosswordGrid, submitAnswers, clearActiveSession, resetGameEnd } = useGame();
 
   const [grid, setGrid] = useState<string[]>([]);
   const [placements, setPlacements] = useState<ExtendedPlacement[]>([]);
@@ -39,7 +31,6 @@ const Crossword: React.FC = () => {
 
   const storageKey = activeSession ? `crossword-letters-${activeSession.session_id}` : null;
 
-  // Keep only mapped placements and dedupe by GameQuestion id (first one wins)
   const normalizePlacements = (raw: any[] = []): ExtendedPlacement[] => {
     const unique: ExtendedPlacement[] = [];
     const seen = new Set<number>();
@@ -58,7 +49,6 @@ const Crossword: React.FC = () => {
     if (stored === "true") setSubmitted(true);
   }, []);
 
-  // Load persisted board (authoritative), sanitize placements once
   useEffect(() => {
     if (!activeSession) return;
     (async () => {
@@ -69,7 +59,6 @@ const Crossword: React.FC = () => {
     })();
   }, [activeSession, getCrosswordGrid]);
 
-  // Auto-submit when timer ends
   useEffect(() => {
     if (!activeSession || submitted || gameEnded) return;
     const start = new Date(activeSession.start_time).getTime();
@@ -81,7 +70,6 @@ const Crossword: React.FC = () => {
     return () => clearTimeout(timer);
   }, [activeSession, submitted, gameEnded]);
 
-  // Hydrate/persist letters per session
   useEffect(() => {
     if (!activeSession) return;
     const saved = localStorage.getItem(`crossword-letters-${activeSession.session_id}`);
@@ -94,14 +82,12 @@ const Crossword: React.FC = () => {
     }
   }, [letters, activeSession]);
 
-  // If game ended (timeout/exit) and not submitted → submit once
   useEffect(() => {
     if (gameEnded && !submitted && activeSession && activeSession.status === "active") {
       handleSubmit();
     }
   }, [gameEnded, submitted, activeSession]);
 
-  // Fallback map: sanitized word -> GameQuestion.id (used only if a placement is missing an id)
   const wordToGqId = useMemo(() => {
     const m = new Map<string, number>();
     const sqs = activeSession?.session_questions ?? [];
@@ -112,13 +98,11 @@ const Crossword: React.FC = () => {
     return m;
   }, [activeSession]);
 
-  // === SINGLE SOURCE OF TRUTH FOR NUMBERING (matches ResultsModal) ============
-  // Global order = session_questions order, filtered to the placed set.
   const orderedPlacedIds = useMemo<number[]>(() => {
     const placedIds = new Set(
       placements
         .map((p) => toNum(p.game_question_id) ?? wordToGqId.get(norm(p.word)))
-        .filter((v): v is number => !!v)
+        .filter((v): v is number => !!v),
     );
     return (activeSession?.session_questions ?? [])
       .map((sq) => Number(sq.id))
@@ -131,7 +115,6 @@ const Crossword: React.FC = () => {
     return map;
   }, [orderedPlacedIds]);
 
-  // Number shown in the top-left of the start cell for each placement
   const startCellNumberingMap = useMemo(() => {
     const map: Record<string, number> = {};
     for (const p of placements) {
@@ -144,7 +127,6 @@ const Crossword: React.FC = () => {
     return map;
   }, [placements, gqIdToNumber, wordToGqId]);
 
-  // Editable cells (only letters under placed words)
   const editableCells = useMemo(() => {
     const positions = new Set<string>();
     placements.forEach((p) => {
@@ -216,7 +198,6 @@ const Crossword: React.FC = () => {
     setSubmitted(true);
     localStorage.setItem("submitted", "true");
 
-    // Submit strictly the placed set; prefer placement id; dedupe by id
     const used = new Set<number>();
     const answers: AnswerSubmission[] = placements
       .map((p) => {
@@ -235,11 +216,7 @@ const Crossword: React.FC = () => {
         if (!gqid || used.has(gqid)) return null;
         used.add(gqid);
 
-        return {
-          question_id: gqid,
-          user_answer: guess.trim(),
-          time_taken: 0,
-        };
+        return { question_id: gqid, user_answer: guess.trim(), time_taken: 0 };
       })
       .filter((a): a is AnswerSubmission => !!a);
 
@@ -247,20 +224,17 @@ const Crossword: React.FC = () => {
     if (storageKey) localStorage.removeItem(storageKey);
   };
 
-  // Clue list: show the same GLOBAL numbers as grid/results (no per-section renumbering)
   const renderClueList = (dir: "across" | "down") =>
     placements
       .filter((p) => p.direction === dir)
       .map((p, idx) => {
         const id = toNum(p.game_question_id) ?? wordToGqId.get(norm(p.word));
-        const num = id ? gqIdToNumber.get(id) : undefined; // same numbering used everywhere
+        const num = id ? gqIdToNumber.get(id) : undefined;
         const isSelected = selectedPlacement === p;
         return (
           <div
             key={`${p.word}-${p.row}-${p.col}-${p.direction}-${idx}`}
-            className={`text-sm mb-1 cursor-pointer px-3 py-2 rounded transition-all border shadow-sm ${
-              isSelected ? "bg-yellow-100 border-yellow-300 " : "bg-white hover:bg-gray-100 border-gray-200"
-            }`}
+            className={`text-sm mb-1 cursor-pointer px-3 py-2 rounded transition-all border shadow-sm ${isSelected ? "bg-yellow-100 border-yellow-300 " : "bg-white hover:bg-gray-100 border-gray-200"}`}
             onClick={() => setSelectedPlacement(p)}
           >
             <strong className="text-[#0077B6] mr-1">{num ?? ""}.</strong> {p.clue || ""}
@@ -272,26 +246,21 @@ const Crossword: React.FC = () => {
 
   return (
     <div className="flex flex-col md:flex-row gap-10 py-6 px-4 justify-center items-start bg-[#F8FAFC] min-h-screen">
-      {/* Crossword Grid */}
       <div className="inline-block overflow-hidden border border-[#6B7280]">
         <div className="grid grid-cols-15">
           {grid.map((row, rowIndex) =>
             row.split("").map((_, colIndex) => {
               const key = `${rowIndex}-${colIndex}`;
               const isEditable = editableCells.has(key);
-              const number = startCellNumberingMap[key]; // global numbers aligned to Results
+              const number = startCellNumberingMap[key];
 
               return (
                 <div
                   key={key}
-                  className={`relative w-10 h-10 border border-[#6B7280] flex items-center justify-center 
-                    ${getCellClass(key, isEditable)} 
-                    transition-all duration-150`}
+                  className={`relative w-10 h-10 border border-[#6B7280] flex items-center justify-center ${getCellClass(key, isEditable)} transition-all duration-150`}
                 >
                   {number && (
-                    <span className="absolute top-[2px] left-[3px] text-[0.55rem] font-bold text-[#6B7280]">
-                      {number}
-                    </span>
+                    <span className="absolute top-[2px] left-[3px] text-[0.55rem] font-bold text-[#6B7280]">{number}</span>
                   )}
                   {isEditable ? (
                     <input
@@ -302,18 +271,16 @@ const Crossword: React.FC = () => {
                       data-cell={key}
                       onChange={(e) => handleCellChange(key, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, key)}
-                      className="w-full h-full text-center font-semibold text-sm outline-none
-                                focus:bg-yellow-100 focus:ring-1 focus:ring-[#6B7280]"
+                      className="w-full h-full text-center font-semibold text-sm outline-none focus:bg-yellow-100 focus:ring-1 focus:ring-[#6B7280]"
                     />
                   ) : null}
                 </div>
               );
-            })
+            }),
           )}
         </div>
       </div>
 
-      {/* Clues Section */}
       <div className="flex flex-col gap-4 max-w-sm w-full">
         <div>
           <h2 className="text-md font-bold mb-2 text-[#0077B6]">Across</h2>
@@ -325,28 +292,21 @@ const Crossword: React.FC = () => {
         </div>
 
         {!gameEnded && (
-          <Component.PrimaryButton
-            label="Submit Answers"
-            onClick={handleSubmit}
-            py="py-2"
-            fontSize="text-md"
-            m="mt-6"
-          />
+          <Component.PrimaryButton label="Submit Answers" onClick={handleSubmit} py="py-2" fontSize="text-md" m="mt-6" />
         )}
       </div>
 
       {gameEnded && submitted && (
-        <div
-        >
-            <Component.ResultsModal
-              onClose={() => {
-                clearActiveSession();
-                resetGameEnd();
-                localStorage.removeItem("submitted");
-                navigate(`/${user?.id}/home`);
-              }}
-            />
-          </div>
+        <div>
+          <Component.ResultsModal
+            onClose={() => {
+              clearActiveSession();
+              resetGameEnd();
+              localStorage.removeItem("submitted");
+              navigate(`/${user?.id}/home`);
+            }}
+          />
+        </div>
       )}
     </div>
   );

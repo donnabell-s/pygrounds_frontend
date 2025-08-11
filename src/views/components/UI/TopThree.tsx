@@ -1,55 +1,38 @@
 // TopThree.tsx
 import { FaCrown } from "react-icons/fa";
 import "./Leaderboard.css";
+import type { LevelName } from "../../../types/game"; // ← types only
 
 interface TopUserProps {
   user: {
     name: string;
     username: string;
     totalXP: number;
-    level: string;
+    level: LevelName; // ← use centralized LevelName
   };
   rank: number; // 0 = 1st, 1 = 2nd, 2 = 3rd
 }
 
-// Local level colors
-const LEVEL_COLORS: Record<
-  string,
-  { color: string; bg: string }
-> = {
-  Beginner: { color: "#3776AB", bg: "#3776AB20" },       // blue
-  Intermediate: { color: "#EAB308", bg: "#EAB30820" },  // yellow
-  Advanced: { color: "#22C55E", bg: "#22C55E20" },      // green
-  Master: { color: "#A855F7", bg: "#A855F720" },        // purple
+// Local level colors (unchanged styling)
+const LEVEL_COLORS: Record<LevelName, { color: string; bg: string }> = {
+  Beginner: { color: "#3776AB", bg: "#3776AB20" }, // blue
+  Intermediate: { color: "#EAB308", bg: "#EAB30820" }, // yellow
+  Advanced: { color: "#22C55E", bg: "#22C55E20" }, // green
+  Master: { color: "#A855F7", bg: "#A855F720" }, // purple
 };
 
 const TopThree: React.FC<TopUserProps> = ({ user, rank }) => {
   const podiumStyles = [
-    {
-      className: "pulse-gold scale-110",
-      border: "border-yellow-400",
-      badgeBg: "bg-yellow-400 text-white",
-    },
-    {
-      className: "pulse-silver scale-100",
-      border: "border-blue-400",
-      badgeBg: "bg-blue-400 text-white",
-    },
-    {
-      className: "pulse-bronze scale-95",
-      border: "border-pink-500",
-      badgeBg: "bg-pink-500 text-white",
-    },
+    { className: "pulse-gold scale-110", border: "border-yellow-400", badgeBg: "bg-yellow-400 text-white" },
+    { className: "pulse-silver scale-100", border: "border-blue-400", badgeBg: "bg-blue-400 text-white" },
+    { className: "pulse-bronze scale-95", border: "border-pink-500", badgeBg: "bg-pink-500 text-white" },
   ];
 
   const { className, border, badgeBg } = podiumStyles[rank];
   const rankNumber = rank + 1;
 
-  // Dynamic level color
-  const levelStyle = LEVEL_COLORS[user.level] || {
-    color: "#704EE7",
-    bg: "#704EE720",
-  };
+  // Dynamic level color (unchanged behavior)
+  const levelStyle = LEVEL_COLORS[user.level] || { color: "#704EE7", bg: "#704EE720" };
 
   return (
     <div
@@ -89,10 +72,7 @@ const TopThree: React.FC<TopUserProps> = ({ user, rank }) => {
       <div className="flex flex-col items-center gap-1 mt-1">
         <span
           className="px-4 py-1 rounded-full text-xs font-semibold text-center"
-          style={{
-            color: levelStyle.color,
-            backgroundColor: levelStyle.bg,
-          }}
+          style={{ color: levelStyle.color, backgroundColor: levelStyle.bg }}
         >
           {user?.level}
         </span>

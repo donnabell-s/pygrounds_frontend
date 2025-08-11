@@ -15,30 +15,20 @@ const clampLives = (n: unknown) => {
 
 const normalizeInitialLives = (raw: unknown) => {
   const n = Number(raw);
-  // If backend sends 0/undefined/NaN for a brand new session, default to full lives.
   return n > 0 ? clampLives(n) : MAX_LIVES;
 };
 
 const Debugging: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const {
-    activeSession,
-    startDebuggingGame,
-    submitDebuggingCode,
-    fetchGameSession,
-    clearActiveSession,
-    resetGameEnd,
-  } = useGame();
+  const { activeSession, startDebuggingGame, submitDebuggingCode, fetchGameSession, clearActiveSession, resetGameEnd } = useGame();
 
-  // ❗ Start nullable; we’ll render with a safe fallback until we know the real value.
   const [lives, setLives] = useState<number | null>(null);
   const [code, setCode] = useState<string>("");
   const [output, setOutput] = useState<string>("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load session
   useEffect(() => {
     (async () => {
       let session = activeSession;
@@ -49,18 +39,14 @@ const Debugging: React.FC = () => {
       }
 
       if (session) {
-        // ✅ Normalize initial lives so brand‑new game shows 0 X's (full lives)
         setLives(normalizeInitialLives(session.remaining_lives));
-
-        const broken =
-          session.session_questions?.[0]?.question?.game_data?.buggy_code;
+        const broken = session.session_questions?.[0]?.question?.game_data?.buggy_code;
         setCode(broken || "");
       }
       setLoading(false);
     })();
   }, []);
 
-  // Auto-submit on timeout
   useEffect(() => {
     if (!activeSession || submitted) return;
 
@@ -74,14 +60,8 @@ const Debugging: React.FC = () => {
         if (result) {
           setLives(clampLives(result.remaining_lives));
           setSubmitted(true);
-          setOutput(
-            result.success
-              ? "⏰ Time's up, but your last submission passed all tests!"
-              : `⏰ Time's up. Game over.\n${result.message}`
-          );
-          if (result.traceback) {
-            setOutput((prev) => prev + `\n\nTraceback:\n${result.traceback}`);
-          }
+          setOutput(result.success ? "⏰ Time's up, but your last submission passed all tests!" : `⏰ Time's up. Game over.\n${result.message}`);
+          if (result.traceback) setOutput((prev) => prev + `\n\nTraceback:\n${result.traceback}`);
         } else {
           setOutput("⏰ Time's up. Game over.");
           setSubmitted(true);
@@ -106,16 +86,10 @@ const Debugging: React.FC = () => {
     setSubmitted(result.success || result.game_over);
     setOutput(
       result.success
-        ? `✅ Fixed! All tests passed.\nLives left: ${clampLives(
-            result.remaining_lives
-          )}`
-        : `❌ ${result.message}\nLives left: ${clampLives(
-            result.remaining_lives
-          )}`
+        ? `✅ Fixed! All tests passed.\nLives left: ${clampLives(result.remaining_lives)}`
+        : `❌ ${result.message}\nLives left: ${clampLives(result.remaining_lives)}`,
     );
-    if (result.traceback) {
-      setOutput((prev) => prev + `\n\nTraceback:\n${result.traceback}`);
-    }
+    if (result.traceback) setOutput((prev) => prev + `\n\nTraceback:\n${result.traceback}`);
   };
 
   const handleClose = () => {
@@ -124,16 +98,13 @@ const Debugging: React.FC = () => {
     navigate(`/${user?.id}/home`);
   };
 
-  if (loading || !activeSession)
-    return <div className="p-6">Loading...</div>;
+  if (loading || !activeSession) return <div className="p-6">Loading...</div>;
 
-  // ✅ Safe value for rendering the HUD
   const safeLives = lives ?? MAX_LIVES;
   const lost = Math.max(0, MAX_LIVES - safeLives);
 
   return (
     <div className="min-h-screen flex flex-col items-center p-6">
-      {/* Lives HUD */}
       <div className="flex gap-4 mb-4">
         {Array.from({ length: MAX_LIVES }).map((_, idx) => {
           const isLost = idx < lost;
@@ -142,9 +113,7 @@ const Debugging: React.FC = () => {
               key={idx}
               className={
                 "w-10 h-10 rounded-full flex items-center justify-center border-2 shadow-lg " +
-                (isLost
-                  ? "bg-red-700 border-red-400"
-                  : "bg-gray-200 border-gray-400")
+                (isLost ? "bg-red-700 border-red-400" : "bg-gray-200 border-gray-400")
               }
             >
               {isLost && <span className="text-white font-bold">✕</span>}
@@ -153,9 +122,7 @@ const Debugging: React.FC = () => {
         })}
       </div>
 
-      {/* Cockpit Panels */}
       <div className="flex items-center justify-center relative w-full max-w-6xl h-[300px]">
-        {/* Left Console */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1/4 h-[300px] bg-gray-800 text-white p-4 rounded-md transform -skew-y-6 shadow-lg overflow-auto">
           <p className="font-bold mb-2">Prompt & I/O</p>
           <p className="text-sm mb-2">{prompt}</p>
@@ -167,38 +134,21 @@ const Debugging: React.FC = () => {
           </div>
         </div>
 
-        {/* Main Code Editor */}
         <div className="w-1/2 h-full flex flex-col bg-gray-900 border-4 border-gray-700 rounded-lg overflow-hidden shadow-xl z-10">
-          <Editor
-            height="100%"
-            language="python"
-            value={code}
-            onChange={(val) => setCode(val || "")}
-            theme="vs-dark"
-          />
+          <Editor height="100%" language="python" value={code} onChange={(val) => setCode(val || "")} theme="vs-dark" />
         </div>
 
-        {/* Right Console */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1/4 h-[300px] bg-gray-800 text-green-300 p-4 rounded-md transform skew-y-6 shadow-lg overflow-auto">
           <p className="font-bold mb-2">Execution Output</p>
           <pre className="text-xs whitespace-pre-wrap">{output || "..."}</pre>
         </div>
       </div>
 
-      {/* Central Button */}
-      {!submitted && (
-        <Component.PrimaryButton
-          label="Submit Answers"
-          onClick={handleSubmit}
-          py="py-2"
-          fontSize="text-md"
-          m="mt-8"
-        />
-      )}
+      {!submitted && <Component.PrimaryButton label="Submit Answers" onClick={handleSubmit} py="py-2" fontSize="text-md" m="mt-8" />}
 
       {submitted && (
         <div>
-            <Component.ResultsModal onClose={handleClose} />
+          <Component.ResultsModal onClose={handleClose} />
         </div>
       )}
     </div>

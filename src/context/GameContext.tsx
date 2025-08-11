@@ -1,4 +1,3 @@
-// src/contexts/GameContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { gameService } from "../services/gameService";
 import type {
@@ -44,29 +43,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [activeSession, setActiveSession] = useState<GameSession | null>(null);
   const [gameEnded, setGameEnded] = useState(false);
 
-  // Hydrate from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("activeSession");
     if (stored) setActiveSession(JSON.parse(stored));
     if (localStorage.getItem("gameEnded") === "true") setGameEnded(true);
   }, []);
 
-  // Persist activeSession
   useEffect(() => {
-    if (activeSession) {
-      localStorage.setItem("activeSession", JSON.stringify(activeSession));
-    } else {
-      localStorage.removeItem("activeSession");
-    }
+    if (activeSession) localStorage.setItem("activeSession", JSON.stringify(activeSession));
+    else localStorage.removeItem("activeSession");
   }, [activeSession]);
 
-  // Persist gameEnded
   useEffect(() => {
-    if (gameEnded) {
-      localStorage.setItem("gameEnded", "true");
-    } else {
-      localStorage.removeItem("gameEnded");
-    }
+    if (gameEnded) localStorage.setItem("gameEnded", "true");
+    else localStorage.removeItem("gameEnded");
   }, [gameEnded]);
 
   const clearActiveSession = () => {
@@ -84,7 +74,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const startCrosswordGame = async (): Promise<CrosswordSessionData | null> => {
     const resp = await gameService.startCrossword();
     if (!resp) return null;
-
     const session = await gameService.getSession(resp.session_id);
     if (session) {
       setActiveSession(session);
@@ -98,7 +87,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const startWordSearchGame = async (): Promise<WordSearchSessionData | null> => {
     const resp = await gameService.startWordSearch();
     if (!resp) return null;
-
     const session = await gameService.getSession(resp.session_id);
     if (session) {
       setActiveSession(session);
@@ -176,8 +164,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   };
 
-  const submitPreAssessmentAnswers = (answers: Record<number, string>) =>
-    gameService.submitPreAssessmentAnswers(answers);
+  const submitPreAssessmentAnswers = (answers: Record<number, string>) => gameService.submitPreAssessmentAnswers(answers);
 
   return (
     <GameContext.Provider
