@@ -37,6 +37,13 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
   const { activeSession, fetchResponses } = useGame();
   const navigate = useNavigate();
 
+  const startTime = activeSession?.start_time ? new Date(activeSession.start_time).getTime() : 0;
+  const endTime = activeSession?.end_time ? new Date(activeSession.end_time).getTime() : 0;
+
+  const elapsedSeconds = startTime && endTime ? Math.max(0, Math.floor((endTime - startTime) / 1000)) : 0;
+  const minutes = Math.floor(elapsedSeconds / 60);
+  const seconds = elapsedSeconds % 60;
+
   // Map: GameQuestion ID -> { ua, ok }
   const [respMap, setRespMap] = useState<Record<number, { ua?: string | null; ok?: boolean | null }>>({});
 
@@ -126,6 +133,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
               <div className="text-sm text-gray-500">Score</div>
               <div className="text-2xl font-bold">{correctCount} / {total}</div>
             </div>
+            <div className="text-sm text-gray-500">
+              Time Taken: {minutes}m {seconds}s
+            </div>
+
           </div>
 
           <div className="max-h-[55vh] overflow-auto pr-1 space-y-3">
