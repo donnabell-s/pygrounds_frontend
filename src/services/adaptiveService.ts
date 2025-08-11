@@ -12,4 +12,7 @@ export const adaptiveService = {
 
   getUserTopicProgress: (): Promise<Topic[]> =>
     adaptiveApi.getUserTopicProgress(),
+
+  getLeaderboardZoneProgress: (): Promise<Topic[]> =>
+    adaptiveApi.getLeaderboardZoneProgress(),
 };

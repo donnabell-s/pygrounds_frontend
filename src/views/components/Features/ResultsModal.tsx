@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGame } from "../../../context/GameContext";
+import * as Component from "../../components";
 
 interface ResultsModalProps { onClose: () => void; }
 
@@ -116,51 +117,53 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-[#0077B6]">Game Results</h2>
-        <div className="text-right">
-          <div className="text-sm text-gray-500">Score</div>
-          <div className="text-2xl font-extrabold">{correctCount} / {total}</div>
-        </div>
-      </div>
-
-      <div className="max-h-[55vh] overflow-auto pr-1 space-y-3">
-        {items.map((it, idx) => (
-          <div key={it.id ?? idx}
-               className={`rounded-md border p-3 shadow-sm ${it.isCorrect ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}`}>
-            <div className="flex items-start justify-between gap-3">
-              <div className="text-sm">
-                <div className="font-semibold text-gray-800">{idx + 1}. {it.qText}</div>
-                <div className="mt-1 space-y-0.5">
-                  <div className="text-[13px]"><span className="font-medium text-gray-700">Your answer:</span>{" "}
-                    <span className="font-mono break-words">{it.userAnswer}</span>
-                  </div>
-                  {!it.isCoding && (
-                    <div className="text-[13px]"><span className="font-medium text-gray-700">Correct answer:</span>{" "}
-                      <span className="font-mono break-words">{it.correctAnswer || "—"}</span>
-                    </div>
-                  )}
-                  {it.isCoding && (
-                    <div className="text-[13px]"><span className="font-medium text-gray-700">Explanation:</span>{" "}
-                      <span className="break-words">{it.explanation?.trim() ? it.explanation : "No explanation yet."}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${it.isCorrect ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>
-                {it.isCorrect ? "Correct" : "Wrong"}
-              </span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2D2D2D]/40">
+      <div className="bg-white rounded-xl shadow-xl w-[90%] max-w-xl p-6 relative border border-gray-200">
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-[#704EE7]">Game Results</h2>
+            <div className="text-right">
+              <div className="text-sm text-gray-500">Score</div>
+              <div className="text-2xl font-bold">{correctCount} / {total}</div>
             </div>
           </div>
-        ))}
-        {total === 0 && <div className="text-sm text-gray-600">No questions found for this session.</div>}
-      </div>
 
-      <div className="pt-1 flex items-center justify-end">
-        <button onClick={handleClose} className="px-5 py-2 bg-[#0077B6] text-white rounded-md hover:brightness-110 transition-colors">
-          Return Home
-        </button>
+          <div className="max-h-[55vh] overflow-auto pr-1 space-y-3">
+            {items.map((it, idx) => (
+              <div key={it.id ?? idx}
+                  className={`rounded-lg border p-3 shadow-sm ${it.isCorrect ? "border-[#42BFAC]/80 bg-[#42BFAC]/10" : "border-[#FD4E66]/80 bg-[#FD4E66]/10"}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="text-sm">
+                    <div className="font-semibold">{idx + 1}. {it.qText}</div>
+                    <div className="mt-1 space-y-0.5">
+                      <div className="text-[13px]"><span className="font-medium text-gray-700">Your answer:</span>{" "}
+                        <span className="font-mono break-words">{it.userAnswer}</span>
+                      </div>
+                      {!it.isCoding && (
+                        <div className="text-[13px]"><span className="font-medium text-gray-700">Correct answer:</span>{" "}
+                          <span className="font-mono break-words">{it.correctAnswer || "—"}</span>
+                        </div>
+                      )}
+                      {it.isCoding && (
+                        <div className="text-[13px]"><span className="font-medium text-gray-700">Explanation:</span>{" "}
+                          <span className="break-words">{it.explanation?.trim() ? it.explanation : "No explanation yet."}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${it.isCorrect ? "bg-[#42BFAC] text-white" : "bg-[#FD4E66] text-white"}`}>
+                    {it.isCorrect ? "Correct" : "Wrong"}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {total === 0 && <div className="text-sm text-gray-600">No questions found for this session.</div>}
+          </div>
+
+          <div className="pt-1 flex items-center justify-end">
+            <Component.PrimaryButton label="Return Home" onClick={handleClose} py="py-2" fontSize="text-md"></Component.PrimaryButton>
+          </div>
+        </div>
       </div>
     </div>
   );

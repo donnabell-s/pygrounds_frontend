@@ -198,11 +198,9 @@ useEffect(() => {
       </div>
 
       {submitted && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-[rgba(45,45,45,0.4)]">
-          <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-6">
+        <div>
             <Component.ResultsModal onClose={handleClose} />
           </div>
-        </div>
       )}
     </div>
   );

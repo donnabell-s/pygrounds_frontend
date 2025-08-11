@@ -345,11 +345,7 @@ const WordSearch: React.FC = () => {
         )}
 
         {gameEnded && submitted && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ backgroundColor: "rgba(45, 45, 45, 0.4)" }}
-          >
-            <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-6 relative">
+          <div>
               <Component.ResultsModal
                 onClose={() => {
                   clearActiveSession();
@@ -359,7 +355,6 @@ const WordSearch: React.FC = () => {
                 }}
               />
             </div>
-          </div>
         )}
       </div>
     </div>

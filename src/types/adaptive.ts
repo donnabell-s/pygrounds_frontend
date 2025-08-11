@@ -35,4 +35,19 @@ export interface Topic {
 
 }
 
+// Leaderboard entries from /user-learning/progress/zones/all/
+export type LeaderboardEntry = {
+  user_id: number;
+  username: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  overall_completion: number; // 0–100
+  progresses: {
+    zone_id: number;
+    zone_name: string;
+    zone_order: number | null;
+    completion_percent: number; // 0–100
+  }[];
+};
+
 

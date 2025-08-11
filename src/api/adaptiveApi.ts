@@ -26,5 +26,13 @@ export const adaptiveApi = {
     } catch {
       return [];
     }
+  },
+    getLeaderboardZoneProgress : async (): Promise<Topic[]> => {
+    try {
+      const res = await client.get<Topic[]>("/progress/zones/all/");
+      return res.data;
+    } catch {
+      return [];
+    }
   }
 };

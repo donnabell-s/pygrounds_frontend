@@ -197,10 +197,8 @@ const Debugging: React.FC = () => {
       )}
 
       {submitted && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-[rgba(0,0,0,0.6)]">
-          <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-6">
+        <div>
             <Component.ResultsModal onClose={handleClose} />
-          </div>
         </div>
       )}
     </div>
