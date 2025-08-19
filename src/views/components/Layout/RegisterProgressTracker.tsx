@@ -24,7 +24,7 @@ const RegisterProgressTracker: React.FC = () => {
             key={step.path}
             className={`text-sm font-medium transition-colors duration-300 ${
               index === currentIndex
-                ? "text-[#704EE7] "
+                ? "text-[#7053D0] "
                 : "text-[#6B7280]"
             }`}
           >
@@ -35,7 +35,7 @@ const RegisterProgressTracker: React.FC = () => {
 
       <div className="w-full h-2 bg-[#E4ECF7] rounded-full overflow-hidden">
         <div
-          className="h-2 bg-[#704EE7] rounded-full transition-all duration-500 ease-in-out"
+          className="h-2 bg-[#7053D0] rounded-full transition-all duration-500 ease-in-out"
           style={{ width: `${progressPercent}%` }}
         />
       </div>

@@ -27,7 +27,7 @@ const RegisterMain: React.FC = () => {
   const [preTestAnswers, setPreTestAnswers] = useState<Record<string, any>>({});
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-gradient-to-b from-[#E4ECF7] to-[#FFFBEC] text-[#2D2D2D]">
+    <div className="min-h-screen w-full flex flex-col bg-gradient-to-b from-[#7053D0]/10 to-[#EAE7FE]/40 text-[#2D2D2D]">
       <Component.Header />
 
       <main className="flex flex-1">

@@ -49,13 +49,13 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
         <div className="flex-1 flex flex-col gap-4">
           <div className="flex items-center text-sm text-[#9CA3AF]">
             <span
-              className="hover:text-[#704EE7] cursor-pointer"
+              className="hover:text-[#7053D0] cursor-pointer"
               onClick={() => navigate(`/${user?.id}/home`)}
             >
               Home
             </span>
             <span className="mx-2">/</span>
-            <span className="text-[#704EE7] font-medium">
+            <span className="text-[#7053D0] font-medium">
               {selectedGame.title}
             </span>
           </div>
@@ -70,7 +70,10 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
 
           <div className="flex gap-4 mt-4">
             <button
-              className="px-6 py-2 bg-[#704EE7] text-white font-semibold rounded-lg hover:brightness-110 transition-colors cursor-pointer"
+              className="px-6 py-2 bg-[#7053D0] text-white hover:bg-[#482986]
+              shadow-sm hover:shadow-md transition-colors focus:outline-none 
+              focus:ring-2 focus:ring-[#EAE7FE] focus:ring-offset-2 disabled:opacity-60
+               disabled:cursor-not-allowed cursor-pointer font-semibold rounded-lg"
               onClick={() => setShowConfirm(true)}
             >
               Start Game

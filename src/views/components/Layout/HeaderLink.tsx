@@ -18,7 +18,7 @@ const HeaderLink: React.FC<HeaderLinkProps> = ({ label, route, mobile = false, o
       <Link 
         to={route} 
         onClick={onClick}
-        className={`block py-3 text-lg ${isSelected ? 'text-[#7E5CE3] font-medium' : 'text-gray-700 hover:text-[#7E5CE3]'}`}
+        className={`block py-3 text-lg ${isSelected ? 'text-[#7053D0] font-medium' : 'text-gray-700 hover:text-[#7053D0]'}`}
       >
         {label}
       </Link>
@@ -28,11 +28,11 @@ const HeaderLink: React.FC<HeaderLinkProps> = ({ label, route, mobile = false, o
   return (
     <Link to={route}>
       <div className="h-[64px] px-3 flex items-center justify-center relative font-medium">
-        <p className={`${isSelected ? 'text-[#7E5CE3]' : 'hover:text-[#7E5CE3]'}`}>
+        <p className={`${isSelected ? 'text-[#7053D0]' : 'hover:text-[#7053D0] hover:transition-colors'}`}>
           {label}
         </p>
         <span
-          className={`absolute -bottom-[2px] left-0 h-[2px] bg-[#7E5CE3] transition-all duration-300 ease-in-out ${
+          className={`absolute -bottom-[2px] left-0 h-[2px] bg-[#7053D0] transition-all duration-300 ease-in-out ${
             isSelected ? 'w-full opacity-100' : 'w-0 opacity-0'
           }`}
         />

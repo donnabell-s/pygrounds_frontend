@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useAdaptive } from "../../../context/AdaptiveContext";
 import { FaCode, FaKeyboard, FaLaptopCode, FaServer } from "react-icons/fa";
-import { LEVELS } from "../../../types/game"; // ← thresholds only
+import { LEVELS } from "../../../types/game"; // ← thresholds only\
+import { TiStarburst } from "react-icons/ti";
 
 // UI-only map per level (keeps original styling)
 const LEVEL_UI = {
-  Beginner:     { color: "#3776AB", iconBg: "bg-[#3776AB]",  badgeBg: "bg-[#3776AB]/10",  icon: <FaCode size={18} className="text-white" /> },
-  Intermediate: { color: "#EAB308", iconBg: "bg-[#EAB308]",  badgeBg: "bg-[#EAB308]/10",  icon: <FaKeyboard size={18} className="text-white" /> },
-  Advanced:     { color: "#22C55E", iconBg: "bg-[#22C55E]",  badgeBg: "bg-[#22C55E]/10",  icon: <FaLaptopCode size={18} className="text-white" /> },
-  Master:       { color: "#A855F7", iconBg: "bg-[#A855F7]",  badgeBg: "bg-[#A855F7]/10",  icon: <FaServer size={18} className="text-white" /> },
+  Beginner:     { color: "#3776AB", iconBg: "text-[#3776AB]",  badgeBg: "bg-[#3776AB]/15",  icon: <FaCode size={18} className="text-white" /> },
+  Intermediate: { color: "#EAB308", iconBg: "text-[#EAB308]",  badgeBg: "bg-[#EAB308]/15",  icon: <FaKeyboard size={18} className="text-white" /> },
+  Advanced:     { color: "#22C55E", iconBg: "text-[#22C55E]",  badgeBg: "bg-[#22C55E]/15",  icon: <FaLaptopCode size={18} className="text-white" /> },
+  Master:       { color: "#A855F7", iconBg: "text-[#A855F7]",  badgeBg: "bg-[#A855F7]/15",  icon: <FaServer size={18} className="text-white" /> },
 } as const;
 
 const ANIMATION_DELAY = 100;
@@ -42,14 +43,23 @@ const ProgressBar = () => {
   const maxXP = tier.maxXP;
   const currentXP = Math.round((zone.completion_percent / 100) * maxXP);
 
-  return (
-    <div className="w-full bg-[#704EE7]/10 flex flex-col rounded-xl p-4 sm:p-6 shadow-md gap-4">
+return (
+  <div
+    className={`group relative overflow-hidden bg-[#704EE7]/15 rounded-2xl p-6 border border-white/40 ring-1 ring-[#704EE7]/40 shadow-md w-full`}
+  >
+    {/* overlay under content */}
+    <div className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-gradient-to-br from-white/30 to-transparent" />
+
+    <div className="relative z-10 flex flex-col gap-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         {/* Icon + Info */}
-        <div className="flex items-center gap-3">
-          <div className={`rounded-full h-10 w-10 sm:h-11 sm:w-11 shrink-0 flex items-center justify-center ${ui.iconBg}`}>
-            {ui.icon}
+        <div className="flex items-center gap-1">
+          <div className="relative flex items-center justify-center h-[59px] w-[59px] shrink-0">
+            <TiStarburst className={`absolute inset-0 w-full h-full ${ui.iconBg}`} />
+            <div className="relative flex items-center justify-center text-white text-lg">
+              {ui.icon}
+            </div>
           </div>
           <div className="min-w-0">
             <p className="font-bold text-lg sm:text-2xl leading-tight">
@@ -71,7 +81,7 @@ const ProgressBar = () => {
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
           <p className="text-sm font-semibold">Overall Progress</p>
-          <p className="text-sm font-bold text-[#7E5CE3]">
+          <p className="text-sm font-bold text-[#7054D0]">
             {currentXP}/{maxXP} XP
           </p>
         </div>
@@ -79,7 +89,7 @@ const ProgressBar = () => {
         <div className="w-full h-3.5 bg-white rounded-full overflow-hidden">
           <div
             className="h-full transition-all duration-700 ease-out"
-            style={{ width: `${progressPercent}%`, backgroundColor: ui.color }}
+            style={{ width: `${progressPercent}%`, backgroundColor: "#7054D0" }}
           />
         </div>
 
@@ -89,7 +99,10 @@ const ProgressBar = () => {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
+
+
 };
 
 export default ProgressBar;

@@ -12,9 +12,12 @@ const HomeBanner = () => {
   };
 
   return (
-    <div className="w-full h-[270px] bg-[#704EE7]/10 rounded-xl shadow-md flex flex-col md:flex-row md:justify-between overflow-hidden">
+    <div className="relative w-full h-[270px] bg-[#7054D0] border border-white/40 ring-1 ring-[#7054D0]/40 text-white rounded-2xl shadow-md flex flex-col md:flex-row md:justify-between overflow-hidden">
+      {/* Overlay to match Landing features */}
+      <div className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-gradient-to-br from-white/30 to-transparent" />
+
       {/* Left Section */}
-      <div className="flex flex-col justify-center gap-3 px-6 py-8 sm:px-10 md:pl-14 md:py-11 w-full md:w-[560px]">
+      <div className="relative z-10 flex flex-col justify-center gap-3 px-6 py-8 sm:px-10 md:pl-14 md:py-11 w-full md:w-[560px]">
         <h1 className="font-bold text-2xl sm:text-3xl md:text-4xl">
           Welcome to the Python Game Zone
         </h1>
@@ -22,7 +25,7 @@ const HomeBanner = () => {
           Pick a game, test your skills, and level up your Python, all while having fun!
         </p>
         <div>
-            <Component.PrimaryButton
+          <Component.PrimaryButton
             label="View Progress"
             py="py-1.5"
             px="px-4"
@@ -31,21 +34,19 @@ const HomeBanner = () => {
             onClick={viewProgressClick}
             icon={<FaArrowRight size={14} />}
             iconPosition="right"
-            />
+            className="bg-white !text-[#7054D0] hover:bg-[#EAE7FE]"
+          />
         </div>
       </div>
 
       {/* Right Section (Optional Image) */}
-      <div className="hidden lg:flex items-end justify-center pr-18">
-        {/* Uncomment if you want to show the mascot/banner image */}
-        
+      <div className="relative z-10 hidden lg:flex items-end justify-center pr-18">
         <img
-          src="/images/python_banner.png"
+          src="/images/PyGrounds_banner.png"
           alt="Python Game Zone Illustration"
           className="h-auto max-h-[260px] w-auto object-contain"
           loading="lazy"
-        /> 
-       
+        />
       </div>
     </div>
   );

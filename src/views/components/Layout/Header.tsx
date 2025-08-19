@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 import { FiArrowRightCircle } from "react-icons/fi";
+import Logo from "../../../assets/logo/Pygrounds_Logo.png";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -17,8 +18,12 @@ const Header = () => {
     <>
       <div className="sticky top-0 bg-[#FFFFFF] h-16 flex items-center shadow-sm px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 z-50">
         <div className="flex items-center gap-7">
-          <Link to="/" className="font-bold text-2xl text-[#704EE7]">
-            PyGrounds
+          <Link to="/" className="flex items-center" aria-label="PyGrounds Home">
+            <img
+              src={Logo}
+              alt="PyGrounds"
+              className="h-8 md:h-11 w-auto"
+            />
           </Link>
 
           {isLearner && (
@@ -55,13 +60,13 @@ const Header = () => {
               <div className="gap-2.5 flex">
                 <button
                   onClick={() => setShowLoginModal(true)}
-                  className="text-sm font-medium  px-2 py-1.5 rounded-md cursor-pointer"
+                  className="text-sm font-medium  px-2 py-1.5 rounded-md cursor-pointer hover:brightness-200"
                 >
                   Login
                 </button>
                 <Link
                   to="/register"
-                  className="text-sm font-medium text-[#704EE7]  border border-[#704EE7] px-3.5 py-1.5 rounded-full hover:brightness-110"
+                  className="text-sm font-medium text-[#7053D0]  border border-[#7053D0] px-3.5 py-1.5 rounded-full hover:border-[#482986] hover:text-[#482986]"
                 >
                   Get Started
                 </Link>

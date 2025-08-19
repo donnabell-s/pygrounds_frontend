@@ -33,7 +33,7 @@ const Login = ({ onSuccess }: LoginProps) => {
     >
 
       <div className="flex flex-col justify-center items-center mb-8">
-        <h2 className="text-2xl font-bold text-center text-[#7E5CE3]">Sign In</h2>
+        <h2 className="text-2xl font-bold text-center text-[#7053D0]">Sign In</h2>
         <span className="text-sm">Enter valid username & password to continue</span>
       </div>
 
@@ -58,12 +58,16 @@ const Login = ({ onSuccess }: LoginProps) => {
 
       <button
         type="submit"
-        className="w-full bg-[#7E5CE3] text-white py-2 px-4 rounded-full hover:brightness-110 mt-4 cursor-pointer"
+        className="w-full py-2 px-4 mt-4 rounded-full
+        bg-[#7053D0] text-white hover:bg-[#482986]
+        shadow-sm hover:shadow-md transition-colors
+        focus:outline-none focus:ring-2 focus:ring-[#EAE7FE] focus:ring-offset-2
+        disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
       >
         Login
       </button>
       <span className="text-sm w-full flex justify-center">Not registered yet?
-        <Link to="/register" className="ml-1 cursor-pointer text-[#7E5CE3] hover:brightness-110">
+        <Link to="/register" className="ml-1 cursor-pointer text-[#7053D0] hover:brightness-110">
           Create an Account
         </Link>
       </span>
