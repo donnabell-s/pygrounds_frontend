@@ -1,1 +1,1 @@
-export { default as UploadedFiles } from "./UploadedFiles";
+export { default as ContentUpload } from "./ContentUpload";

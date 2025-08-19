@@ -5,25 +5,30 @@ import type { PreAssessmentQuestion, GameZone, Topic } from "../types/adaptive";
 export const adaptiveApi = {
   getPreAssessmentQuestions: async (): Promise<PreAssessmentQuestion[]> => {
     try {
-      const res = await client.get<PreAssessmentQuestion[]>("/preassessment/");
-      return res.data;
+      // This endpoint doesn't exist yet, return empty array
+      console.warn('PreAssessment endpoint not implemented yet');
+      return [];
     } catch {
       return [];
     }
   },
   getUserZoneProgress: async (): Promise<GameZone[]> => {
     try {
-      const res = await client.get<GameZone[]>("/progress/current-zone/");
+      // Use the existing zones endpoint instead of progress endpoint
+      const res = await client.get<GameZone[]>("/zones/");
       return res.data;
-    } catch {
+    } catch (error: any) {
+      console.warn('Zones endpoint not available:', error.message);
       return [];
     }
   },
   getUserTopicProgress: async (): Promise<Topic[]> => {
     try {
-      const res = await client.get<Topic[]>("/progress/topics/");
+      // Use the existing topics endpoint instead of progress endpoint
+      const res = await client.get<Topic[]>("/topics/");
       return res.data;
-    } catch {
+    } catch (error: any) {
+      console.warn('Topics endpoint not available:', error.message);
       return [];
     }
   }
