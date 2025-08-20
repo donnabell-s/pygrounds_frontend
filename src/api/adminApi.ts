@@ -41,8 +41,9 @@ export const adminApi = {
         return response.data;
     },
 
-    deleteZone: async (id: number): Promise<void> => {
-        await client.delete(`/zones/${id}/`);
+    deleteZone: async (id: number, force: boolean = false): Promise<void> => {
+        const url = force ? `/zones/${id}/?force=true` : `/zones/${id}/`;
+        await client.delete(url);
     },
 
     // Topic APIs
@@ -143,8 +144,17 @@ export const adminApi = {
         await client.delete(`/docs/${id}/delete/`);
     },
 
-    runPipeline: async (id: number): Promise<PipelineResult> => {
-        const response = await client.post<PipelineResult>(`/pipeline/${id}/`);
+    runPipeline: async (id: number, reprocess: boolean = false): Promise<PipelineResult> => {
+        const response = await client.post<PipelineResult>(`/pipeline/${id}/`, { reprocess });
+        return response.data;
+    },
+
+    cancelPipeline: async (id: number): Promise<void> => {
+        await client.post(`/pipeline/${id}/cancel/`);
+    },
+
+    getDocumentStatus: async (id: number): Promise<UploadedDocument> => {
+        const response = await client.get<UploadedDocument>(`/docs/${id}/`);
         return response.data;
     },
 

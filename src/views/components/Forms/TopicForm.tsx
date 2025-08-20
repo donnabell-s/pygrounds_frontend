@@ -80,8 +80,13 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit, onCancel, initialValues
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (validateForm()) {
-            // Add a default order of 0 when submitting
-            onSubmit({ ...formData, order: 0 });
+            // Find the zone name for the submission
+            const selectedZone = zones.find(z => z.id === formData.zone);
+            onSubmit({ 
+                ...formData, 
+                zone_name: selectedZone?.name || '',
+                subtopics_count: 0 
+            });
         }
     };
 

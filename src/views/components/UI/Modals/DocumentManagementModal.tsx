@@ -29,18 +29,14 @@ export const DocumentManagementModal = ({
             return;
         }
 
-        try {
-            setError('');
-            const data = {
-                file: file as File,
-                difficulty,
-                is_pipeline: false  // Upload only, don't run pipeline automatically
-            };
-            // Call onSubmit synchronously - parent handles async operations and modal closing
-            onSubmit(data);
-        } catch (err: any) {
-            setError(err.message || 'Failed to save document');
-        }
+        setError('');
+        const data = {
+            file: file as File,
+            difficulty,
+            is_pipeline: false  // Upload only, don't run pipeline automatically
+        };
+        // Call onSubmit synchronously - parent handles async operations and modal closing
+        onSubmit(data);
     };
 
     return (

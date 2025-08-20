@@ -11,6 +11,11 @@ const ViewZone = () => {
     const [editingZone, setEditingZone] = useState<AdminZone | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [deleteConfirmation, setDeleteConfirmation] = useState<{
+        zone: AdminZone;
+        topicCount?: number;
+        showForceConfirm?: boolean;
+    } | null>(null);
 
     useEffect(() => {
         fetchZones();
@@ -67,17 +72,52 @@ const ViewZone = () => {
         }
     };
 
-    const handleDelete = async (zoneId: number) => {
+    const handleDelete = async (zoneId: number, force: boolean = false) => {
+        const zone = zones.find(z => z.id === zoneId);
+        if (!zone) return;
+
+        try {
+            // First attempt - normal delete
+            if (force) {
+                await adminApi.deleteZone(zoneId, true); // Add force parameter to API
+                await fetchZones();
+                setDeleteConfirmation(null);
+                setError('');
+            } else {
+                await adminApi.deleteZone(zoneId);
+                await fetchZones();
+            }
+        } catch (err: any) {
+            const errorData = err.response?.data;
+            
+            if (errorData?.topic_count !== undefined) {
+                // Show confirmation with topic count
+                setDeleteConfirmation({
+                    zone,
+                    topicCount: errorData.topic_count,
+                    showForceConfirm: true
+                });
+            } else {
+                setError('Failed to delete zone');
+                console.error('Error deleting zone:', err);
+            }
+        }
+    };
+
+    const handleDeleteClick = (zoneId: number) => {
+        const zone = zones.find(z => z.id === zoneId);
+        if (!zone) return;
+
         if (!window.confirm('Are you sure you want to delete this zone?')) {
             return;
         }
 
-        try {
-            await adminApi.deleteZone(zoneId);
-            await fetchZones();
-        } catch (err) {
-            setError('Failed to delete zone');
-            console.error('Error deleting zone:', err);
+        handleDelete(zoneId);
+    };
+
+    const handleForceDelete = () => {
+        if (deleteConfirmation) {
+            handleDelete(deleteConfirmation.zone.id, true);
         }
     };
 
@@ -118,7 +158,7 @@ const ViewZone = () => {
                                     <FiEdit2 className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(zone.id)}
+                                    onClick={() => handleDeleteClick(zone.id)}
                                     className="p-1 text-gray-600 hover:text-red-600 transition-colors"
                                     title="Delete"
                                 >
@@ -137,6 +177,42 @@ const ViewZone = () => {
                 initialData={editingZone || undefined}
                 title={editingZone ? 'Edit Zone' : 'Create New Zone'}
             />
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirmation && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-lg border">
+                        <h3 className="text-lg font-semibold text-red-600 mb-4">
+                            ⚠️ Warning: Zone Contains Content
+                        </h3>
+                        
+                        <div className="mb-4">
+                            <p className="text-gray-700 mb-2">
+                                Zone "<strong>{deleteConfirmation.zone.name}</strong>" contains{' '}
+                                <strong>{deleteConfirmation.topicCount}</strong> topic(s).
+                            </p>
+                            <p className="text-red-600 font-medium">
+                                All topics and their content will be permanently deleted.
+                            </p>
+                        </div>
+
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setDeleteConfirmation(null)}
+                                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleForceDelete}
+                                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                            >
+                                Delete Zone & All Content
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

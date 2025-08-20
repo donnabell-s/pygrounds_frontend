@@ -1,4 +1,3 @@
-import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useGame } from "../context/GameContext";
 import type { ReactNode } from "react"; // ✅ type-only import

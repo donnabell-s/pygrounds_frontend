@@ -98,7 +98,7 @@ const ZoneForm: React.FC<ZoneFormProps> = ({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (validateForm()) {
-            onSubmit(formData);
+            onSubmit({ ...formData, topics_count: 0 });
         }
     };
 

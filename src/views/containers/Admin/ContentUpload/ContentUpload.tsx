@@ -3,6 +3,7 @@ import { adminApi } from '../../../../api';
 import { AdminTable, DocumentManagementModal } from '../../../components/UI';
 import { MdDelete } from 'react-icons/md';
 import { BsFillPlayFill } from 'react-icons/bs';
+import { FiSquare } from 'react-icons/fi';
 
 import type { UploadedDocument } from '../../../../types/adaptive';
 type Document = UploadedDocument;
@@ -14,6 +15,47 @@ export const ContentUpload = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalDocuments, setTotalDocuments] = useState(0);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [processingDocuments, setProcessingDocuments] = useState<Set<number>>(new Set());
+
+    useEffect(() => {
+        fetchDocuments();
+    }, [currentPage]);
+
+    // Auto-refresh when there are processing documents
+    useEffect(() => {
+        let intervalId: number | null = null;
+
+        if (processingDocuments.size > 0) {
+            intervalId = setInterval(() => {
+                checkProcessingDocuments();
+            }, 2000); // Poll every 2 seconds as recommended
+        }
+
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
+    }, [processingDocuments]);
+
+    const checkProcessingDocuments = async () => {
+        const stillProcessing = new Set<number>();
+        
+        for (const docId of processingDocuments) {
+            try {
+                const doc = await adminApi.getDocumentStatus(docId);
+                if (doc.processing_status === 'PROCESSING') {
+                    stillProcessing.add(docId);
+                }
+                // Update the document in the list
+                setDocuments(prev => prev.map(d => d.id === docId ? doc : d));
+            } catch (err) {
+                console.error(`Error checking status for document ${docId}:`, err);
+            }
+        }
+        
+        setProcessingDocuments(stillProcessing);
+    };
 
     useEffect(() => {
         fetchDocuments();
@@ -50,7 +92,7 @@ export const ContentUpload = () => {
                     console.error('Error refreshing documents:', err);
                 });
             }).catch(err => {
-                const errorMessage = err.message || 'Failed to upload document';
+                const errorMessage = err?.message || err?.response?.data?.message || 'Failed to upload document';
                 console.error('Error uploading document:', err);
                 setError(errorMessage);
             });
@@ -79,33 +121,69 @@ export const ContentUpload = () => {
 
     const handleRunPipeline = async (id: number) => {
         try {
-            const response = await adminApi.runPipeline(id);
-            await fetchDocuments();
+            setProcessingDocuments(prev => new Set(prev).add(id));
+            const response = await adminApi.runPipeline(id, false);
+            
+            // Update document status immediately
+            setDocuments(prev => prev.map(doc => 
+                doc.id === id 
+                    ? { ...doc, processing_status: 'PROCESSING' as const }
+                    : doc
+            ));
             
             // Show success message if available
             if (response.status === 'success') {
-                const results = response.results;
                 setError(''); // Clear any previous errors
-                console.log(`Pipeline succeeded: ${results.message} - Processed ${results.processed_subtopics} subtopics with ${results.total_similarities} similarities`);
+                console.log('Pipeline started successfully');
             }
         } catch (err: any) {
-            setError(err.message || 'Failed to run pipeline');
+            setProcessingDocuments(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(id);
+                return newSet;
+            });
+            setError(err?.message || err?.response?.data?.message || 'Failed to run pipeline');
+        }
+    };
+
+    const handleCancelPipeline = async (id: number) => {
+        try {
+            await adminApi.cancelPipeline(id);
+            
+            // Remove from processing set and update status
+            setProcessingDocuments(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(id);
+                return newSet;
+            });
+            
+            // Update document status immediately
+            setDocuments(prev => prev.map(doc => 
+                doc.id === id 
+                    ? { ...doc, processing_status: 'PENDING' as const, processing_message: 'Processing cancelled' }
+                    : doc
+            ));
+            
+            setError(''); // Clear any previous errors
+        } catch (err: any) {
+            setError(err?.message || err?.response?.data?.message || 'Failed to cancel pipeline');
         }
     };
 
     return (
         <div className="space-y-4">
-            <AdminTable
-                title="Content Upload"
-                loading={loading}
-                error={error}
-                items={documents}
-                total={totalDocuments}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-                onAdd={() => setIsUploadModalOpen(true)}
-                headerColumns={['Name', 'Status', 'Difficulty', 'Created At', 'Actions']}
-                renderRow={(document: Document) => (
+            <div className="overflow-x-auto">
+                <AdminTable
+                    title="Content Upload"
+                    loading={loading}
+                    error={error}
+                    items={documents}
+                    total={totalDocuments}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                    onAdd={() => setIsUploadModalOpen(true)}
+                    headerColumns={['Name', 'Status', 'Difficulty', 'Created At', 'Actions']}
+                    renderRow={(document: Document) => (
                     <tr key={document.id}>
                         <td className="px-6 py-4">
                             <div className="line-clamp-1">{document.title}</div>
@@ -135,7 +213,15 @@ export const ContentUpload = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex space-x-2">
-                                {document.processing_status !== 'PROCESSING' && (
+                                {document.processing_status === 'PROCESSING' ? (
+                                    <button
+                                        onClick={() => handleCancelPipeline(document.id)}
+                                        className="p-1 text-gray-600 hover:text-red-600 transition-colors"
+                                        title="Cancel Pipeline"
+                                    >
+                                        <FiSquare className="w-5 h-5" />
+                                    </button>
+                                ) : (
                                     <button
                                         onClick={() => handleRunPipeline(document.id)}
                                         className="p-1 text-gray-600 hover:text-green-600 transition-colors"
@@ -156,6 +242,7 @@ export const ContentUpload = () => {
                     </tr>
                 )}
             />
+            </div>
 
             <DocumentManagementModal
                 isOpen={isUploadModalOpen}
