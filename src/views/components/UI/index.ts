@@ -10,6 +10,7 @@ export {
     TopicModal,
     SubtopicModal,
     BulkGenerationModal,
+    GenerationProgressModal,
     DocumentManagementModal
 } from "./Modals";
 export { default as Pagination } from "./Pagination";

@@ -15,10 +15,10 @@ const difficultyLevels = ['beginner', 'intermediate', 'advanced', 'master'] as c
 
 export const BulkGenerationModal = ({ isOpen, onClose, onSubmit, questionType }: BulkGenerationModalProps) => {
     const [minigameData, setMinigameData] = useState<BulkGenerationParams>({
-        subtopic_ids: [],
         game_type: 'non_coding',
-        difficulties: [],
-        count: 1
+        difficulty_levels: [],
+        num_questions_per_subtopic: 5,
+        zone_ids: []
     });
     const [preassessmentData, setPreassessmentData] = useState<PreAssessmentBulkGenerationParams>({
         total_questions: 20
@@ -58,13 +58,19 @@ export const BulkGenerationModal = ({ isOpen, onClose, onSubmit, questionType }:
         e.preventDefault();
         try {
             setLoading(true);
+            setError('');
             if (questionType === 'minigame') {
-                if (minigameData.difficulties.length === 0) {
-                    setError('Please select at least one difficulty level');
-                    return;
-                }
-                await onSubmit(minigameData);
+                // If no difficulty levels selected, default to all levels
+                const submissionData = {
+                    ...minigameData,
+                    difficulty_levels: (minigameData.difficulty_levels?.length ?? 0) > 0 
+                        ? minigameData.difficulty_levels 
+                        : ['beginner', 'intermediate', 'advanced', 'master'] as ('beginner' | 'intermediate' | 'advanced' | 'master')[]
+                };
+                console.log('Submitting minigame data:', submissionData);
+                await onSubmit(submissionData);
             } else {
+                console.log('Submitting preassessment data:', preassessmentData);
                 await onSubmit(preassessmentData);
             }
             onClose();
@@ -76,20 +82,23 @@ export const BulkGenerationModal = ({ isOpen, onClose, onSubmit, questionType }:
     };
 
     const toggleDifficulty = (difficulty: typeof difficultyLevels[number]) => {
-        setMinigameData(prev => ({
-            ...prev,
-            difficulties: prev.difficulties.includes(difficulty)
-                ? prev.difficulties.filter(d => d !== difficulty)
-                : [...prev.difficulties, difficulty]
-        }));
+        setMinigameData(prev => {
+            const currentLevels = prev.difficulty_levels ?? [];
+            return {
+                ...prev,
+                difficulty_levels: currentLevels.includes(difficulty)
+                    ? currentLevels.filter(d => d !== difficulty)
+                    : [...currentLevels, difficulty]
+            };
+        });
     };
 
     const toggleZone = (zoneId: number) => {
         setMinigameData(prev => ({
             ...prev,
-            subtopic_ids: prev.subtopic_ids.includes(zoneId)
-                ? prev.subtopic_ids.filter(id => id !== zoneId)
-                : [...prev.subtopic_ids, zoneId]
+            zone_ids: prev.zone_ids?.includes(zoneId)
+                ? prev.zone_ids.filter(id => id !== zoneId)
+                : [...(prev.zone_ids || []), zoneId]
         }));
     };
 
@@ -191,7 +200,7 @@ export const BulkGenerationModal = ({ isOpen, onClose, onSubmit, questionType }:
                                 onChange={() => setMinigameData(prev => ({ ...prev, game_type: 'coding' }))}
                                 className="mr-2"
                             />
-                            Coding
+                            Coding Questions
                         </label>
                         <label className="flex items-center">
                             <input
@@ -200,7 +209,7 @@ export const BulkGenerationModal = ({ isOpen, onClose, onSubmit, questionType }:
                                 onChange={() => setMinigameData(prev => ({ ...prev, game_type: 'non_coding' }))}
                                 className="mr-2"
                             />
-                            Non-Coding
+                            Non-Coding Questions
                         </label>
                     </div>
                 </div>
@@ -209,12 +218,15 @@ export const BulkGenerationModal = ({ isOpen, onClose, onSubmit, questionType }:
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Difficulty Levels
                     </label>
+                    <p className="text-xs text-gray-500 mb-2">
+                        Leave empty to generate questions for all difficulty levels
+                    </p>
                     <div className="flex flex-wrap gap-3">
                         {difficultyLevels.map(difficulty => (
                             <label key={difficulty} className="flex items-center">
                                 <input
                                     type="checkbox"
-                                    checked={minigameData.difficulties.includes(difficulty)}
+                                    checked={minigameData.difficulty_levels?.includes(difficulty) ?? false}
                                     onChange={() => toggleDifficulty(difficulty)}
                                     className="mr-2"
                                 />
@@ -226,38 +238,40 @@ export const BulkGenerationModal = ({ isOpen, onClose, onSubmit, questionType }:
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Number of Questions per Zone
+                        Number of Questions per Subtopic
                     </label>
                     <input
                         type="number"
                         min={1}
-                        max={10}
-                        value={minigameData.count}
+                        max={50}
+                        value={minigameData.num_questions_per_subtopic}
                         onChange={(e) => setMinigameData(prev => ({
                             ...prev,
-                            count: parseInt(e.target.value) || 1
+                            num_questions_per_subtopic: parseInt(e.target.value) || 5
                         }))}
                         className="mt-1 block w-full rounded-md border border-gray-300 p-2"
                     />
+                    <p className="text-sm text-gray-500 mt-1">1-50 questions per subtopic</p>
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Zones
+                        Select Zones (Optional)
                     </label>
                     <div className="max-h-40 overflow-y-auto border rounded-md p-2">
                         {zones.map(zone => (
                             <label key={zone.id} className="flex items-center py-1">
                                 <input
                                     type="checkbox"
-                                    checked={minigameData.subtopic_ids.includes(zone.id)}
+                                    checked={minigameData.zone_ids?.includes(zone.id) || false}
                                     onChange={() => toggleZone(zone.id)}
                                     className="mr-2"
                                 />
-                                {zone.name}
+                                {zone.name} ({zone.topics_count} topics)
                             </label>
                         ))}
                     </div>
+                    <p className="text-sm text-gray-500 mt-1">Leave empty to generate for all zones</p>
                 </div>
 
                 <div className="flex justify-end gap-3 mt-4">
