@@ -65,16 +65,16 @@ export const PATHS = {
         },
         TOPIC_MANAGEMENT: {
             ZONE: {
-                path: "topics/zones/",
+                path: "zones",
                 label: "View Zones"
             },
             TOPIC: {
-                path: "topics/",
+                path: "topics",
                 label: "View Topics"
 
             },
             SUBTOPIC: {
-                path: "topics/subtopics",
+                path: "subtopics",
                 label: "View Subtopics"
             }
         },

@@ -63,7 +63,7 @@ const RegisterPreTest: React.FC = () => {
       </span>
 
       <div>
-        { (preAssessmentQuestions ?? []).map((q, index) => (
+        { (preAssessmentQuestions ?? []).map((q) => (
           <Component.PreTestQuestionCard
             key={q.id}
             question={q}

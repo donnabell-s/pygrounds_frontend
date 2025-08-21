@@ -11,9 +11,12 @@ interface AdminSideNavProps {
 const AdminSideNav: React.FC<AdminSideNavProps> = ({ nav }) => {
   return (
     <div
-      className={`fixed bg-white sm:w-64 w-full h-full flex flex-col overflow-y-auto shadow-md transition-transform duration-300 ease-in-out ${
-        nav ? "translate-x-0" : "-translate-x-full"
-      }`}
+      className={`fixed top-0 left-0 bg-white w-64 h-screen flex flex-col overflow-y-auto shadow-md transition-transform duration-300 ease-in-out z-20 pt-16
+      ${nav 
+        ? "translate-x-0" 
+        : "-translate-x-full"
+      } 
+      sm:translate-x-0`}
     >
         <Component.AdminSideNavLinkDropdown
         icon={<MdAdminPanelSettings size={20} />}

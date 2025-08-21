@@ -14,6 +14,8 @@ export const AppRoutes = () => {
         <Route path={PATHS.LANDING.path} element={<Views.Landing />} />
         
         <Route path={PATHS.LOGIN.path} element={<Views.Login />} />
+        
+        <Route path={PATHS.ADMIN_LOGIN.path} element={<Views.AdminLogin />} />
 
         
         <Route path={PATHS.REGISTER.path} element={<Views.RegisterMain />}>
@@ -36,12 +38,13 @@ export const AppRoutes = () => {
         </Route>
 
         <Route path={PATHS.ADMIN_MAIN.path} element={<Views.AdminMain />}>
+          <Route index element={<Navigate to={PATHS.ADMIN_VIEW.ADMIN_VIEWS.DASHBOARD.path} replace />} />
           <Route path={PATHS.ADMIN_VIEW.ADMIN_VIEWS.DASHBOARD.path} element={<Views.Dashboard />} />
           <Route path={PATHS.ADMIN_VIEW.ADMIN_VIEWS.NOTIFICATIONS.path} element={<Views.Notifications />} />
           <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.ZONE.path} element={<Views.ViewZone />} />
           <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.TOPIC.path} element={<Views.ViewTopic />} />
           <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.SUBTOPIC.path} element={<Views.ViewSubtopic />} />
-          <Route path={PATHS.ADMIN_VIEW.CONTENT_UPLOAD.path} element={<Views.UploadedFiles />} />
+          <Route path={PATHS.ADMIN_VIEW.CONTENT_UPLOAD.path} element={<Views.ContentUpload />} />
           <Route path={PATHS.ADMIN_VIEW.USER_MANAGEMENT.VIEW_USERS.path} element={<Views.ViewUsers />} />
           <Route path={PATHS.ADMIN_VIEW.QUESTION_MANAGEMENT.VIEW_QUESTIONS.path} element={<Views.QuestionBank />} />
         </Route>

@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 
 interface AdminSideNavLinkProps {
   label: string;
@@ -10,11 +10,15 @@ interface AdminSideNavLinkProps {
 const AdminSideNavLink: React.FC<AdminSideNavLinkProps> = ({ label, icon, path }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { adminId } = useParams();
+  
+  // Construct the full path with adminId
+  const fullPath = `/admin/${adminId}/${path}`;
   const isActive = location.pathname.includes(path);
 
   return (
     <div
-      onClick={() => navigate(path)}
+      onClick={() => navigate(fullPath)}
       className={`flex items-center justify-between p-3 hover:bg-gray-100 cursor-pointer rounded-md text-gray-800 text-md font-medium ${
         isActive ? "bg-gray-100" : ""
       }`}
