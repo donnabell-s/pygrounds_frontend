@@ -13,25 +13,33 @@ export const adaptiveApi = {
   },
   getUserZoneProgress: async (): Promise<GameZone[]> => {
     try {
-      const res = await client.get<GameZone[]>("/progress/current-zone/");
+      // Use the zones progress endpoint, not current-zone
+      const res = await client.get<GameZone[]>("/progress/zones/");
+      console.log("getUserZoneProgress - API Response:", res.data);
       return res.data;
-    } catch {
+    } catch (error: any) {
+      console.warn('Zone progress endpoint not available:', error.message);
       return [];
     }
   },
   getUserTopicProgress: async (): Promise<Topic[]> => {
     try {
       const res = await client.get<Topic[]>("/progress/topics/");
+      console.log("getUserTopicProgress - API Response:", res.data);
       return res.data;
-    } catch {
+    } catch (error: any) {
+      console.warn('Topic progress endpoint not available:', error.message);
       return [];
     }
   },
     getLeaderboardZoneProgress : async (): Promise<Topic[]> => {
     try {
+      console.log("getLeaderboardZoneProgress - Making API call...");
       const res = await client.get<Topic[]>("/progress/zones/all/");
+      console.log("getLeaderboardZoneProgress - API Response:", res.data);
       return res.data;
-    } catch {
+    } catch (error: any) {
+      console.warn('Leaderboard endpoint not available:', error.message);
       return [];
     }
   }

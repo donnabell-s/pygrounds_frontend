@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
   };
 
   // ✅ Fetch profile from backend

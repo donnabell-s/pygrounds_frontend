@@ -93,24 +93,9 @@ type TP = {
 const ProficiencyList = () => {
   const { topicProgress, isLoading } = useAdaptive();
 
-  if (isLoading) {
-    return (
-      <div className="bg-[#FFFFFF] w-full rounded-xl shadow-md p-6">
-        <p className="text-gray-500">Loading topic proficiency...</p>
-      </div>
-    );
-  }
-
-  if (!topicProgress?.length) {
-    return (
-      <div className="bg-[#FFFFFF] w-full rounded-xl shadow-md p-6">
-        <p className="text-gray-500">No topic progress found.</p>
-      </div>
-    );
-  }
-
+  // ✅ Move ALL hooks to the top before any conditionals
   const sortedTopics: TP[] = useMemo(
-    () => [...topicProgress].sort((a: TP, b: TP) => a.topic.id - b.topic.id),
+    () => (topicProgress ? [...topicProgress].sort((a: TP, b: TP) => a.topic.id - b.topic.id) : []),
     [topicProgress]
   );
 
@@ -129,7 +114,7 @@ const ProficiencyList = () => {
   const [activeZone, setActiveZone] = useState<number | null>(null);
 
   useEffect(() => {
-    if (activeZone === null) setActiveZone(zones[0][0]); // default to first zone
+    if (activeZone === null && zones.length > 0) setActiveZone(zones[0][0]); // default to first zone
   }, [activeZone, zones]);
 
   const visibleTopics = useMemo(() => {
@@ -148,6 +133,23 @@ const ProficiencyList = () => {
     const i = zoneIndex >= zones.length - 1 ? 0 : zoneIndex + 1;
     setActiveZone(zones[i][0]);
   };
+
+  // ✅ Now handle loading and empty states AFTER all hooks
+  if (isLoading) {
+    return (
+      <div className="bg-[#FFFFFF] w-full rounded-xl shadow-md p-6">
+        <p className="text-gray-500">Loading topic proficiency...</p>
+      </div>
+    );
+  }
+
+  if (!topicProgress?.length) {
+    return (
+      <div className="bg-[#FFFFFF] w-full rounded-xl shadow-md p-6">
+        <p className="text-gray-500">No topic progress found.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden bg-[#FFFFFF] w-full rounded-2xl shadow-md border border-white/40 ring-1 ring-[#704EE7]/20">

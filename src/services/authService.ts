@@ -6,10 +6,10 @@ export const authService = {
   async login(username: string, password: string): Promise<User> {
     const { access, refresh } = await authApi.login({ username, password });
     // store tokens before fetching profile
-    localStorage.setItem("access", access);
-    localStorage.setItem("refresh", refresh);
+    localStorage.setItem("accessToken", access);
+    localStorage.setItem("refreshToken", refresh);
     const user = await authApi.getProfile();
-    return user;
+    return { ...user, token: access }; // include token in user object for AuthContext
   },
 
   async register(data: SignupData): Promise<User> {

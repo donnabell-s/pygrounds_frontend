@@ -18,10 +18,11 @@ const initialsOf = (first?: string, last?: string) => {
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ coverUrl, avatarUrl }) => {
   const { user } = useAuth();
 
+  console.log("ProfileHeader - user data:", user);
+
   const first = user?.first_name || "";
   const last = user?.last_name || "";
   const username = user?.username ? `@${user.username}` : "";
-  const role = (user?.role || "").toString();
 
   return (
     <section className="w-full bg-white rounded-2xl overflow-hidden shadow-md">
@@ -51,7 +52,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ coverUrl, avatarUrl }) =>
           )}
 
           {/* Name + Username + Button (same row, button on far right) */}
-          <div className="flex-1 min-w-0 flex items-start justify-between pt-17">{/* pt-4 for breathing room */}
+          <div className="flex-1 min-w-0 flex items-start justify-between pt-4">{/* pt-4 for breathing room */}
             <div>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-[#0F172A] leading-tight truncate">
                 {first || last ? `${first} ${last}`.trim() : "Your Name"}

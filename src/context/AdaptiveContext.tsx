@@ -11,6 +11,7 @@ type AdaptiveContextType = {
   isLoading: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
+  lastUpdated: Date | null;
 };
 
 const AdaptiveContext = createContext<AdaptiveContextType | undefined>(undefined);
@@ -20,6 +21,7 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [zoneProgress, setZoneProgress] = useState<GameZone[] | null>(null);
   const [topicProgress, setTopicProgress] = useState<Topic[] | null>(null);
   const [leaderboardZoneProgress, setLeaderboardZoneProgress] = useState<any[] | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -37,12 +39,15 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       console.log("Zones:", zones);
       console.log("Topics:", topics);
+      console.log("Leaderboard:", leaderboard);
 
 
       setPreAssessmentQuestions(qs);
       setZoneProgress(zones);
       setTopicProgress(topics);
       setLeaderboardZoneProgress(leaderboard);
+      console.log("AdaptiveContext - Setting leaderboard data:", leaderboard);
+      setLastUpdated(new Date());
       setError(null);
     } catch (e) {
       console.error("Adaptive fetch error:", e);
@@ -58,6 +63,25 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     fetchAdaptiveData();
+    
+    // Auto-refresh data every 30 seconds
+    const interval = setInterval(() => {
+      console.log("AdaptiveContext - Auto-refreshing data...");
+      fetchAdaptiveData();
+    }, 30000); // 30 seconds
+    
+    // Refresh when user comes back to the tab
+    const handleFocus = () => {
+      console.log("AdaptiveContext - Window focused, refreshing data...");
+      fetchAdaptiveData();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   return (
@@ -70,6 +94,7 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isLoading,
         error,
         refresh: fetchAdaptiveData,
+        lastUpdated,
       }}
     >
       {children}

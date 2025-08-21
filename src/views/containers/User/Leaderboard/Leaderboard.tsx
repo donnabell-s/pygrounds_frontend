@@ -44,6 +44,9 @@ const Leaderboard = () => {
   const { leaderboardZoneProgress, isLoading } = useAdaptive();
   const { user: authUser } = useAuth();
 
+  console.log("Leaderboard Component - Data received:", leaderboardZoneProgress);
+  console.log("Leaderboard Component - Is loading:", isLoading);
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
@@ -56,10 +59,15 @@ const Leaderboard = () => {
 
   // Build UI list
   const entries: UIUser[] = (leaderboardZoneProgress ?? []).map((e: any) => {
+    console.log("Leaderboard - Processing entry:", e);
     const name = [e.first_name, e.last_name].filter(Boolean).join(" ") || e.username;
+    console.log("Leaderboard - Entry progresses:", e.progresses);
     const { totalXP, level } = computeXPFromCurrentZone(e.progresses || []);
+    console.log("Leaderboard - Computed XP and level:", { totalXP, level });
     return { id: e.user_id, name, username: e.username, totalXP, level };
   });
+
+  console.log("Leaderboard - Final entries:", entries);
 
   if (entries.length === 0) {
     return <div className="text-sm text-gray-500">No learner data yet.</div>;
@@ -82,12 +90,12 @@ const Leaderboard = () => {
   return (
     <div className="flex flex-col gap-10 py-8">
       {/* Top 3 Podium */}
-      {topThree.length === 3 && (
+      {topThree.length > 0 && (
         <>
           <div className="flex flex-row justify-center items-end gap-8 mt-2 relative">
-            <Components.TopThree user={topThree[1]} rank={1} />
-            <Components.TopThree user={topThree[0]} rank={0} />
-            <Components.TopThree user={topThree[2]} rank={2} />
+            {topThree[1] && <Components.TopThree user={topThree[1]} rank={1} />}
+            {topThree[0] && <Components.TopThree user={topThree[0]} rank={0} />}
+            {topThree[2] && <Components.TopThree user={topThree[2]} rank={2} />}
           </div>
 
           {/* If I'm in Top 3, show a subtle badge */}

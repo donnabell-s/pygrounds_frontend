@@ -7,7 +7,7 @@ const client = axios.create({
 });
 
 client.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access");
+  const token = localStorage.getItem("accessToken");
 
   // Ensure headers object exists
   if (!config.headers) {
