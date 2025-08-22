@@ -64,9 +64,14 @@ const TopThree: React.FC<TopUserProps> = ({ user, rank }) => {
 
       {/* Name + Username */}
       <div className="flex flex-col items-center text-center gap-0.5 mt-3">
-        <div className="text-lg font-semibold">{user?.name}</div>
-        <div className="text-sm font-medium text-gray-500">@{user?.username}</div>
+        <div className="text-lg font-semibold truncate whitespace-nowrap max-w-[7.5rem]">
+          {user?.name}
+        </div>
+        <div className="text-sm font-medium text-gray-500 truncate whitespace-nowrap max-w-[7.5rem]">
+          @{user?.username}
+        </div>
       </div>
+
 
       {/* XP + Dynamic Level */}
       <div className="flex flex-col items-center gap-1 mt-1">
