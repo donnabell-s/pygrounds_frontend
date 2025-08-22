@@ -4,11 +4,6 @@ import * as Components from "../../../components";
 const MyProfile = () => {
   return (
     <div className="flex flex-col gap-7 py-8">
-      {/* Refresh button */}
-      <div className="flex justify-end">
-        <Components.RefreshButton />
-      </div>
-
       {/* New profile header with default cover + avatar fallback */}
       <Components.ProfileHeader
         // You can pass custom URLs if/when you add uploads:

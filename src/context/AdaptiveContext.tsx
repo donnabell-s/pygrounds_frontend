@@ -62,15 +62,18 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   useEffect(() => {
+    console.log("AdaptiveContext - useEffect mounting, will fetch data now");
     fetchAdaptiveData();
     
-    // Auto-refresh data every 30 seconds
+   
+    // Note: Focus refresh handles immediate updates when switching tabs
     const interval = setInterval(() => {
       console.log("AdaptiveContext - Auto-refreshing data...");
       fetchAdaptiveData();
-    }, 30000); // 30 seconds
+    }, 60000); // 60 seconds
     
-    // Refresh when user comes back to the tab
+    // Refresh when user returns to tab
+    // When user completes activities in another tab and comes back,
     const handleFocus = () => {
       console.log("AdaptiveContext - Window focused, refreshing data...");
       fetchAdaptiveData();
@@ -79,6 +82,7 @@ export const AdaptiveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.addEventListener('focus', handleFocus);
     
     return () => {
+      console.log("AdaptiveContext - useEffect cleanup");
       clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
     };
