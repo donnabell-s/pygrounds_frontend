@@ -11,6 +11,8 @@ const ViewZone = () => {
     const [editingZone, setEditingZone] = useState<AdminZone | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [itemsPerPage] = useState(10);
     const [deleteConfirmation, setDeleteConfirmation] = useState<{
         zone: AdminZone;
         topicCount?: number;
@@ -19,13 +21,17 @@ const ViewZone = () => {
 
     useEffect(() => {
         fetchZones();
-    }, []);
+    }, [currentPage]);
 
     const fetchZones = async () => {
         try {
             setLoading(true);
-            const data = await adminApi.getAllZones();
-            setZones(data);
+            const data = await adminApi.getAllZones({
+                page: currentPage,
+                page_size: itemsPerPage
+            });
+            setZones(data.results);
+            setTotalCount(data.count);
         } catch (err) {
             setError('Failed to fetch zones');
             console.error('Error fetching zones:', err);
@@ -41,6 +47,7 @@ const ViewZone = () => {
     }) => {
         try {
             await adminApi.createZone(data);
+            setCurrentPage(1); // Reset to first page
             await fetchZones();
             setShowCreateForm(false);
             setError('');
@@ -133,10 +140,12 @@ const ViewZone = () => {
                 loading={loading}
                 error={error}
                 items={zones}
+                total={totalCount}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
                 onAdd={() => setShowCreateForm(true)}
                 headerColumns={['ID', 'Name', 'Description', 'Order', 'Topics', 'Actions']}
+                itemsPerPage={itemsPerPage}
                 renderRow={(zone) => (
                     <tr key={zone.id} className="hover:bg-gray-50">
                         <td className="px-4 py-4 w-20 text-sm">{zone.id}</td>

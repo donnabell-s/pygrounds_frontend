@@ -45,14 +45,16 @@ const ViewSubtopic = () => {
     const [editingSubtopic, setEditingSubtopic] = useState<AdminSubtopic | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [itemsPerPage] = useState(10);
 
     useEffect(() => {
         Promise.all([fetchSubtopics(), fetchTopics()]);
-    }, []);
+    }, [currentPage]);
 
     const fetchTopics = async () => {
         try {
-            const data = await adminApi.getAllTopics();
+            const data = await adminApi.getAllTopicsNoPagination(); // Use non-paginated for dropdown
             setTopics(data);
         } catch (err: any) {
             console.error('Error fetching topics:', err);
@@ -62,8 +64,12 @@ const ViewSubtopic = () => {
     const fetchSubtopics = async () => {
         try {
             setLoading(true);
-            const data = await adminApi.getAllSubtopics();
-            setSubtopics(data);
+            const data = await adminApi.getAllSubtopics({
+                page: currentPage,
+                page_size: itemsPerPage
+            });
+            setSubtopics(data.results);
+            setTotalCount(data.count);
         } catch (err: any) {
             setError(`Failed to fetch subtopics: ${err.message || 'Unknown error'}`);
             console.error('Error fetching subtopics:', err);
@@ -146,10 +152,12 @@ const ViewSubtopic = () => {
                 loading={loading}
                 error={error}
                 items={subtopics}
+                total={totalCount}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
                 onAdd={() => setShowCreateForm(true)}
                 headerColumns={['Name', 'Topic', 'Concept Intent', 'Code Intent', 'Embedding Status', 'Actions']}
+                itemsPerPage={itemsPerPage}
                 renderRow={(subtopic) => (
                     <tr key={subtopic.id}>
                         <td className="px-6 py-4 w-1/6">

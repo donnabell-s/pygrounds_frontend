@@ -18,6 +18,7 @@ const QuestionBank = () => {
     const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
     const [questionsData, setQuestionsData] = useState<QuestionListResponse | null>(null);
     const [preassessmentQuestions, setPreassessmentQuestions] = useState<PreAssessmentQuestion[]>([]);
+    const [preassessmentData, setPreassessmentData] = useState<{ count: number; results: PreAssessmentQuestion[] } | null>(null);
     const [generationSuccess, setGenerationSuccess] = useState<string>('');
     const [isCheckingDifficulty, setIsCheckingDifficulty] = useState(false);
     const [difficultyCheckResult, setDifficultyCheckResult] = useState<string>('');
@@ -116,10 +117,22 @@ const QuestionBank = () => {
                     return; // fetchQuestions will be called again due to useEffect dependency
                 }
             } else {
-                const response = await adminApi.getPreAssessmentQuestions();
+                const response = await adminApi.getPreAssessmentQuestions({
+                    page: currentPage,
+                    page_size: 10
+                });
+                setPreassessmentData(response);
                 setPreassessmentQuestions(response.results);
+                
+                // Validate current page for preassessment and reset if invalid
+                const totalPages = Math.ceil((response.count || 0) / 10);
+                if (currentPage > totalPages && totalPages > 0) {
+                    setCurrentPage(1);
+                    return; // fetchQuestions will be called again due to useEffect dependency
+                }
             }
         } catch (err: any) {
+            console.error('Error fetching questions:', err);
             setError(err.message || 'Failed to fetch questions');
         } finally {
             setLoading(false);
@@ -487,9 +500,10 @@ const QuestionBank = () => {
                 loading={loading}
                 error={error}
                 items={questionType === 'minigame' ? (filteredQuestions || []) : (preassessmentQuestions || [])}
-                total={questionType === 'minigame' ? questionsData?.count : preassessmentQuestions?.length}
+                total={questionType === 'minigame' ? questionsData?.count : preassessmentData?.count}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
+                itemsPerPage={10}
                 headerColumns={questionType === 'minigame' 
                     ? ['Question', 'Zone', 'Topic', 'Subtopic', 'Type', 'Difficulty', 'Status', 'Actions']
                     : ['Question', 'Topics', 'Difficulty', 'Order', 'Actions']

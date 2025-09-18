@@ -38,7 +38,7 @@ export const BulkGenerationModal = ({ isOpen, onClose, onSubmit, questionType }:
 
     const fetchZones = async () => {
         try {
-            const data = await adminApi.getAllZones();
+            const data = await adminApi.getAllZonesNoPagination();
             setZones(data);
         } catch (err) {
             console.error('Error fetching zones:', err);
@@ -47,7 +47,7 @@ export const BulkGenerationModal = ({ isOpen, onClose, onSubmit, questionType }:
 
     const fetchTopics = async () => {
         try {
-            const data = await adminApi.getAllTopics();
+            const data = await adminApi.getAllTopicsNoPagination();
             setTopics(data);
         } catch (err) {
             console.error('Error fetching topics:', err);

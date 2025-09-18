@@ -66,7 +66,7 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit, onCancel, initialValues
     useEffect(() => {
         const fetchZones = async () => {
             try {
-                const zonesData = await adminApi.getAllZones();
+                const zonesData = await adminApi.getAllZonesNoPagination();
                 setZones(zonesData);
             } catch (error) {
                 console.error('Failed to fetch zones:', error);

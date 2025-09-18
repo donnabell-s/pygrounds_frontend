@@ -239,9 +239,22 @@ export const adminApi = {
         await client.delete(`/admin/pre-assessment/${questionId}/`);
     },
     // Zone APIs
-    getAllZones: async (): Promise<AdminZone[]> => {
-        const response = await client.get<AdminZone[]>('/zones/');
-        return response.data;
+    getAllZones: async (params?: {
+        page?: number;
+        page_size?: number;
+    }): Promise<{ count: number; results: AdminZone[] }> => {
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.append('page', params.page.toString());
+        if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
+        
+        const url = `/zones/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminZone[] }>(url);
+        return response.data; // Return full paginated response for server-side pagination
+    },
+
+    getAllZonesNoPagination: async (): Promise<AdminZone[]> => {
+        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminZone[] }>('/zones/');
+        return response.data.results; // Extract results from paginated response for backward compatibility
     },
 
     getZone: async (id: number): Promise<AdminZone> => {
@@ -273,9 +286,22 @@ export const adminApi = {
     },
 
     // Topic APIs
-    getAllTopics: async (): Promise<AdminTopic[]> => {
-        const response = await client.get<AdminTopic[]>('/topics/');
-        return response.data;
+    getAllTopics: async (params?: {
+        page?: number;
+        page_size?: number;
+    }): Promise<{ count: number; results: AdminTopic[] }> => {
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.append('page', params.page.toString());
+        if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
+        
+        const url = `/topics/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminTopic[] }>(url);
+        return response.data; // Return full paginated response for server-side pagination
+    },
+
+    getAllTopicsNoPagination: async (): Promise<AdminTopic[]> => {
+        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminTopic[] }>('/topics/');
+        return response.data.results; // Extract results from paginated response for backward compatibility
     },
 
     getTopic: async (id: number): Promise<AdminTopic> => {
@@ -306,9 +332,22 @@ export const adminApi = {
     },
 
     // Subtopic APIs
-    getAllSubtopics: async (): Promise<AdminSubtopic[]> => {
-        const response = await client.get<AdminSubtopic[]>('/subtopics/');
-        return response.data;
+    getAllSubtopics: async (params?: {
+        page?: number;
+        page_size?: number;
+    }): Promise<{ count: number; results: AdminSubtopic[] }> => {
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.append('page', params.page.toString());
+        if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
+        
+        const url = `/subtopics/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminSubtopic[] }>(url);
+        return response.data; // Return full paginated response for server-side pagination
+    },
+
+    getAllSubtopicsNoPagination: async (): Promise<AdminSubtopic[]> => {
+        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminSubtopic[] }>('/subtopics/');
+        return response.data.results; // Extract results from paginated response for backward compatibility
     },
 
     getSubtopic: async (id: number): Promise<AdminSubtopic> => {
@@ -382,6 +421,22 @@ export const adminApi = {
     getDocumentStatus: async (id: number): Promise<UploadedDocument> => {
         const response = await client.get<UploadedDocument>(`/docs/${id}/`);
         return response.data;
+    },
+
+    // Content Ingestion APIs - Fixed for pagination compatibility
+    getTopics: async (): Promise<AdminTopic[]> => {
+        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminTopic[] }>('/content-ingestion/topics/');
+        return response.data.results; // Extract results from paginated response
+    },
+
+    getSubtopics: async (topicId: number): Promise<AdminSubtopic[]> => {
+        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminSubtopic[] }>(`/content-ingestion/subtopics/?topic=${topicId}`);
+        return response.data.results; // Extract results from paginated response
+    },
+
+    getDocuments: async (subtopicId: number): Promise<UploadedDocument[]> => {
+        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: UploadedDocument[] }>(`/content-ingestion/documents/?subtopic=${subtopicId}`);
+        return response.data.results; // Extract results from paginated response
     },
 
 

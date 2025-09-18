@@ -118,13 +118,6 @@ const AdminTable = <T extends { id: number }>({
                         </table>
                     </div>
                     
-                    {/* Scroll hint for wide tables */}
-                    {headerColumns.length > 5 && (
-                        <div className="text-xs text-gray-500 mt-2 text-center">
-                            ← Scroll horizontally to view all columns →
-                        </div>
-                    )}
-                    
                     {totalItems > itemsPerPage && (
                         <div className="mt-4">
                             <Pagination

@@ -12,14 +12,16 @@ const ViewTopic = () => {
     const [editingTopic, setEditingTopic] = useState<AdminTopic | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [itemsPerPage] = useState(10);
 
     useEffect(() => {
         Promise.all([fetchTopics(), fetchZones()]);
-    }, []);
+    }, [currentPage]);
 
     const fetchZones = async () => {
         try {
-            const data = await adminApi.getAllZones();
+            const data = await adminApi.getAllZonesNoPagination(); // Use non-paginated for dropdown
             setZones(data);
         } catch (err) {
             console.error('Error fetching zones:', err);
@@ -29,8 +31,12 @@ const ViewTopic = () => {
     const fetchTopics = async () => {
         try {
             setLoading(true);
-            const data = await adminApi.getAllTopics();
-            setTopics(data);
+            const data = await adminApi.getAllTopics({
+                page: currentPage,
+                page_size: itemsPerPage
+            });
+            setTopics(data.results);
+            setTotalCount(data.count);
         } catch (err) {
             setError('Failed to fetch topics');
             console.error('Error fetching topics:', err);
@@ -102,10 +108,12 @@ const ViewTopic = () => {
                 loading={loading}
                 error={error}
                 items={topics}
+                total={totalCount}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
                 onAdd={() => setShowCreateForm(true)}
                 headerColumns={['Name', 'Description', 'Zone', 'Subtopics', 'Actions']}
+                itemsPerPage={itemsPerPage}
                 renderRow={(topic) => (
                     <tr key={topic.id}>
                         <td className="px-6 py-4 w-1/4">{topic.name}</td>
