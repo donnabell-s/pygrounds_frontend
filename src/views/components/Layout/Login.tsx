@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
+import { useAdaptive } from "../../../context/AdaptiveContext";
 import { Link, useNavigate } from "react-router-dom";
 
 type LoginProps = {
@@ -8,6 +9,7 @@ type LoginProps = {
 
 const Login = ({ onSuccess }: LoginProps) => {
   const { login } = useAuth();
+  const { refresh } = useAdaptive();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -18,6 +20,8 @@ const Login = ({ onSuccess }: LoginProps) => {
     e.preventDefault();
     try {
       const loggedInUser = await login(username, password);
+      // Refresh adaptive data after successful login to ensure progress bar is updated
+      refresh();
       if (onSuccess) onSuccess(); // ✅ close modal if in modal
       navigate(`/${loggedInUser.id}/home`);
     } catch (err: any) {

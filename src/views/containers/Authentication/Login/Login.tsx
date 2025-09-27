@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useAuth } from "../../../../context/AuthContext";
+import { useAdaptive } from "../../../../context/AdaptiveContext";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const { login } = useAuth(); // ✅ get the user
+  const { refresh } = useAdaptive();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState(""); // changed from email
@@ -14,6 +16,8 @@ const Login = () => {
     e.preventDefault();
     try {
       const loggedInUser = await login(username, password);
+      // Refresh adaptive data after successful login to ensure progress bar is updated
+      refresh();
       navigate(`/${loggedInUser.id}/home`);
     } catch (err: any) {
       setError("Login failed. Please check your credentials.");

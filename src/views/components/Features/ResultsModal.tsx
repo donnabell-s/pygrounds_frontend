@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGame } from "../../../context/GameContext";
 import { useAdaptive } from "../../../context/AdaptiveContext";
@@ -36,7 +36,12 @@ type SQ = {
 };
 
 const normalize = (s?: string | null) =>
-  (s ?? "").toString().trim().replace(/\s+/g, " ").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  (s ?? "")
+    .toString()
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[^A-Za-z0-9]/g, "")
+    .toUpperCase();
 
 const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
   const { activeSession, fetchResponses } = useGame();
@@ -124,9 +129,55 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
 
   const total = items.length;
   const correctCount = items.filter((i) => i.isCorrect).length;
+  const percent = total > 0 ? (correctCount / total) * 100 : 0;
+
+  // --- feedback effects (audio + confetti) ---
+  const wompRef = useRef<HTMLAudioElement>(null);
+  const cheerRef = useRef<HTMLAudioElement>(null); // NEW: success sound
+  const [celebrated, setCelebrated] = useState(false);
+  const [sounded, setSounded] = useState(false);
+
+  useEffect(() => {
+    if (total === 0) return;
+
+    if (percent >= 70) {
+      if (celebrated) return;
+      setCelebrated(true);
+
+      // Play success sound
+      try {
+        if (cheerRef.current) {
+          cheerRef.current.currentTime = 0;
+          cheerRef.current.play().catch(() => {});
+        }
+      } catch {}
+
+      // Fire confetti once
+      (async () => {
+        const confetti = (await import("canvas-confetti")).default;
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.6 },
+          scalar: 1,
+        });
+      })();
+    } else {
+      if (sounded) return;
+      setSounded(true);
+
+      // Play womp-womp
+      try {
+        if (wompRef.current) {
+          wompRef.current.currentTime = 0;
+          wompRef.current.play().catch(() => {});
+        }
+      } catch {}
+    }
+  }, [percent, total, celebrated, sounded]);
+
 
   const handleClose = () => {
-    // Refresh adaptive data to update progress bars and zone progress
     refresh();
     onClose();
     const storedUser = localStorage.getItem("user");
@@ -134,10 +185,15 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
     navigate(`/${userId}/home`);
   };
 
-  const hintsDisplay = activeSession && (activeSession as any).hints_used != null ? String((activeSession as any).hints_used) : "—";
+  const hintsDisplay =
+    activeSession && (activeSession as any).hints_used != null ? String((activeSession as any).hints_used) : "—";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2D2D2D]/40">
+      {/* audio elements */}
+      <audio ref={wompRef} preload="auto" src="/sounds/wompwomp.mp3" />
+      <audio ref={cheerRef} preload="auto" src="/sounds/cheer.mp3" />{/* NEW: success sound */}
+
       <div className="bg-white rounded-xl shadow-xl w-[90%] max-w-xl relative border border-gray-200">
         <div>
           <div className="flex items-center gap-3 bg-[#F6F1FF] rounded-t-xl px-6 py-5">
@@ -188,7 +244,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
             {items.map((it, idx) => (
               <div
                 key={it.id ?? idx}
-                className={`rounded-lg border p-3 shadow-sm ${it.isCorrect ? "border-[#42BFAC]/80 bg-[#42BFAC]/10" : "border-[#FD4E66]/80 bg-[#FD4E66]/10"}`}
+                className={`rounded-lg border p-3 shadow-sm ${
+                  it.isCorrect ? "border-[#42BFAC]/80 bg-[#42BFAC]/10" : "border-[#FD4E66]/80 bg-[#FD4E66]/10"
+                }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="text-sm">
@@ -209,13 +267,17 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
                       {it.isCoding && (
                         <div className="text-[13px]">
                           <span className="font-medium text-gray-700">Explanation:</span>{" "}
-                          <span className="break-words">{it.explanation?.trim() ? it.explanation : "No explanation yet."}</span>
+                          <span className="break-words">
+                            {it.explanation?.trim() ? it.explanation : "No explanation yet."}
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
                   <span
-                    className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${it.isCorrect ? "bg-[#42BFAC] text-white" : "bg-[#FD4E66] text-white"}`}
+                    className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
+                      it.isCorrect ? "bg-[#42BFAC] text-white" : "bg-[#FD4E66] text-white"
+                    }`}
                   >
                     {it.isCorrect ? "Correct" : "Wrong"}
                   </span>

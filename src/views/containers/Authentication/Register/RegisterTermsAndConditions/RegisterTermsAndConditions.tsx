@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useAuth } from "../../../../../context/AuthContext";
+import { useAdaptive } from "../../../../../context/AdaptiveContext";
 import { useGame } from "../../../../../context/GameContext";
 import type { RegistrationContextType } from "../RegisterMain/RegisterMain";
 
@@ -11,6 +12,7 @@ const RegisterTermsAndConditions: React.FC = () => {
   const { signupData, preTestAnswers } =
     useOutletContext<RegistrationContextType>();
   const { register } = useAuth();
+  const { refresh } = useAdaptive();
   const { submitPreAssessmentAnswers } = useGame();
 
   const [agreed, setAgreed] = useState(false);
@@ -79,6 +81,9 @@ const RegisterTermsAndConditions: React.FC = () => {
       if (Object.keys(preTestAnswers).length > 0) {
         await submitPreAssessmentAnswers(formattedAnswers);
       }
+
+      // Refresh adaptive data after successful registration to ensure progress bar is updated
+      refresh();
 
       // Navigate onward
       navigate(`/${createdUser.id}/home`);
