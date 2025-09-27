@@ -107,15 +107,24 @@ const ProficiencyList = () => {
       const lbl = getZoneLabel(p.topic.zone);
       if (zn) m.set(zn, lbl);
     }
-    if (m.size === 0) m.set(0, "Zone 0");
+    // Don't add default Zone 0 if no real zones exist
     return Array.from(m.entries()).sort((a, b) => a[0] - b[0]); // [zoneNumber, label][]
   }, [sortedTopics]);
 
   const [activeZone, setActiveZone] = useState<number | null>(null);
 
+  // ✅ Update activeZone whenever zones change or when initially loaded
   useEffect(() => {
-    if (activeZone === null && zones.length > 0) setActiveZone(zones[0][0]); // default to first zone
-  }, [activeZone, zones]);
+    if (zones.length > 0) {
+      // If activeZone is null or doesn't exist in current zones, set to first available zone
+      if (activeZone === null || !zones.some(([zoneNum]) => zoneNum === activeZone)) {
+        setActiveZone(zones[0][0]);
+      }
+    } else {
+      // No zones available, reset activeZone
+      setActiveZone(null);
+    }
+  }, [zones, activeZone]);
 
   const visibleTopics = useMemo(() => {
     if (activeZone == null) return [];

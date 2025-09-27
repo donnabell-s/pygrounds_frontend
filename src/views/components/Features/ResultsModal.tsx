@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGame } from "../../../context/GameContext";
+import { useAdaptive } from "../../../context/AdaptiveContext";
 import * as Component from "../../components";
 import { FaRegClock } from "react-icons/fa6";
 import { HiOutlineLightningBolt } from "react-icons/hi";
@@ -39,6 +40,7 @@ const normalize = (s?: string | null) =>
 
 const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
   const { activeSession, fetchResponses } = useGame();
+  const { refresh } = useAdaptive();
   const navigate = useNavigate();
 
   const startTime = activeSession?.start_time ? new Date(activeSession.start_time).getTime() : 0;
@@ -124,6 +126,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
   const correctCount = items.filter((i) => i.isCorrect).length;
 
   const handleClose = () => {
+    // Refresh adaptive data to update progress bars and zone progress
+    refresh();
     onClose();
     const storedUser = localStorage.getItem("user");
     const userId = storedUser ? JSON.parse(storedUser).id : "";
