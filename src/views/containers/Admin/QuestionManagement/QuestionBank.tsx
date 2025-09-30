@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { adminApi } from '../../../../api';
 import type { GeneratedQuestion, PreAssessmentQuestion, BulkGenerationParams, PreAssessmentBulkGenerationParams, QuestionListResponse } from '../../../../types/questions';
 import { AdminTable, BulkGenerationModal } from '../../../components/UI';
+import MinigameBulkGeneration from './MinigameBulkGeneration';
 import { FiEdit2, FiTrash2, FiCheck } from 'react-icons/fi';
 
 type QuestionType = 'minigame' | 'preassessment';
 type GameType = 'all' | 'coding' | 'non_coding';
 type ValidationStatus = 'all' | 'pending' | 'processed';
+type DifficultyFilter = 'all' | 'beginner' | 'intermediate' | 'advanced' | 'master';
 
 const QuestionBank = () => {
     const [loading, setLoading] = useState(true);
@@ -15,6 +17,7 @@ const QuestionBank = () => {
     const [questionType, setQuestionType] = useState<QuestionType>('minigame');
     const [gameType, setGameType] = useState<GameType>('all');
     const [validationStatus, setValidationStatus] = useState<ValidationStatus>('all');
+    const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
     const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
     const [questionsData, setQuestionsData] = useState<QuestionListResponse | null>(null);
     const [preassessmentQuestions, setPreassessmentQuestions] = useState<PreAssessmentQuestion[]>([]);
@@ -29,6 +32,7 @@ const QuestionBank = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingMinigameQuestion, setEditingMinigameQuestion] = useState<GeneratedQuestion | null>(null);
     const [isMinigameEditModalOpen, setIsMinigameEditModalOpen] = useState(false);
+    const [showMinigameBulkGeneration, setShowMinigameBulkGeneration] = useState(false);
 
     const handleCancelGeneration = async (sessionId: string, generationType: 'minigame' | 'preassessment') => {
         try {
@@ -91,9 +95,7 @@ const QuestionBank = () => {
             setMinigameGenerationStatus('Minigame generation in progress...');
             pollMinigameGenerationStatus(savedMinigameSession);
         }
-    }, [questionType, gameType, validationStatus]);
-
-    // Separate effect for page changes to avoid infinite loops
+        }, [questionType, gameType, validationStatus, difficultyFilter]);    // Separate effect for page changes to avoid infinite loops
     useEffect(() => {
         fetchQuestions();
     }, [currentPage]);
@@ -105,6 +107,7 @@ const QuestionBank = () => {
                 const response = await adminApi.getAllQuestions({
                     game_type: gameType === 'all' ? undefined : gameType as 'coding' | 'non_coding',
                     validation_status: validationStatus === 'all' ? undefined : validationStatus as 'pending' | 'processed',
+                    difficulty: difficultyFilter === 'all' ? undefined : difficultyFilter,
                     page: currentPage,
                     page_size: 10
                 });
@@ -294,24 +297,42 @@ const QuestionBank = () => {
                 console.log('Polling minigame generation status for session:', sessionId);
                 const status = await adminApi.getGenerationStatus(sessionId);
                 console.log('Minigame generation status response:', status);
+                console.log('Worker summary from status:', status.worker_summary);
+                console.log('Overall progress:', status.overall_progress);
+                console.log('Session status:', status.status);
                 
-                // Get worker details for more detailed progress
-                const workerStatus = await adminApi.getWorkerStatus(sessionId);
+                // Use the worker_summary from the main status response
+                const workerSummary = status.worker_summary;
+                const overallProgress = status.overall_progress;
                 
-                if (workerStatus.workers && workerStatus.workers.length > 0) {
-                    const activeWorkers = workerStatus.workers.filter(w => w.status === 'processing');
-                    const completedWorkers = workerStatus.workers.filter(w => w.status === 'completed');
+                if (workerSummary && workerSummary.total_workers > 0) {
+                    const activeWorkers = workerSummary.active_workers;
+                    const completedWorkers = workerSummary.completed_workers;
+                    const failedWorkers = workerSummary.failed_workers;
+                    const totalWorkers = workerSummary.total_workers;
+                    const pendingWorkers = totalWorkers - activeWorkers - completedWorkers - failedWorkers;
                     
-                    if (activeWorkers.length > 0) {
-                        const currentWork = activeWorkers.map(w => 
-                            `Worker ${w.worker_id}: ${w.current_step} (${w.zone_name})`
-                        ).join(', ');
-                        setMinigameGenerationStatus(`Generating questions... ${completedWorkers.length}/${workerStatus.workers.length} workers completed. Active: ${currentWork}`);
+                    let statusMessage = '';
+                    
+                    if (activeWorkers > 0) {
+                        statusMessage = `🔄 Generating questions... ${activeWorkers} workers active, ${completedWorkers} completed`;
+                    } else if (pendingWorkers > 0) {
+                        statusMessage = `⏳ Starting workers... ${pendingWorkers} workers pending, ${completedWorkers} completed`;
+                    } else if (completedWorkers > 0) {
+                        statusMessage = `✅ Processing... ${completedWorkers}/${totalWorkers} workers completed`;
                     } else {
-                        setMinigameGenerationStatus(`Processing... ${completedWorkers.length}/${workerStatus.workers.length} workers completed`);
+                        statusMessage = `🚀 Initializing ${totalWorkers} workers...`;
                     }
+                    
+                    statusMessage += ` | Generated: ${overallProgress.total_questions_generated || 0} questions`;
+                    
+                    if (failedWorkers > 0) {
+                        statusMessage += ` | ⚠️ ${failedWorkers} failed`;
+                    }
+                    
+                    setMinigameGenerationStatus(statusMessage);
                 } else {
-                    setMinigameGenerationStatus(`Generating questions... ${status.overall_progress.total_questions_generated || 0} questions generated`);
+                    setMinigameGenerationStatus(`Generating questions... ${overallProgress.total_questions_generated || 0} questions generated`);
                 }
                 
                 // Stop polling if completed or error
@@ -369,6 +390,38 @@ const QuestionBank = () => {
         }
     };
 
+    // Show minigame bulk generation page if requested
+    if (showMinigameBulkGeneration) {
+        return (
+            <MinigameBulkGeneration
+                onBack={() => setShowMinigameBulkGeneration(false)}
+                onSubmit={async (params: BulkGenerationParams) => {
+                    try {
+                        setError('');
+                        setMinigameGenerationStatus('');
+                        setShowMinigameBulkGeneration(false);
+                        
+                        const response = await adminApi.generateBulkQuestions(params);
+                        
+                        if (response.session_id) {
+                            // Start inline real-time tracking
+                            setMinigameGenerationStatus('Starting minigame question generation...');
+                            pollMinigameGenerationStatus(response.session_id);
+                        } else {
+                            // Immediate completion
+                            setMinigameGenerationStatus(response.message);
+                            setTimeout(() => setMinigameGenerationStatus(''), 10000);
+                            await fetchQuestions();
+                        }
+                    } catch (err: any) {
+                        setError(err.message || 'Failed to generate questions');
+                        setShowMinigameBulkGeneration(false);
+                    }
+                }}
+            />
+        );
+    }
+
     return (
         <div className="space-y-4">
             {/* Filters and Action Buttons Container - Responsive Layout */}
@@ -403,11 +456,29 @@ const QuestionBank = () => {
                             <option value="pending">Pending (Default)</option>
                             <option value="processed">Processed</option>
                         </select>
+
+                        <select
+                            value={difficultyFilter}
+                            onChange={(e) => setDifficultyFilter(e.target.value as 'all' | 'beginner' | 'intermediate' | 'advanced' | 'master')}
+                            className="rounded-md border border-gray-300 p-2 min-w-[150px]"
+                        >
+                            <option value="all">All Difficulties</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                            <option value="master">Master</option>
+                        </select>
                     </>
                 )}
 
                 <button
-                    onClick={() => setIsBulkModalOpen(true)}
+                    onClick={() => {
+                        if (questionType === 'minigame') {
+                            setShowMinigameBulkGeneration(true);
+                        } else {
+                            setIsBulkModalOpen(true);
+                        }
+                    }}
                     className="bg-[#3776AB] text-white px-4 py-2 rounded hover:brightness-110 transition-all whitespace-nowrap"
                 >
                     Bulk Generate Questions
@@ -446,48 +517,32 @@ const QuestionBank = () => {
                 <BulkGenerationModal
                 isOpen={isBulkModalOpen}
                 onClose={() => setIsBulkModalOpen(false)}
-                questionType={questionType}
-                onSubmit={async (params: BulkGenerationParams | PreAssessmentBulkGenerationParams) => {
+                onSubmit={async (params: PreAssessmentBulkGenerationParams) => {
                     try {
                         setError('');
                         setGenerationSuccess('');
                         setIsBulkModalOpen(false);
                         
-                        if (questionType === 'minigame') {
-                            const response = await adminApi.generateBulkQuestions(params as BulkGenerationParams);
-                            
-                            if (response.session_id) {
-                                // Start inline real-time tracking
-                                setMinigameGenerationStatus('Starting minigame question generation...');
-                                pollMinigameGenerationStatus(response.session_id);
-                            } else {
-                                // Immediate completion
-                                setMinigameGenerationStatus(response.message);
-                                setTimeout(() => setMinigameGenerationStatus(''), 10000);
-                                await fetchQuestions();
+                        // Handle preassessment generation
+                        setGenerationSuccess('Pre-assessment question generation is running...');
+                        
+                        const response = await adminApi.generatePreAssessmentQuestions(params);
+                        
+                        if (response.session_id) {
+                            // Get initial status immediately
+                            try {
+                                const initialStatus = await adminApi.getPreAssessmentGenerationStatus(response.session_id);
+                                setGenerationSuccess(`Pre-assessment generation: ${initialStatus.questions_generated} questions generated...`);
+                            } catch (err) {
+                                console.warn('Could not get initial status, will start polling anyway');
                             }
+                            
+                            // Start polling for status updates
+                            pollPreAssessmentStatus(response.session_id);
                         } else {
-                            // Handle preassessment generation
-                            setGenerationSuccess('Pre-assessment question generation is running...');
-                            
-                            const response = await adminApi.generatePreAssessmentQuestions(params as PreAssessmentBulkGenerationParams);
-                            
-                            if (response.session_id) {
-                                // Get initial status immediately
-                                try {
-                                    const initialStatus = await adminApi.getPreAssessmentGenerationStatus(response.session_id);
-                                    setGenerationSuccess(`Pre-assessment generation: ${initialStatus.questions_generated} questions generated...`);
-                                } catch (err) {
-                                    console.warn('Could not get initial status, will start polling anyway');
-                                }
-                                
-                                // Start polling for status updates
-                                pollPreAssessmentStatus(response.session_id);
-                            } else {
-                                // Immediate completion (fallback case)
-                                setGenerationSuccess('Pre-assessment questions generated successfully');
-                                await fetchQuestions();
-                            }
+                            // Immediate completion (fallback case)
+                            setGenerationSuccess('Pre-assessment questions generated successfully');
+                            await fetchQuestions();
                         }
                     } catch (err: any) {
                         setError(err.message || 'Failed to generate questions');
@@ -505,19 +560,19 @@ const QuestionBank = () => {
                 onPageChange={setCurrentPage}
                 itemsPerPage={10}
                 headerColumns={questionType === 'minigame' 
-                    ? ['Question', 'Zone', 'Topic', 'Subtopic', 'Type', 'Difficulty', 'Status', 'Actions']
-                    : ['Question', 'Topics', 'Difficulty', 'Order', 'Actions']
+                    ? ['ID', 'Question', 'Topic', 'Subtopic', 'Type', 'Difficulty', 'Status', 'Actions']
+                    : ['ID', 'Question', 'Topics', 'Difficulty', 'Order', 'Actions']
                 }
                 renderRow={(item: GeneratedQuestion | PreAssessmentQuestion) => {
                     if (questionType === 'minigame') {
                         const question = item as GeneratedQuestion;
                         return (
                             <tr key={question.id}>
+                                <td className="px-3 py-3 text-sm font-mono">
+                                    {question.id}
+                                </td>
                                 <td className="px-3 py-3">
                                     <div className="line-clamp-2 text-sm max-w-[400px]">{question.question_preview || question.question_text || 'No question text'}</div>
-                                </td>
-                                <td className="px-3 py-3 text-sm">
-                                    <div className="line-clamp-1 max-w-[150px]">{question.topic?.zone?.name || 'Unknown Zone'}</div>
                                 </td>
                                 <td className="px-3 py-3 text-sm">
                                     <div className="line-clamp-1 max-w-[150px]">{question.topic?.name || 'Unknown Topic'}</div>
@@ -574,6 +629,9 @@ const QuestionBank = () => {
                         const question = item as PreAssessmentQuestion;
                         return (
                             <tr key={question.id}>
+                                <td className="px-3 py-3 text-sm font-mono">
+                                    {question.id}
+                                </td>
                                 <td className="px-3 py-3">
                                     <div className="line-clamp-2 text-sm max-w-[400px]">{question.question_text || 'No question text'}</div>
                                 </td>

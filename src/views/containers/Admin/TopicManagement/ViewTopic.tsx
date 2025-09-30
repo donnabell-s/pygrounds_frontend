@@ -112,18 +112,19 @@ const ViewTopic = () => {
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
                 onAdd={() => setShowCreateForm(true)}
-                headerColumns={['Name', 'Description', 'Zone', 'Subtopics', 'Actions']}
+                headerColumns={['ID', 'Name', 'Description', 'Zone Name', 'Subtopics Count', 'Actions']}
                 itemsPerPage={itemsPerPage}
                 renderRow={(topic) => (
                     <tr key={topic.id}>
+                        <td className="px-6 py-4 w-1/12 text-sm font-mono">{topic.id}</td>
                         <td className="px-6 py-4 w-1/4">{topic.name}</td>
                         <td className="px-6 py-4 w-1/3">
                             <div className="max-w-xs truncate">
                                 {topic.description || '-'}
                             </div>
                         </td>
-                        <td className="px-6 py-4 w-1/6">{topic.zone_name}</td>
-                        <td className="px-6 py-4 w-1/12 text-center">{topic.subtopics_count}</td>
+                        <td className="px-6 py-4 w-1/6">{topic.zone_name || 'No Zone Name'}</td>
+                        <td className="px-6 py-4 w-1/12 text-center">{topic.subtopics_count !== undefined ? topic.subtopics_count : 0}</td>
                         <td className="px-6 py-4 w-1/12">
                             <div className="flex justify-start space-x-2">
                                 <button

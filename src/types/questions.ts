@@ -35,7 +35,7 @@ export interface BulkGenerationParams {
     game_type: 'coding' | 'non_coding';
     difficulty_levels?: ('beginner' | 'intermediate' | 'advanced' | 'master')[];
     num_questions_per_subtopic: number;
-    zone_ids?: number[];
+    subtopic_ids?: number[];
 }
 
 export interface SingleGenerationParams {

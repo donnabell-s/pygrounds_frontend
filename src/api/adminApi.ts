@@ -138,8 +138,18 @@ export const adminApi = {
         await client.delete(`/admin/questions/${questionId}/`);
     },
 
-    getQuestionsBySubtopic: async (subtopicId: number): Promise<{ subtopic: any; questions: GeneratedQuestion[] }> => {
-        const response = await client.get<{ subtopic: any; questions: GeneratedQuestion[] }>(`/subtopic/${subtopicId}/`);
+    getQuestionsBySubtopic: async (subtopicId: number, params?: {
+        difficulty?: 'beginner' | 'intermediate' | 'advanced' | 'master';
+        game_type?: 'coding' | 'non_coding';
+        minigame_type?: string;
+    }): Promise<{ subtopic: any; questions: GeneratedQuestion[] }> => {
+        const queryParams = new URLSearchParams();
+        if (params?.difficulty) queryParams.append('difficulty', params.difficulty);
+        if (params?.game_type) queryParams.append('game_type', params.game_type);
+        if (params?.minigame_type) queryParams.append('minigame_type', params.minigame_type);
+        
+        const url = `/subtopic/${subtopicId}/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const response = await client.get<{ subtopic: any; questions: GeneratedQuestion[] }>(url);
         return response.data;
     },
 
@@ -253,8 +263,23 @@ export const adminApi = {
     },
 
     getAllZonesNoPagination: async (): Promise<AdminZone[]> => {
-        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminZone[] }>('/zones/');
-        return response.data.results; // Extract results from paginated response for backward compatibility
+        const allZones: AdminZone[] = [];
+        let nextUrl: string | null = '/zones/';
+        
+        while (nextUrl) {
+            const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminZone[] }>(nextUrl);
+            const data: { count: number; next: string | null; previous: string | null; results: AdminZone[] } = response.data;
+            
+            if (data.results) {
+                allZones.push(...data.results);
+                // Extract the path from the full URL if next is a full URL, remove /api prefix
+                nextUrl = data.next ? new URL(data.next).pathname.replace('/api', '') + new URL(data.next).search : null;
+            } else {
+                break;
+            }
+        }
+        
+        return allZones;
     },
 
     getZone: async (id: number): Promise<AdminZone> => {
@@ -294,14 +319,29 @@ export const adminApi = {
         if (params?.page) queryParams.append('page', params.page.toString());
         if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
         
-        const url = `/topics/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const url = `/admin/topics/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
         const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminTopic[] }>(url);
         return response.data; // Return full paginated response for server-side pagination
     },
 
     getAllTopicsNoPagination: async (): Promise<AdminTopic[]> => {
-        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminTopic[] }>('/topics/');
-        return response.data.results; // Extract results from paginated response for backward compatibility
+        const allTopics: AdminTopic[] = [];
+        let nextUrl: string | null = '/admin/topics/';
+        
+        while (nextUrl) {
+            const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminTopic[] }>(nextUrl);
+            const data: { count: number; next: string | null; previous: string | null; results: AdminTopic[] } = response.data;
+            
+            if (data.results) {
+                allTopics.push(...data.results);
+                // Extract the path from the full URL if next is a full URL, remove /api prefix
+                nextUrl = data.next ? new URL(data.next).pathname.replace('/api', '') + new URL(data.next).search : null;
+            } else {
+                break;
+            }
+        }
+        
+        return allTopics;
     },
 
     getTopic: async (id: number): Promise<AdminTopic> => {
@@ -346,8 +386,23 @@ export const adminApi = {
     },
 
     getAllSubtopicsNoPagination: async (): Promise<AdminSubtopic[]> => {
-        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminSubtopic[] }>('/subtopics/');
-        return response.data.results; // Extract results from paginated response for backward compatibility
+        const allSubtopics: AdminSubtopic[] = [];
+        let nextUrl: string | null = '/subtopics/';
+        
+        while (nextUrl) {
+            const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminSubtopic[] }>(nextUrl);
+            const data: { count: number; next: string | null; previous: string | null; results: AdminSubtopic[] } = response.data;
+            
+            if (data.results) {
+                allSubtopics.push(...data.results);
+                // Extract the path from the full URL if next is a full URL, remove /api prefix
+                nextUrl = data.next ? new URL(data.next).pathname.replace('/api', '') + new URL(data.next).search : null;
+            } else {
+                break;
+            }
+        }
+        
+        return allSubtopics;
     },
 
     getSubtopic: async (id: number): Promise<AdminSubtopic> => {

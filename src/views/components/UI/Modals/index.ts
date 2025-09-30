@@ -1,5 +1,5 @@
 export { default as Modal } from "./Modal";
-export { BulkGenerationModal } from "./BulkGenerationModal";
+export { BulkGenerationModal } from "../BulkGenerationModal";
 export { SingleQuestionGenerationModal } from "./SingleQuestionGenerationModal";
 export { GenerationProgressModal } from "./GenerationProgressModal";
 export { DocumentManagementModal } from "./DocumentManagementModal";

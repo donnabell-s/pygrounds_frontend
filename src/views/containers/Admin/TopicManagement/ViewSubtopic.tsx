@@ -156,16 +156,18 @@ const ViewSubtopic = () => {
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
                 onAdd={() => setShowCreateForm(true)}
-                headerColumns={['Name', 'Topic', 'Concept Intent', 'Code Intent', 'Embedding Status', 'Actions']}
+                headerColumns={['ID', 'Name', 'Topic ID', 'Topic Name', 'Concept Intent', 'Code Intent', 'Embedding Status', 'Actions']}
                 itemsPerPage={itemsPerPage}
                 renderRow={(subtopic) => (
                     <tr key={subtopic.id}>
+                        <td className="px-6 py-4 w-1/12 text-sm font-mono">{subtopic.id}</td>
                         <td className="px-6 py-4 w-1/6">
                             <div className="font-medium">{subtopic.name}</div>
                         </td>
+                        <td className="px-6 py-4 w-1/12 text-center font-mono">{subtopic.topic}</td>
                         <td className="px-6 py-4 w-1/12">
                             <div className="text-center">
-                                {topics.find(t => t.id === subtopic.topic)?.name || subtopic.topic}
+                                {topics.find(t => t.id === subtopic.topic)?.name || subtopic.topic_name || 'Unknown'}
                             </div>
                         </td>
                         <td className="px-6 py-4 w-1/4">
