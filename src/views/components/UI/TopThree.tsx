@@ -5,12 +5,14 @@ import type { LevelName } from "../../../types/game"; // ← types only
 
 interface TopUserProps {
   user: {
+    id: number;
     name: string;
     username: string;
     totalXP: number;
     level: LevelName; // ← use centralized LevelName
   };
   rank: number; // 0 = 1st, 1 = 2nd, 2 = 3rd
+  onClick?: (userId: number) => void; // Optional click handler
 }
 
 // Local level colors (unchanged styling)
@@ -21,7 +23,7 @@ const LEVEL_COLORS: Record<LevelName, { color: string; bg: string }> = {
   Master: { color: "#A855F7", bg: "#A855F720" }, // purple
 };
 
-const TopThree: React.FC<TopUserProps> = ({ user, rank }) => {
+const TopThree: React.FC<TopUserProps> = ({ user, rank, onClick }) => {
   const podiumStyles = [
     { className: "pulse-gold scale-110", border: "border-yellow-400", badgeBg: "bg-yellow-400 text-white" },
     { className: "pulse-silver scale-100", border: "border-blue-400", badgeBg: "bg-blue-400 text-white" },
@@ -36,8 +38,10 @@ const TopThree: React.FC<TopUserProps> = ({ user, rank }) => {
 
   return (
     <div
+      onClick={() => onClick?.(user.id)}
       className={`${className} flex flex-col items-center gap-3 rounded-2xl w-40 lg:w-48 p-5 
-                  bg-white/80 backdrop-blur-sm border border-[#704EE7]/25 shadow-md hover:shadow-lg transition`}
+                  bg-white/80 backdrop-blur-sm border border-[#704EE7]/25 shadow-md hover:shadow-lg transition 
+                  ${onClick ? 'cursor-pointer' : ''}`}
     >
       {/* Avatar + Crown + Rank Badge */}
       <div className="relative flex items-center justify-center">

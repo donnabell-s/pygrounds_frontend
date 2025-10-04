@@ -1,24 +1,29 @@
 // src/context/UserContext.tsx
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { userApi } from "../api/userApi";
 import type { User } from "../types/user";
 
 type UserContextType = {
   currentUser: User | null;
+  selectedUser: User | null;
   isLoading: boolean;
   error: Error | null;
   fetchProfile: () => Promise<User | null>;
+  fetchUserProfile: (userId: number) => Promise<User | null>;
+  setSelectedUser: (user: User | null) => void;
+  clearSelectedUser: () => void;
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   // Fetch current user's profile (moved from AuthContext)
-  const fetchProfile = async (): Promise<User | null> => {
+  const fetchProfile = useCallback(async (): Promise<User | null> => {
     setIsLoading(true);
     setError(null);
     try {
@@ -50,7 +55,29 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Fetch another user's profile by ID
+  const fetchUserProfile = useCallback(async (userId: number): Promise<User | null> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const profile = await userApi.getUserProfile(userId);
+      setSelectedUser(profile);
+      return profile;
+    } catch (e) {
+      const error = e as Error;
+      console.error("Failed to fetch user profile", error);
+      setError(error);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const clearSelectedUser = useCallback(() => {
+    setSelectedUser(null);
+  }, []);
 
   // Load current user from storage and fetch fresh profile on mount
   useEffect(() => {
@@ -65,18 +92,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  return (
-    <UserContext.Provider
-      value={{
-        currentUser,
-        isLoading,
-        error,
-        fetchProfile,
-      }}
-    >
-      {children}
-    </UserContext.Provider>
-  );
+  const value = useMemo(() => ({
+    currentUser,
+    selectedUser,
+    isLoading,
+    error,
+    fetchProfile,
+    fetchUserProfile,
+    setSelectedUser,
+    clearSelectedUser,
+  }), [currentUser, selectedUser, isLoading, error, fetchProfile, fetchUserProfile, clearSelectedUser]);
+
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
 
 export const useUser = () => {

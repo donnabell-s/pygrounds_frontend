@@ -37,7 +37,7 @@ const WordSearch: React.FC = () => {
   const { activeSession, gameEnded, getWordSearchMatrix, submitAnswers, clearActiveSession, resetGameEnd } = useGame();
 
   const [matrix, setMatrix] = useState<string[]>([]);
-  const [placements, setPlacements] = useState<WordSearchPlacement[]>([]);
+  // placements are fetched but not used in rendering in this component. We don't store them now.
 
   const [questionCss, setQuestionCss] = useState<Record<number, string>>({});
   const [questionRgba, setQuestionRgba] = useState<Record<number, string>>({});
@@ -97,8 +97,7 @@ const WordSearch: React.FC = () => {
       if (!data) return;
 
       setMatrix(data.matrix || []);
-      const rawPlacements: WordSearchPlacement[] = data.placements || [];
-      setPlacements(rawPlacements);
+  const rawPlacements: WordSearchPlacement[] = data.placements || [];
 
       const idsSet = new Set<number>();
       for (const p of rawPlacements) {
@@ -259,12 +258,14 @@ const WordSearch: React.FC = () => {
           const isSelected = selectedQ === sq.id;
           const isAnswered = Array.isArray(highlighted[sq.id]) && highlighted[sq.id].length > 1;
 
-        const bgClass = isSelected ? questionCss[sq.id] : isAnswered ? `${questionCss[sq.id]} bg-opacity-50` : "bg-white hover:bg-gray-100";
+          const qText = sq.question?.question_text ?? "(question missing)";
+          const qCss = questionCss[sq.id] ?? "bg-white";
+          const bgClass = isSelected ? qCss : isAnswered ? `${qCss} bg-opacity-50` : "bg-white hover:bg-gray-100";
           const borderClass = isSelected ? "border-black" : isAnswered ? "border-transparent" : "border-gray-300";
 
           return (
             <button key={sq.id} onClick={() => setSelectedQ(sq.id)} className={`text-left px-3 py-2 rounded shadow-sm cursor-pointer border ${borderClass} ${bgClass}`}>
-              {sq.question.question_text}
+              {qText}
             </button>
           );
         })}

@@ -2,7 +2,7 @@ import * as Components from "../../components";
 import { useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
-import { FiArrowRightCircle } from "react-icons/fi";
+// removed unused FiArrowRightCircle
 import { PATHS } from "../../../constants";
 import Logo from "../../../assets/logo/Pygrounds_Logo.png";
 

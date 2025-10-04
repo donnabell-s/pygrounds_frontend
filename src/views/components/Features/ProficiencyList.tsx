@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAdaptive } from "../../../context/AdaptiveContext";
-import { FaSquareCaretRight, FaSquareCaretLeft } from "react-icons/fa6";
-import { FaChevronCircleRight, FaChevronCircleLeft, FaAngleRight , FaAngleLeft } from "react-icons/fa";
+import { FaAngleRight, FaAngleLeft } from "react-icons/fa";
 
 // ✅ Config for proficiency levels
 const PROFICIENCY_LEVELS = [
@@ -90,13 +89,18 @@ type TP = {
   proficiency_percent: number;
 };
 
-const ProficiencyList = () => {
+type ProficiencyListProps = {
+  user?: any;
+};
+
+const ProficiencyList = ({ user }: ProficiencyListProps) => {
   const { topicProgress, isLoading } = useAdaptive();
+  const effectiveTopicProgress = user?.topic_proficiencies ?? topicProgress;
 
   // ✅ Move ALL hooks to the top before any conditionals
   const sortedTopics: TP[] = useMemo(
-    () => (topicProgress ? [...topicProgress].sort((a: TP, b: TP) => a.topic.id - b.topic.id) : []),
-    [topicProgress]
+    () => (effectiveTopicProgress ? [...effectiveTopicProgress].sort((a: TP, b: TP) => a.topic.id - b.topic.id) : []),
+    [effectiveTopicProgress]
   );
 
   // Build available zones from topic.zone

@@ -20,9 +20,14 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-const ProgressBar = () => {
+type ProgressBarProps = {
+  user?: any; // optional user object (selected user)
+};
+
+const ProgressBar = ({ user }: ProgressBarProps) => {
   const { zoneProgress, isLoading } = useAdaptive();
-  const zone = zoneProgress?.[0] || null;
+  // If a user is passed (viewing other user's profile), use their zone_progresses
+  const zone = user?.zone_progresses?.length ? user.zone_progresses[0] : zoneProgress?.[0] || null;
 
   const [progressPercent, setProgressPercent] = useState(0);
 

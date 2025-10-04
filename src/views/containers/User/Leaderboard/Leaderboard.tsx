@@ -3,6 +3,8 @@ import * as Components from "../../../components";
 import "./Leaderboard.css";
 import { useAdaptive } from "../../../../context/AdaptiveContext";
 import { useAuth } from "../../../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "../../../../constants";
 import { LEVELS } from "../../../../types/game"; // ← use centralized thresholds
 import type { LevelName } from "../../../../types/game";
 
@@ -43,6 +45,19 @@ const computeXPFromCurrentZone = (
 const Leaderboard = () => {
   const { leaderboardZoneProgress, isLoading } = useAdaptive();
   const { user: authUser } = useAuth();
+  const navigate = useNavigate();
+
+  const handleUserClick = (userId: number) => {
+    if (authUser?.id) {
+      // Navigate to the user's profile using the USER_PROFILE route
+      const profilePath = `/${authUser.id}/${PATHS.USER_VIEW.USER_PROFILE.path.replace(':profileId', userId.toString())}`;
+      console.log("Navigating to profile path:", profilePath);
+      console.log("USER_PROFILE path template:", PATHS.USER_VIEW.USER_PROFILE.path);
+      console.log("Target userId:", userId);
+      console.log("Current authUser.id:", authUser.id);
+      navigate(profilePath);
+    }
+  };
 
   console.log("Leaderboard Component - Data received:", leaderboardZoneProgress);
   console.log("Leaderboard Component - Is loading:", isLoading);
@@ -93,9 +108,9 @@ const Leaderboard = () => {
       {topThree.length > 0 && (
         <>
           <div className="flex flex-row justify-center items-end gap-8 mt-2 relative">
-            {topThree[1] && <Components.TopThree user={topThree[1]} rank={1} />}
-            {topThree[0] && <Components.TopThree user={topThree[0]} rank={0} />}
-            {topThree[2] && <Components.TopThree user={topThree[2]} rank={2} />}
+            {topThree[1] && <Components.TopThree user={topThree[1]} rank={1} onClick={handleUserClick} />}
+            {topThree[0] && <Components.TopThree user={topThree[0]} rank={0} onClick={handleUserClick} />}
+            {topThree[2] && <Components.TopThree user={topThree[2]} rank={2} onClick={handleUserClick} />}
           </div>
 
           {/* If I'm in Top 3, show a subtle badge */}
@@ -117,8 +132,9 @@ const Leaderboard = () => {
           return (
             <div
               key={user.id}
+              onClick={() => handleUserClick(user.id)}
               className={[
-                "flex items-center justify-between bg-white/80 backdrop-blur-sm border p-5 rounded-2xl shadow-md transition-all duration-300 group",
+                "flex items-center justify-between bg-white/80 backdrop-blur-sm border p-5 rounded-2xl shadow-md transition-all duration-300 group cursor-pointer",
                 isMe ? "border-[#704EE7] ring-2 ring-[#704EE7]/40 bg-[#704EE7]/5" : "border-[#704EE7]/25 hover:border-[#704EE7]/35 hover:shadow-lg",
               ].join(" ")}
             >
@@ -165,8 +181,10 @@ const Leaderboard = () => {
               <div className="h-px bg-gray-200 flex-1" />
             </div>
 
-            <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm border p-5 rounded-2xl 
-                         shadow-md ring-2 ring-[#704EE7]/40 border-[#704EE7] bg-[#704EE7]/5">
+            <div 
+              onClick={() => handleUserClick(me.id)}
+              className="flex items-center justify-between bg-white/80 backdrop-blur-sm border p-5 rounded-2xl 
+                         shadow-md ring-2 ring-[#704EE7]/40 border-[#704EE7] bg-[#704EE7]/5 cursor-pointer">
               {/* Left Side: Rank + Avatar + Name */}
               <div className="flex items-center gap-4">
                 <span className="text-[#3776AB] font-bold text-xl w-10 text-center">#{myRank}</span>

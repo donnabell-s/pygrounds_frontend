@@ -7,6 +7,8 @@ import defaultCover from "../../../assets/images/default_cover.png"; // ⬅️ u
 interface ProfileHeaderProps {
   coverUrl?: string | null;
   avatarUrl?: string | null;
+  user?: any; // User to display (if not provided, uses current user)
+  showEditButton?: boolean; // Whether to show the edit button
 }
 
 const initialsOf = (first?: string, last?: string) => {
@@ -15,8 +17,16 @@ const initialsOf = (first?: string, last?: string) => {
   return (a + b).trim() || "?";
 };
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({ coverUrl, avatarUrl }) => {
-  const { user } = useAuth();
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ 
+  coverUrl, 
+  avatarUrl, 
+  user: propUser, 
+  showEditButton = true 
+}) => {
+  const { user: authUser } = useAuth();
+  
+  // Use the passed user or fall back to current user
+  const user = propUser || authUser;
 
   console.log("ProfileHeader - user data:", user);
 
@@ -62,14 +72,16 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ coverUrl, avatarUrl }) =>
               </div>
             </div>
 
-            <button
-              type="button"
-              className="ml-4 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#7054D0] text-white text-sm font-medium shadow hover:opacity-95 w-auto"
-              title="Edit profile (coming soon)"
-            >
-              <FiEdit2 />
-              <span className="hidden sm:inline">Edit Profile</span>
-            </button>
+            {showEditButton && (
+              <button
+                type="button"
+                className="ml-4 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#7054D0] text-white text-sm font-medium shadow hover:opacity-95 w-auto"
+                title="Edit profile (coming soon)"
+              >
+                <FiEdit2 />
+                <span className="hidden sm:inline">Edit Profile</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

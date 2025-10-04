@@ -13,7 +13,8 @@ export const authApi = {
   },
 
   getProfile: async (): Promise<User> => {
-    const res = await client.get<User>("user/profile/");
+    // backend exposes current user's profile at /api/user/profile/
+    const res = await client.get<User>("/user/profile/");
     return res.data;
   },
 };

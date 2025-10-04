@@ -3,7 +3,7 @@ import { FaArrowRight } from "react-icons/fa";
 import { FaCode, FaChartLine } from "react-icons/fa6";
 import { RiBrain2Line } from "react-icons/ri";
 import HeroImage from "../../../assets/images/landing-hero3.png";
-import { FaTwitter, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
+// removed unused social icons
 
 const Landing = () => {
   const features = [

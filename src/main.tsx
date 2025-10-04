@@ -5,14 +5,17 @@ import App from './App.tsx'
 import { AuthProvider } from "./context/AuthContext";
 import { GameProvider } from "./context/GameContext";
 import { AdaptiveProvider } from "./context/AdaptiveContext";
+import { UserProvider } from "./context/UserContext";
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AdaptiveProvider>
       <AuthProvider>
-        <GameProvider>
-            <App />
-        </GameProvider>
+        <UserProvider>
+          <GameProvider>
+              <App />
+          </GameProvider>
+        </UserProvider>
       </AuthProvider>
     </AdaptiveProvider>
   </StrictMode>,
