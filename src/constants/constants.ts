@@ -39,9 +39,13 @@ export const PATHS = {
             path: "home",
             label: "Home"
         },
-        MY_PROFILE: {
-            path: "my-profile",
-            label: "My Profile"
+        // MY_PROFILE: {
+        //     path: "my-profile",
+        //     label: "My Profile"
+        // },
+        USER_PROFILE: {
+            path: "profile/:profileId",
+            label: "User Profile"
         },
         PYTHON_LEARN: {
             path: "python-learn",

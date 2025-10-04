@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 import { FiArrowRightCircle } from "react-icons/fi";
+import { PATHS } from "../../../constants";
 import Logo from "../../../assets/logo/Pygrounds_Logo.png";
 
 const Header = () => {
@@ -28,10 +29,10 @@ const Header = () => {
 
           {isLearner && (
             <div className="hidden md:flex gap-3">
-              <Components.HeaderLink label="Home" route={`/${user.id}/home`} />
-              <Components.HeaderLink label="My Profile" route={`/${user.id}/my-profile`} />
-              <Components.HeaderLink label="Python Learn" route={`/${user.id}/python-learn`} />
-              <Components.HeaderLink label="Leaderboard" route={`/${user.id}/leaderboard`} />
+              <Components.HeaderLink label="Home" route={`/${user.id}/${PATHS.USER_VIEW.HOME.path}`} />
+              <Components.HeaderLink label="My Profile" route={`/${user.id}/${PATHS.USER_VIEW.USER_PROFILE.path.replace(':profileId', user.id.toString())}`} />
+              <Components.HeaderLink label="Python Learn" route={`/${user.id}/${PATHS.USER_VIEW.PYTHON_LEARN.path}`} />
+              <Components.HeaderLink label="Leaderboard" route={`/${user.id}/${PATHS.USER_VIEW.LEADERBOARD.path}`} />
             </div>
           )}
         </div>
@@ -79,10 +80,10 @@ const Header = () => {
       {/* Mobile Menu */}
       {mobileMenuOpen && isLearner && (
         <div className="md:hidden fixed inset-0 bg-white z-40 mt-16 p-6 space-y-4">
-          <Components.HeaderLink label="Home" route={`/${user.id}/home`} mobile />
-          <Components.HeaderLink label="My Profile" route={`/${user.id}/my-profile`} mobile />
-          <Components.HeaderLink label="Python Learn" route={`/${user.id}/python-learn`} mobile />
-          <Components.HeaderLink label="Leaderboard" route={`/${user.id}/leaderboard`} mobile />
+          <Components.HeaderLink label="Home" route={`/${user.id}/${PATHS.USER_VIEW.HOME.path}`} mobile />
+          <Components.HeaderLink label="My Profile" route={`/${user.id}/${PATHS.USER_VIEW.USER_PROFILE.path.replace(':profileId', user.id.toString())}`} mobile />
+          <Components.HeaderLink label="Python Learn" route={`/${user.id}/${PATHS.USER_VIEW.PYTHON_LEARN.path}`} mobile />
+          <Components.HeaderLink label="Leaderboard" route={`/${user.id}/${PATHS.USER_VIEW.LEADERBOARD.path}`} mobile />
           <div className="pt-4 border-t border-gray-200">
             <Components.ProfileDropdown mobile />
           </div>
