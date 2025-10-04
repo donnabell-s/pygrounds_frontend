@@ -43,9 +43,33 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
     navigate(`/${user?.id}/${gameSlug}/start`);
   };
 
+  // Determine glow color: prefer the game's canonical color if present
+  const glowColor = selectedGame.color || (() => {
+    const t = selectedGame.title.toLowerCase();
+    if (t.includes("hangman")) return "#4498FF";
+    if (t.includes("ship") || t.includes("debug")) return "#FC4D66";
+    if (t.includes("search")) return "#42BFAB";
+    if (t.includes("crossword")) return "#7E5CE3";
+    return "#9CA3AF";
+  })();
+
+  const hexToRgba = (hex: string, alpha: number) => {
+    let h = hex.replace('#', '');
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  const glowStyle = {
+    // smaller spread, less blur and slightly reduced alpha for a subtle glow
+    boxShadow: `0 1px 3px rgba(0,0,0,0.06), 0 6px 12px ${hexToRgba(glowColor, 0.10)}`,
+  } as React.CSSProperties;
+
   return (
     <>
-      <div className="flex flex-col md:flex-row gap-11">
+  <div className="flex flex-col md:flex-row gap-9">
         <div className="flex-1 flex flex-col gap-4">
           <div className="flex items-center text-sm text-[#9CA3AF]">
             <span
@@ -90,8 +114,39 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
           </div>
         </div>
 
-        <div className="w-full md:w-[350px] h-[230px] bg-[#F1F1F1] rounded-xl flex items-center justify-center shadow-md">
-          <span className="text-[#A8A8A8]">Game Thumbnail</span>
+    <div className="w-full md:w-[380px] h-[230px] rounded-xl overflow-hidden shadow-md bg-white border border-[#E6EDF7] flex items-center justify-center" style={glowStyle}>
+          {selectedGame.image ? (
+            <img
+              src={selectedGame.image}
+              alt={`${selectedGame.title} thumbnail`}
+              className="max-w-full max-h-full object-contain"
+            />
+          ) : (
+            // Fallback colored placeholder for games without images (e.g., Hangman, Ship Debugging)
+            <div
+              className={`w-full h-full flex items-center justify-center text-white font-bold p-4`}
+              style={{
+                background: (() => {
+                  const t = selectedGame.title.toLowerCase();
+                  // Use the project's canonical game colors
+                  // prefer the game's canonical color when available
+                  const base = selectedGame.color || (t.includes("hangman") ? "#4498FF" : t.includes("ship") || t.includes("debug") ? "#FC4D66" : "#9CA3AF");
+                  // build a simple gradient from base to a slightly darker variant
+                  const darker = (() => {
+                    // crude darken by reducing hex components
+                    const h = base.replace('#','');
+                    const r = Math.max(0, parseInt(h.substring(0,2),16) - 25).toString(16).padStart(2,'0');
+                    const g = Math.max(0, parseInt(h.substring(2,4),16) - 25).toString(16).padStart(2,'0');
+                    const b = Math.max(0, parseInt(h.substring(4,6),16) - 25).toString(16).padStart(2,'0');
+                    return `#${r}${g}${b}`;
+                  })();
+                  return `linear-gradient(135deg,${base},${darker})`;
+                })(),
+              }}
+            >
+              <span className="text-xl md:text-2xl px-4 text-center">{selectedGame.title}</span>
+            </div>
+          )}
         </div>
       </div>
 

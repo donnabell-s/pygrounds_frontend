@@ -2,13 +2,6 @@ import * as Components from "../../components"
 import { mockGames } from "../../../interfaces/minigames";
 
 const GameList = () => {
-    const gameColors = [
-    "#4498FF",
-    "#FC4D66",
-    "#42BFAB",
-    "#7E5CE3",
-    ];
-
     return (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {mockGames.map((game, index) => (
@@ -17,7 +10,7 @@ const GameList = () => {
             title={game.title}
             description={game.description}
             category={game.category}
-            color={gameColors[index % gameColors.length]}
+            color={game.color || "#9CA3AF"}
             image={game.image} // ✅ optional if provided in mockGames
             />
 

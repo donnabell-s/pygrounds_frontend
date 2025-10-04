@@ -59,7 +59,8 @@ const AchievementCard = ({ achievement }: { achievement: Interfaces.Achievement 
   );
 };
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { FaAngleRight, FaAngleLeft } from "react-icons/fa";
 import { useAchievement } from "../../../context/AchievementContext";
 
 type Props = {
@@ -68,10 +69,13 @@ type Props = {
 
 const AchievementList = ({ userId }: Props) => {
   const { achievements: ctxAchievements, refresh } = useAchievement();
+  const [pageStart, setPageStart] = useState(0); // index of first achievement on current page
 
   useEffect(() => {
     (async () => {
       await refresh(userId || undefined);
+      // reset page when user changes
+      setPageStart(0);
     })();
   }, [userId, refresh]);
 
@@ -89,17 +93,63 @@ return (
     {/* Overlay */}
     <div className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-gradient-to-br from-white/30 to-transparent" />
 
-    {/* Header */}
-    <h3 className="relative z-10 text-xl font-semibold px-6 py-3.5 bg-[#704EE7]/15 shadow-sm rounded-t-2xl">
-      Achievements
-    </h3>
-
-    {/* Cards */}
-    <div className="relative z-10 p-4.5 flex flex-col gap-4">
-      {sortedAchievements.map((achievement) => (
-        <AchievementCard key={achievement.id} achievement={achievement} />
-      ))}
+    {/* Header (use ProficiencyList header styling) */}
+    <div className="relative z-10 flex flex-col px-6 py-3.5 bg-[#704EE7]/15 gap-1 shadow-sm rounded-t-2xl">
+      <h3 className="text-xl font-semibold">Achievements</h3>
+      <p className="text-sm text-[#6B7280]">Earn badges as you progress through zones and games</p>
     </div>
+
+    {/* Cards (same spacing as ProficiencyList, no pagination/footer) */}
+    <div className="relative z-10 p-6 flex flex-col gap-4">
+      {sortedAchievements.length === 0 ? (
+        <div className="text-sm text-[#6B7280]">No achievements available.</div>
+      ) : (
+        // show slice based on pageStart
+        sortedAchievements.slice(pageStart, pageStart + 4).map((achievement) => (
+          <AchievementCard key={achievement.id} achievement={achievement} />
+        ))
+      )}
+    </div>
+
+    {/* Footer: prev/next navigation (wraps around) */}
+    {sortedAchievements.length > 4 && (
+      <div className="relative z-10 px-6 py-3.5 bg-white border-t border-[#E4ECF7] rounded-b-2xl flex items-center justify-between">
+        <div className="text-xs text-[#6B7280]">
+          {(() => {
+            const total = sortedAchievements.length;
+            const start = Math.min(pageStart + 1, total);
+            const end = Math.min(pageStart + 4, total);
+            return `${start}${end} of ${total}`.replace('\u0003','–');
+          })()}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const total = sortedAchievements.length;
+              const newStart = pageStart - 4 < 0 ? Math.max(0, Math.floor((total - 1) / 4) * 4) : pageStart - 4;
+              setPageStart(newStart);
+            }}
+            className="text-sm transition cursor-pointer"
+            aria-label="Previous achievements"
+          >
+            <FaAngleLeft size={18} />
+          </button>
+
+          <button
+            onClick={() => {
+              const total = sortedAchievements.length;
+              const newStart = pageStart + 4 >= total ? 0 : pageStart + 4;
+              setPageStart(newStart);
+            }}
+            className="text-sm transition cursor-pointer"
+            aria-label="Next achievements"
+          >
+            <FaAngleRight size={18} />
+          </button>
+        </div>
+      </div>
+    )}
   </div>
 );
 

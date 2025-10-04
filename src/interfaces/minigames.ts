@@ -9,6 +9,7 @@ export interface Minigame {
   lives: number;
   time_limit_seconds: number | null;
   image?: string; // ✅ Add this
+  color?: string; // canonical color for the minigame (hex)
 }
 
 import wordsearchImg from "../assets/images/wordsearch.png";
@@ -40,6 +41,7 @@ export const mockGames: Minigame[] = [
     challenges: 3,
     lives: 3,
     time_limit_seconds: null,
+    color: "#4498FF",
   },
   {
     title: "Ship Debugging Game",
@@ -61,6 +63,7 @@ export const mockGames: Minigame[] = [
     challenges: 3,
     lives: 1,
     time_limit_seconds: 180,
+    color: "#FC4D66",
   },
   {
     title: "Python Word Search",
@@ -82,6 +85,7 @@ export const mockGames: Minigame[] = [
     challenges: 8,
     lives: 3,
     time_limit_seconds: null,
+    color: "#42BFAB",
   },
   {
     title: "Python Crossword",
@@ -101,6 +105,7 @@ export const mockGames: Minigame[] = [
     challenges: 1,
     lives: 0,
     time_limit_seconds: 300,
+    color: "#7E5CE3",
   },
 ];
 
