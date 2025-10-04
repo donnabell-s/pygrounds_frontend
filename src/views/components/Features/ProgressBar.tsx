@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAdaptive } from "../../../context/AdaptiveContext";
+import { useAchievement } from "../../../context/AchievementContext";
 import { FaCode, FaKeyboard, FaLaptopCode, FaServer } from "react-icons/fa";
 import { LEVELS } from "../../../types/game"; // ← thresholds only\
 import { TiStarburst } from "react-icons/ti";
@@ -26,6 +27,7 @@ type ProgressBarProps = {
 
 const ProgressBar = ({ user }: ProgressBarProps) => {
   const { zoneProgress, isLoading } = useAdaptive();
+  const { achievements: ctxAchievements, refresh } = useAchievement();
   // If a user is passed (viewing other user's profile), use their zone_progresses
   const zone = user?.zone_progresses?.length ? user.zone_progresses[0] : zoneProgress?.[0] || null;
 
@@ -36,6 +38,12 @@ const ProgressBar = ({ user }: ProgressBarProps) => {
     const timer = setTimeout(() => setProgressPercent(zone.completion_percent), ANIMATION_DELAY);
     return () => clearTimeout(timer);
   }, [zone]);
+
+  // Refresh achievements for this user (or current user if no user prop)
+  useEffect(() => {
+    // refresh returns a promise; we don't need to await it here
+    refresh(user?.id || undefined).catch(() => {});
+  }, [user?.id, refresh]);
 
   if (isLoading || !zone) return <LoadingSkeleton />;
 
@@ -99,7 +107,7 @@ return (
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-[#6B7280] gap-1 sm:gap-0">
-          <p className="text-xs">3 achievements unlocked</p>
+          <p className="text-xs">{ctxAchievements ? `${ctxAchievements.filter(a => a.isUnlocked).length} achievement${ctxAchievements.filter(a => a.isUnlocked).length === 1 ? '' : 's'} unlocked` : 'Loading achievements...'}</p>
           <p className="text-xs">{zone.completion_percent.toFixed(0)}% Topic Mastery</p>
         </div>
       </div>

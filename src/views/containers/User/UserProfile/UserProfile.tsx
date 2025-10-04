@@ -91,24 +91,10 @@ const UserProfile = () => {
         </div>
       )}
 
-      {/* For other users, show a placeholder message about their progress */}
-      {/* {!isOwnProfile && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">
-            {userToDisplay?.first_name || userToDisplay?.username}'s Progress
-          </h3>
-          <p className="text-gray-600 text-sm">
-            Detailed progress information is currently only available for your own profile.
-            <br />
-            You can see their overall ranking and level on the leaderboard.
-          </p>
-        </div>
-      )} */}
-
       {/* Achievements and Topic Proficiency — show the same UI for own and other users */}
       <div className="flex flex-col md:flex-row gap-5">
         <div className="flex-1">
-          <Components.AchievementList />
+          <Components.AchievementList userId={userToDisplay?.id} />
         </div>
         <div className="flex-1">
           <Components.ProficiencyList user={userToDisplay} />

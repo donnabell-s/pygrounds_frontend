@@ -59,8 +59,23 @@ const AchievementCard = ({ achievement }: { achievement: Interfaces.Achievement 
   );
 };
 
-const AchievementList = () => {
-  const sortedAchievements = [...Interfaces.achievements].sort((a, b) => {
+import { useEffect } from "react";
+import { useAchievement } from "../../../context/AchievementContext";
+
+type Props = {
+  userId?: number | null;
+};
+
+const AchievementList = ({ userId }: Props) => {
+  const { achievements: ctxAchievements, refresh } = useAchievement();
+
+  useEffect(() => {
+    (async () => {
+      await refresh(userId || undefined);
+    })();
+  }, [userId, refresh]);
+
+  const sortedAchievements = [...ctxAchievements].sort((a, b) => {
     if (a.isUnlocked !== b.isUnlocked) {
       return Number(b.isUnlocked) - Number(a.isUnlocked);
     }
