@@ -25,6 +25,25 @@ client.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error("API Error:", error);
+
+    const status = error?.response?.status;
+    if (status === 401) {
+      try {
+        // If another tab already handled expiry, don't re-dispatch
+        if (localStorage.getItem("tokenExpiredHandled")) {
+          return Promise.reject(error);
+        }
+
+        // Prevent flooding: set a flag so we only notify once per expiry
+        if (!localStorage.getItem("tokenExpired")) {
+          localStorage.setItem("tokenExpired", "1");
+          window.dispatchEvent(new CustomEvent("auth:expired"));
+        }
+      } catch (e) {
+        console.error("Failed to set tokenExpired flag", e);
+      }
+    }
+
     return Promise.reject(error);
   }
 );

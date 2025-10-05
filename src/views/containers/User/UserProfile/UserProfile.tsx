@@ -7,7 +7,7 @@ import { useAuth } from "../../../../context/AuthContext";
 
 const UserProfile = () => {
   const { profileId } = useParams<{ profileId: string }>();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, isLoading: authLoading, sessionExpired } = useAuth();
   const { selectedUser, fetchUserProfile, clearSelectedUser, isLoading } = useUser();
   
   console.log("UserProfile - profileId:", profileId);
@@ -82,24 +82,47 @@ const UserProfile = () => {
 
 
 
-      {/* Progress bar - show for own profile or when viewing another user (uses passed user data) */}
-      {(
-        isOwnProfile || (!isOwnProfile && userToDisplay)
-      ) && (
-        <div className="flex flex-col md:flex-row items-center gap-6">
-          <Components.ProgressBar user={userToDisplay} />
-        </div>
-      )}
+      {/*
+        Unified fallback: when the session is expired (tokenExpired) or we still have an
+        access token but no in-memory user (common in SPA apps after expiry), show a single
+        page-level message instead of three separate loading/empty states.
+      */}
+      {(() => {
+    const accessToken = localStorage.getItem("accessToken");
+  // Only show the unified fallback if auth loading has completed to avoid hiding
+  // freshly-loaded sessions during initial profile fetch.
+  const showUnifiedFallback = !authLoading && (sessionExpired || (!!accessToken && !currentUser));
 
-      {/* Achievements and Topic Proficiency — show the same UI for own and other users */}
-      <div className="flex flex-col md:flex-row gap-5">
-        <div className="flex-1">
-          <Components.AchievementList userId={userToDisplay?.id} />
-        </div>
-        <div className="flex-1">
-          <Components.ProficiencyList user={userToDisplay} />
-        </div>
-      </div>
+        if (showUnifiedFallback) {
+          return (
+            <Components.PageEmpty
+              title="Learner data cannot be viewed"
+              subtitle="Your session appears to have expired. Sign out and sign back in, or refresh the page to continue."
+            />
+          );
+        }
+
+        return (
+          <>
+            {/* Progress bar - show for own profile or when viewing another user (uses passed user data) */}
+            {(isOwnProfile || (!isOwnProfile && userToDisplay)) && (
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <Components.ProgressBar user={userToDisplay} />
+              </div>
+            )}
+
+            {/* Achievements and Topic Proficiency — show the same UI for own and other users */}
+            <div className="flex flex-col md:flex-row gap-5">
+              <div className="flex-1">
+                <Components.AchievementList userId={userToDisplay?.id} />
+              </div>
+              <div className="flex-1">
+                <Components.ProficiencyList user={userToDisplay} />
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 };

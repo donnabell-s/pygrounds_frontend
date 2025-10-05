@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Interfaces from "../../../interfaces";
 import * as Components from "../../components";
+import AuthExpiryModal from "../UI/AuthExpiryModal";
 import { useAuth } from "../../../context/AuthContext";
 import { useGame } from "../../../context/GameContext";
 
@@ -11,7 +12,7 @@ type PreviewActionProps = {
 };
 
 const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
-  const { user } = useAuth();
+  const { user, logout, sessionExpired } = useAuth();
   const {
     startCrosswordGame,
     startWordSearchGame,
@@ -20,6 +21,7 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
   } = useGame();
 
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showAuthExpiry, setShowAuthExpiry] = useState(false);
   const navigate = useNavigate();
 
   const slugifyTitle = (title: string) =>
@@ -98,7 +100,16 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
               shadow-sm hover:shadow-md transition-colors focus:outline-none 
               focus:ring-2 focus:ring-[#EAE7FE] focus:ring-offset-2 disabled:opacity-60
                disabled:cursor-not-allowed cursor-pointer font-semibold rounded-lg"
-              onClick={() => setShowConfirm(true)}
+              onClick={() => {
+                // If the token is marked expired, or we have a token but no in-memory user,
+                // show the AuthExpiryModal instead of the ConfirmGame modal.
+                const accessToken = localStorage.getItem("accessToken");
+                if (sessionExpired || (accessToken && !user)) {
+                  setShowAuthExpiry(true);
+                  return;
+                }
+                setShowConfirm(true);
+              }}
             >
               Start Game
             </button>
@@ -160,6 +171,29 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
               game={selectedGame}
               onConfirm={handleStartGame}
               onCancel={() => setShowConfirm(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {showAuthExpiry && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: "rgba(45, 45, 45, 0.4)" }}
+        >
+          <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-6 relative">
+            <AuthExpiryModal
+              open={true}
+              onConfirm={() => {
+                try {
+                  localStorage.removeItem("tokenExpired");
+                  localStorage.setItem("tokenExpiredHandled", "1");
+                } catch (e) {}
+                logout();
+                setShowAuthExpiry(false);
+                navigate(`/`);
+              }}
+              onCancel={() => setShowAuthExpiry(false)}
             />
           </div>
         </div>

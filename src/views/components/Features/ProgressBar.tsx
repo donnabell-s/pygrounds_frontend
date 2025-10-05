@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../../context/AuthContext";
 import { useAdaptive } from "../../../context/AdaptiveContext";
 import { useAchievement } from "../../../context/AchievementContext";
 import { FaCode, FaKeyboard, FaLaptopCode, FaServer } from "react-icons/fa";
@@ -16,8 +17,10 @@ const LEVEL_UI = {
 const ANIMATION_DELAY = 100;
 
 const LoadingSkeleton = () => (
-  <div className="w-full bg-[#704EE7]/10 flex flex-col rounded-xl p-4 sm:p-6 shadow-md gap-4">
-    <p className="text-sm text-gray-500">Loading zone progress...</p>
+  <div className="w-full bg-[#ffffff] rounded-2xl p-6 shadow-md">
+    <div className="flex items-center justify-center py-8">
+      <p className="text-lg md:text-xl font-semibold text-gray-600">Loading zone progress...</p>
+    </div>
   </div>
 );
 
@@ -26,6 +29,9 @@ type ProgressBarProps = {
 };
 
 const ProgressBar = ({ user }: ProgressBarProps) => {
+  const { isLoading: authLoading, sessionExpired } = useAuth();
+  // If session expired, let parent show unified fallback instead of this component's messages
+  if (sessionExpired && !authLoading) return null;
   const { zoneProgress, isLoading } = useAdaptive();
   const { achievements: ctxAchievements, refresh } = useAchievement();
   // If a user is passed (viewing other user's profile), use their zone_progresses

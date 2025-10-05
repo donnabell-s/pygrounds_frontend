@@ -62,6 +62,9 @@ const AchievementCard = ({ achievement }: { achievement: Interfaces.Achievement 
 import { useEffect, useState } from "react";
 import { FaAngleRight, FaAngleLeft } from "react-icons/fa";
 import { useAchievement } from "../../../context/AchievementContext";
+import { useAdaptive } from "../../../context/AdaptiveContext";
+import PageEmpty from "../UI/PageEmpty";
+import { useAuth } from "../../../context/AuthContext";
 
 type Props = {
   userId?: number | null;
@@ -69,6 +72,10 @@ type Props = {
 
 const AchievementList = ({ userId }: Props) => {
   const { achievements: ctxAchievements, refresh } = useAchievement();
+  const { lastUpdated } = useAdaptive();
+  const { isLoading: authLoading } = useAuth();
+  const { sessionExpired } = useAuth();
+  if (sessionExpired && !authLoading) return null;
   const [pageStart, setPageStart] = useState(0); // index of first achievement on current page
 
   useEffect(() => {
@@ -78,6 +85,13 @@ const AchievementList = ({ userId }: Props) => {
       setPageStart(0);
     })();
   }, [userId, refresh]);
+
+  // Keep achievements in sync when adaptive data refreshes (so progressbar and achievements match)
+  useEffect(() => {
+    if (!lastUpdated) return;
+    // re-fetch achievements when adaptive context updates
+    refresh(userId || undefined).catch(() => {});
+  }, [lastUpdated, userId, refresh]);
 
   const sortedAchievements = [...ctxAchievements].sort((a, b) => {
     if (a.isUnlocked !== b.isUnlocked) {
@@ -102,7 +116,7 @@ return (
     {/* Cards (same spacing as ProficiencyList, no pagination/footer) */}
     <div className="relative z-10 p-6 flex flex-col gap-4">
       {sortedAchievements.length === 0 ? (
-        <div className="text-sm text-[#6B7280]">No achievements available.</div>
+        <PageEmpty title="No achievements available" subtitle="This user has not earned any achievements yet." />
       ) : (
         // show slice based on pageStart
         sortedAchievements.slice(pageStart, pageStart + 4).map((achievement) => (

@@ -85,7 +85,12 @@ const Leaderboard = () => {
   console.log("Leaderboard - Final entries:", entries);
 
   if (entries.length === 0) {
-    return <div className="text-sm text-gray-500">No learner data yet.</div>;
+    return (
+      <Components.PageEmpty
+        title="No learner data yet"
+        subtitle="There are no learners in this leaderboard. Check back later."
+      />
+    );
   }
 
   // Sort by XP desc

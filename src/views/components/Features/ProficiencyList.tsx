@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import PageEmpty from "../UI/PageEmpty";
+import { useAuth } from "../../../context/AuthContext";
 import { useAdaptive } from "../../../context/AdaptiveContext";
 import { FaAngleRight, FaAngleLeft } from "react-icons/fa";
 
@@ -97,6 +99,10 @@ const ProficiencyList = ({ user }: ProficiencyListProps) => {
   const { topicProgress, isLoading } = useAdaptive();
   const effectiveTopicProgress = user?.topic_proficiencies ?? topicProgress;
 
+  const { isLoading: authLoading } = useAuth();
+  const { sessionExpired } = useAuth();
+  if (sessionExpired && !authLoading) return null;
+
   // ✅ Move ALL hooks to the top before any conditionals
   const sortedTopics: TP[] = useMemo(
     () => (effectiveTopicProgress ? [...effectiveTopicProgress].sort((a: TP, b: TP) => a.topic.id - b.topic.id) : []),
@@ -149,19 +155,11 @@ const ProficiencyList = ({ user }: ProficiencyListProps) => {
 
   // ✅ Now handle loading and empty states AFTER all hooks
   if (isLoading) {
-    return (
-      <div className="bg-[#FFFFFF] w-full rounded-xl shadow-md p-6">
-        <p className="text-gray-500">Loading topic proficiency...</p>
-      </div>
-    );
+    return <PageEmpty title="Loading topic proficiency..." />;
   }
 
   if (!topicProgress?.length) {
-    return (
-      <div className="bg-[#FFFFFF] w-full rounded-xl shadow-md p-6">
-        <p className="text-gray-500">No topic progress found.</p>
-      </div>
-    );
+    return <PageEmpty title="No topic progress found" subtitle="This user has not started any topics yet." />;
   }
 
   return (
