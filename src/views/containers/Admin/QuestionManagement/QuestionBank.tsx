@@ -167,6 +167,8 @@ const QuestionBank = () => {
 
     const handleSaveEdit = async (updatedData: {
         question_text: string;
+        answer_options: string[];
+        correct_answer: string;
         topic_ids: number[];
         estimated_difficulty: 'beginner' | 'intermediate' | 'advanced' | 'master';
         order: number;
@@ -177,9 +179,12 @@ const QuestionBank = () => {
             // Only send the allowed fields for partial update
             const updatePayload = {
                 question_text: updatedData.question_text,
+                answer_options: updatedData.answer_options,
+                correct_answer: updatedData.correct_answer,
                 topic_ids: updatedData.topic_ids,
                 subtopic_ids: editingQuestion.subtopic_ids, // Include existing subtopic_ids
-                estimated_difficulty: updatedData.estimated_difficulty
+                estimated_difficulty: updatedData.estimated_difficulty,
+                order: updatedData.order
             };
             await adminApi.partialUpdatePreAssessmentQuestion(editingQuestion.id, updatePayload);
             setIsEditModalOpen(false);
@@ -192,8 +197,17 @@ const QuestionBank = () => {
 
     // Minigame question handlers
     const handleMinigameEdit = async (question: GeneratedQuestion) => {
-        setEditingMinigameQuestion(question);
-        setIsMinigameEditModalOpen(true);
+        try {
+            setLoading(true);
+            const fullQuestionData = await adminApi.getAdminQuestion(question.id);
+            console.log("Full Question Data for Editing:", fullQuestionData); // Log the full data
+            setEditingMinigameQuestion(fullQuestionData);
+            setIsMinigameEditModalOpen(true);
+        } catch (err: any) {
+            setError(err.message || 'Failed to fetch full question data');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleMinigameSaveEdit = async (updatedData: {
@@ -752,15 +766,27 @@ const QuestionBank = () => {
 
             {/* Edit Pre-Assessment Question Modal */}
             {isEditModalOpen && editingQuestion && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
                         <h3 className="text-lg font-semibold mb-4">Edit Pre-Assessment Question</h3>
                         
                         <form onSubmit={(e) => {
                             e.preventDefault();
                             const formData = new FormData(e.currentTarget);
+                            const answerOptions = [
+                                formData.get('answer_option_1') as string,
+                                formData.get('answer_option_2') as string,
+                                formData.get('answer_option_3') as string,
+                                formData.get('answer_option_4') as string,
+                            ].filter(option => option.trim() !== '');
+                            
+                            const correctAnswerIndex = parseInt(formData.get('correct_answer') as string);
+                            const correctAnswer = answerOptions[correctAnswerIndex] || '';
+                            
                             const updatedData = {
                                 question_text: formData.get('question_text') as string,
+                                answer_options: answerOptions,
+                                correct_answer: correctAnswer,
                                 topic_ids: (formData.get('topic_ids') as string).split(',').map(t => parseInt(t.trim())).filter(n => !isNaN(n)),
                                 estimated_difficulty: formData.get('estimated_difficulty') as 'beginner' | 'intermediate' | 'advanced' | 'master',
                                 order: parseInt(formData.get('order') as string)
@@ -779,6 +805,34 @@ const QuestionBank = () => {
                                         rows={3}
                                         required
                                     />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Answer Options
+                                    </label>
+                                    <div className="space-y-2">
+                                        {[0, 1, 2, 3].map((index) => (
+                                            <div key={index} className="flex items-center space-x-2">
+                                                <input
+                                                    type="radio"
+                                                    name="correct_answer"
+                                                    value={index}
+                                                    defaultChecked={editingQuestion.answer_options[index] === editingQuestion.correct_answer}
+                                                    className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    name={`answer_option_${index + 1}`}
+                                                    defaultValue={editingQuestion.answer_options[index] || ''}
+                                                    placeholder={`Option ${index + 1}`}
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    required
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Select the radio button next to the correct answer</p>
                                 </div>
                                 
                                 <div>
@@ -823,6 +877,13 @@ const QuestionBank = () => {
                                         required
                                     />
                                 </div>
+
+                                <div className="bg-gray-50 p-3 rounded-md">
+                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Read-Only Information</h4>
+                                    <div className="text-sm text-gray-600 space-y-1">
+                                        <p><strong>ID:</strong> {editingQuestion.id}</p>
+                                    </div>
+                                </div>
                             </div>
                             
                             <div className="flex justify-end space-x-3 mt-6">
@@ -847,79 +908,122 @@ const QuestionBank = () => {
 
             {/* Edit Minigame Question Modal */}
             {isMinigameEditModalOpen && editingMinigameQuestion && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-lg font-semibold mb-4">Edit Minigame Question</h3>
+                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <h3 className="text-lg font-semibold mb-4">Edit Minigame Question (ID: {editingMinigameQuestion.id})</h3>
                         
                         <form onSubmit={(e) => {
                             e.preventDefault();
                             const formData = new FormData(e.currentTarget);
-                            const updatedData = {
+                            const gameType = formData.get('game_type') as 'coding' | 'non_coding';
+                            
+                            const updatedData: any = {
                                 question_text: formData.get('question_text') as string,
-                                correct_answer: formData.get('correct_answer') as string,
                                 estimated_difficulty: formData.get('estimated_difficulty') as 'beginner' | 'intermediate' | 'advanced' | 'master',
-                                game_type: formData.get('game_type') as 'coding' | 'non_coding'
+                                game_type: gameType,
                             };
+
+                            if (gameType === 'non_coding') {
+                                updatedData.correct_answer = formData.get('correct_answer') as string;
+                            }
+                            
+                            if (gameType === 'coding') {
+                                updatedData.game_data = {
+                                    correct_code: formData.get('correct_code') as string,
+                                    sample_input: formData.get('sample_input') as string,
+                                    sample_output: formData.get('sample_output') as string,
+                                    function_name: formData.get('function_name') as string,
+                                    buggy_question_text: formData.get('buggy_question_text') as string,
+                                    buggy_code: formData.get('buggy_code') as string,
+                                    buggy_correct_code: formData.get('buggy_correct_code') as string,
+                                    buggy_explanation: formData.get('buggy_explanation') as string,
+                                };
+                            }
+                            
                             handleMinigameSaveEdit(updatedData);
                         }}>
                             <div className="space-y-4">
+                                {/* Common Fields */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Question Text
-                                    </label>
-                                    <textarea
-                                        name="question_text"
-                                        defaultValue={editingMinigameQuestion.question_preview || editingMinigameQuestion.question_text || ''}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        rows={4}
-                                        required
-                                    />
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
+                                    <textarea name="question_text" defaultValue={editingMinigameQuestion.question_text || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md" rows={3} required />
                                 </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Correct Answer
-                                    </label>
-                                    <textarea
-                                        name="correct_answer"
-                                        defaultValue={editingMinigameQuestion.correct_answer}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        rows={3}
-                                        required
-                                    />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                                        <select name="estimated_difficulty" defaultValue={editingMinigameQuestion.estimated_difficulty} className="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                            <option value="beginner">Beginner</option>
+                                            <option value="intermediate">Intermediate</option>
+                                            <option value="advanced">Advanced</option>
+                                            <option value="master">Master</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Game Type</label>
+                                        <select name="game_type" defaultValue={editingMinigameQuestion.game_type} className="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                            <option value="coding">Coding</option>
+                                            <option value="non_coding">Non-Coding</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Difficulty
-                                    </label>
-                                    <select
-                                        name="estimated_difficulty"
-                                        defaultValue={editingMinigameQuestion.estimated_difficulty}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    >
-                                        <option value="beginner">Beginner</option>
-                                        <option value="intermediate">Intermediate</option>
-                                        <option value="advanced">Advanced</option>
-                                        <option value="master">Master</option>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Game Type
-                                    </label>
-                                    <select
-                                        name="game_type"
-                                        defaultValue={editingMinigameQuestion.game_type}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    >
-                                        <option value="coding">Coding</option>
-                                        <option value="non_coding">Non-Coding</option>
-                                    </select>
-                                </div>
+
+                                {/* Conditional Fields */}
+                                {editingMinigameQuestion.game_type === 'non_coding' ? (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Correct Answer</label>
+                                        <textarea name="correct_answer" defaultValue={editingMinigameQuestion.correct_answer || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md" rows={3} />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        {/* Normal Variant */}
+                                        <div className="p-4 border border-gray-200 rounded-lg">
+                                            <h4 className="text-md font-semibold mb-3 text-blue-600">Normal Question Details</h4>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Function Name</label>
+                                                    <input type="text" name="function_name" defaultValue={editingMinigameQuestion.game_data?.function_name || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Correct Code</label>
+                                                    <textarea name="correct_code" defaultValue={editingMinigameQuestion.game_data?.correct_code || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" rows={6} />
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Sample Input</label>
+                                                        <input type="text" name="sample_input" defaultValue={editingMinigameQuestion.game_data?.sample_input || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Sample Output</label>
+                                                        <input type="text" name="sample_output" defaultValue={editingMinigameQuestion.game_data?.sample_output || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Buggy Variant */}
+                                        <div className="p-4 border border-gray-200 rounded-lg">
+                                            <h4 className="text-md font-semibold mb-3 text-red-600">Buggy Question Details</h4>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Buggy Question Text</label>
+                                                    <textarea name="buggy_question_text" defaultValue={editingMinigameQuestion.game_data?.buggy_question_text || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md" rows={2} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Buggy Code</label>
+                                                    <textarea name="buggy_code" defaultValue={editingMinigameQuestion.game_data?.buggy_code || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" rows={6} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Buggy Code Correct Solution</label>
+                                                    <textarea name="buggy_correct_code" defaultValue={editingMinigameQuestion.game_data?.buggy_correct_code || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" rows={6} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Buggy Code Explanation</label>
+                                                    <textarea name="buggy_explanation" defaultValue={editingMinigameQuestion.game_data?.buggy_explanation || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md" rows={3} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="bg-gray-50 p-3 rounded-md">
                                     <h4 className="text-sm font-medium text-gray-700 mb-2">Read-Only Information</h4>

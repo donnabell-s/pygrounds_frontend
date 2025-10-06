@@ -16,19 +16,20 @@ export const ContentUpload = () => {
     const [totalDocuments, setTotalDocuments] = useState(0);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [processingDocuments, setProcessingDocuments] = useState<Set<number>>(new Set());
+    const [startingPipelines, setStartingPipelines] = useState<Set<number>>(new Set());
 
     useEffect(() => {
         fetchDocuments();
     }, [currentPage]);
 
-    // Auto-refresh when there are processing documents
+    // Auto-refresh when there are processing documents - Poll every 5 seconds
     useEffect(() => {
         let intervalId: number | null = null;
 
         if (processingDocuments.size > 0) {
             intervalId = setInterval(() => {
                 checkProcessingDocuments();
-            }, 2000); // Poll every 2 seconds as recommended
+            }, 5000); // Poll every 5 seconds for queued processing
         }
 
         return () => {
@@ -44,17 +45,41 @@ export const ContentUpload = () => {
         for (const docId of processingDocuments) {
             try {
                 const doc = await adminApi.getDocumentStatus(docId);
-                if (doc.processing_status === 'PROCESSING') {
+                
+                // Log status for debugging
+                console.log(`📊 Document ${docId} status:`, {
+                    status: doc.processing_status,
+                    message: doc.processing_message
+                });
+                
+                // Check if still processing, queued, or pending
+                if (doc.processing_status === 'PROCESSING' || 
+                    doc.processing_status === 'QUEUED' ||
+                    doc.processing_status === 'PENDING') {
                     stillProcessing.add(docId);
+                } else if (doc.processing_status === 'COMPLETED') {
+                    console.log(`✅ Document ${docId} completed successfully`);
+                } else if (doc.processing_status === 'FAILED') {
+                    console.error(`❌ Document ${docId} failed:`, doc.processing_message);
+                } else if (doc.processing_status === 'COMPLETED_WITH_WARNINGS') {
+                    console.warn(`⚠️ Document ${docId} completed with warnings:`, doc.processing_message);
                 }
+                
                 // Update the document in the list
                 setDocuments(prev => prev.map(d => d.id === docId ? doc : d));
             } catch (err) {
                 console.error(`Error checking status for document ${docId}:`, err);
+                // Keep polling on error
+                stillProcessing.add(docId);
             }
         }
         
         setProcessingDocuments(stillProcessing);
+        
+        // Refresh the full list if any document completed
+        if (stillProcessing.size < processingDocuments.size) {
+            fetchDocuments();
+        }
     };
 
     useEffect(() => {
@@ -121,28 +146,109 @@ export const ContentUpload = () => {
 
     const handleRunPipeline = async (id: number) => {
         try {
-            setProcessingDocuments(prev => new Set(prev).add(id));
-            const response = await adminApi.runPipeline(id, false);
-            
-            // Update document status immediately
-            setDocuments(prev => prev.map(doc => 
-                doc.id === id 
-                    ? { ...doc, processing_status: 'PROCESSING' as const }
-                    : doc
-            ));
-            
-            // Show success message if available
-            if (response.status === 'success') {
-                setError(''); // Clear any previous errors
-                console.log('Pipeline started successfully');
+            // Add to starting set to show loading
+            setStartingPipelines(prev => new Set(prev).add(id));
+
+            // Start the pipeline (may take time with queue-based processing)
+            // Set a timeout for the request itself
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+            let response;
+            try {
+                response = await adminApi.runPipeline(id, false);
+                clearTimeout(timeoutId);
+            } catch (pipelineError: any) {
+                clearTimeout(timeoutId);
+
+                // If it's a timeout, still start polling - backend might be processing
+                if (pipelineError.code === 'ECONNABORTED' || pipelineError.message?.includes('timeout')) {
+                    console.warn('⏰ Pipeline request timed out, but starting polling anyway...');
+
+                    // Show a message to user that processing started despite timeout
+                    setError(''); // Clear any previous errors first
+                    setTimeout(() => {
+                        setError('Processing started (request timed out but polling active)');
+                        setTimeout(() => setError(''), 5000); // Clear after 5 seconds
+                    }, 1000);
+
+                    // Continue with polling even if request timed out
+                } else {
+                    throw pipelineError; // Re-throw other errors
+                }
+            } finally {
+                // Remove from starting set
+                setStartingPipelines(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(id);
+                    return newSet;
+                });
             }
+
+            // Check if we got the expected response
+            if (response && (response.status === 'accepted' || response.message)) {
+                console.log('✅ Pipeline queued:', response.message);
+
+                // Update document status to show it's queued/processing
+                setDocuments(prev => prev.map(doc =>
+                    doc.id === id
+                        ? {
+                            ...doc,
+                            processing_status: 'PROCESSING' as const,
+                            processing_message: response.message || 'Processing started...'
+                          }
+                        : doc
+                ));
+
+                setError(''); // Clear any previous errors
+            } else {
+                // If no response or unexpected response, still start polling
+                console.log('🔄 Starting pipeline processing (no immediate response)...');
+
+                setDocuments(prev => prev.map(doc =>
+                    doc.id === id
+                        ? {
+                            ...doc,
+                            processing_status: 'PROCESSING' as const,
+                            processing_message: 'Processing started...'
+                          }
+                        : doc
+                ));
+
+                setError(''); // Clear any previous errors
+            }
+
+            // Always start polling regardless of response
+            setProcessingDocuments(prev => new Set(prev).add(id));
+
         } catch (err: any) {
+            console.error('Failed to start pipeline:', err);
+
+            // Remove from both sets
+            setStartingPipelines(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(id);
+                return newSet;
+            });
             setProcessingDocuments(prev => {
                 const newSet = new Set(prev);
                 newSet.delete(id);
                 return newSet;
             });
-            setError(err?.message || err?.response?.data?.message || 'Failed to run pipeline');
+
+            const errorMessage = err?.response?.data?.error || err?.message || 'Failed to start pipeline';
+            setError(errorMessage);
+
+            // Update document to show error
+            setDocuments(prev => prev.map(doc =>
+                doc.id === id
+                    ? {
+                        ...doc,
+                        processing_status: 'FAILED' as const,
+                        processing_message: errorMessage
+                      }
+                    : doc
+            ));
         }
     };
 
@@ -192,14 +298,18 @@ export const ContentUpload = () => {
                             <div>
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
                                     ${document.processing_status === 'COMPLETED' && 'bg-green-100 text-green-800'}
-                                    ${document.processing_status === 'PROCESSING' && 'bg-yellow-100 text-yellow-800'}
+                                    ${document.processing_status === 'COMPLETED_WITH_WARNINGS' && 'bg-yellow-100 text-yellow-800'}
+                                    ${document.processing_status === 'PROCESSING' && 'bg-blue-100 text-blue-800'}
+                                    ${document.processing_status === 'QUEUED' && 'bg-purple-100 text-purple-800'}
                                     ${document.processing_status === 'PENDING' && 'bg-gray-100 text-gray-800'}
                                     ${document.processing_status === 'FAILED' && 'bg-red-100 text-red-800'}
                                 `}>
-                                    {document.processing_status.toLowerCase()}
+                                    {document.processing_status === 'COMPLETED_WITH_WARNINGS' 
+                                        ? 'completed (warnings)' 
+                                        : document.processing_status.toLowerCase()}
                                 </span>
                                 {document.processing_message && (
-                                    <p className="text-sm text-gray-500 mt-1">
+                                    <p className="text-sm text-gray-500 mt-1 max-w-xs truncate" title={document.processing_message}>
                                         {document.processing_message}
                                     </p>
                                 )}
@@ -213,7 +323,7 @@ export const ContentUpload = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex space-x-2">
-                                {document.processing_status === 'PROCESSING' ? (
+                                {(document.processing_status === 'PROCESSING' || document.processing_status === 'QUEUED') ? (
                                     <button
                                         onClick={() => handleCancelPipeline(document.id)}
                                         className="p-1 text-gray-600 hover:text-red-600 transition-colors"
@@ -224,10 +334,19 @@ export const ContentUpload = () => {
                                 ) : (
                                     <button
                                         onClick={() => handleRunPipeline(document.id)}
-                                        className="p-1 text-gray-600 hover:text-green-600 transition-colors"
-                                        title="Run Pipeline"
+                                        disabled={startingPipelines.has(document.id)}
+                                        className={`p-1 transition-colors ${
+                                            startingPipelines.has(document.id)
+                                                ? 'text-gray-400 cursor-not-allowed'
+                                                : 'text-gray-600 hover:text-green-600'
+                                        }`}
+                                        title={startingPipelines.has(document.id) ? "Starting..." : "Run Pipeline"}
                                     >
-                                        <BsFillPlayFill className="w-5 h-5" />
+                                        {startingPipelines.has(document.id) ? (
+                                            <div className="w-5 h-5 border-2 border-gray-400 border-t-green-500 rounded-full animate-spin"></div>
+                                        ) : (
+                                            <BsFillPlayFill className="w-5 h-5" />
+                                        )}
                                     </button>
                                 )}
                                 <button

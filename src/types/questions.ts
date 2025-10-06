@@ -21,9 +21,22 @@ export interface GeneratedQuestion {
     game_type: 'coding' | 'non_coding';
     validation_status: 'pending' | 'processed';
     game_data: {
+        // Fields from the detailed response
+        function_name?: string;
+        correct_code?: string;
+        sample_input?: string;
+        sample_output?: string;
+        buggy_question_text?: string;
+        buggy_code?: string;
+        buggy_correct_code?: string;
+        buggy_explanation?: string;
+        hidden_tests?: Array<{input: string; expected_output: string}>;
+        explanation?: string;
+        generation_timestamp?: string;
+        
+        // Original fields
         zone_id?: number;
         zone_name?: string;
-        buggy_code?: string;
         rag_context?: {
             used: boolean;
             context: string;

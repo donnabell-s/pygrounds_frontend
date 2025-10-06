@@ -111,6 +111,11 @@ export const adminApi = {
         return response.data;
     },
 
+    getAdminQuestion: async (questionId: number): Promise<GeneratedQuestion> => {
+        const response = await client.get<GeneratedQuestion>(`/admin/questions/${questionId}/`);
+        return response.data;
+    },
+
     updateQuestion: async (questionId: number, data: {
         question_text?: string;
         correct_answer?: string;
@@ -129,6 +134,16 @@ export const adminApi = {
         game_type?: 'coding' | 'non_coding';
         game_data?: any;
         validation_status?: 'pending' | 'processed';
+        // Coding-specific fields
+        correct_code?: string;
+        sample_input?: string;
+        sample_output?: string;
+        function_name?: string;
+        buggy_explanation?: string;
+        buggy_correct_code?: string;
+        buggy_question_text?: string;
+        buggy_code?: string;
+        test_cases?: Array<{input: any[]; expected: any}>;
     }): Promise<GeneratedQuestion> => {
         const response = await client.patch<GeneratedQuestion>(`/admin/questions/${questionId}/`, data);
         return response.data;
@@ -237,9 +252,12 @@ export const adminApi = {
 
     partialUpdatePreAssessmentQuestion: async (questionId: number, data: {
         question_text?: string;
+        answer_options?: string[];
+        correct_answer?: string;
         topic_ids?: number[];
         subtopic_ids?: number[];
         estimated_difficulty?: 'beginner' | 'intermediate' | 'advanced' | 'master';
+        order?: number;
     }): Promise<PreAssessmentQuestion> => {
         const response = await client.patch<PreAssessmentQuestion>(`/admin/pre-assessment/${questionId}/`, data);
         return response.data;
@@ -465,7 +483,11 @@ export const adminApi = {
     },
 
     runPipeline: async (id: number, reprocess: boolean = false): Promise<PipelineResult> => {
-        const response = await client.post<PipelineResult>(`/pipeline/${id}/`, { reprocess });
+        // For queue-based processing, we expect immediate response (202 ACCEPTED)
+        // Set a longer timeout since backend might be processing before queuing
+        const response = await client.post<PipelineResult>(`/pipeline/${id}/`, { reprocess }, {
+            timeout: 30000 // 30 seconds for queue-based processing
+        });
         return response.data;
     },
 

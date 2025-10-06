@@ -33,6 +33,11 @@ export interface PreAssessmentQuestion {
     correct_answer: string;
     estimated_difficulty: "beginner" | "intermediate" | "advanced" | "master";
     order: number;
+    game_data?: {
+        options?: string[];
+        explanation?: string;
+        generation_timestamp?: string;
+    };
 }
 
 export interface GameZone {
@@ -91,7 +96,7 @@ export interface UploadedDocument {
     file: string;
     uploaded_at: string;
     difficulty: 'beginner' | 'intermediate' | 'advanced' | 'master';
-    processing_status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    processing_status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'QUEUED' | 'COMPLETED_WITH_WARNINGS';
     processing_message: string;
     total_pages: number;
     chunks_count: number;
@@ -111,9 +116,11 @@ export interface DocumentListResponse {
 }
 
 export interface PipelineResult {
-    status: 'success' | 'error';
+    status: 'success' | 'error' | 'accepted';
     message: string;
-    results: {
+    queue_position?: number;
+    processing_status?: string;
+    results?: {
         status: 'success' | 'error';
         message: string;
         processed_subtopics: number;
