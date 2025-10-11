@@ -190,6 +190,17 @@ export const gameApi = {
       return null;
     }
   },
+
+  // ────────── Leaderboard ──────────
+  getLeaderboard: async (gameType: string): Promise<import("../types/game").LeaderboardEntry[] | null> => {
+    try {
+      const res = await client.get<import("../types/game").LeaderboardEntry[]>(`/leaderboard/${gameType}/`);
+      return res.data;
+    } catch (err) {
+      console.error("gameApi.getLeaderboard error", err);
+      return null;
+    }
+  },
 };
 
 export default gameApi;

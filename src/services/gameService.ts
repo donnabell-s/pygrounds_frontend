@@ -40,4 +40,6 @@ export const gameService = {
   // ────────── Pre-assessment ──────────
   submitPreAssessmentAnswers: (answers: Record<number, string>): Promise<any | null> =>
     gameApi.submitPreAssessmentAnswers(answers),
+  // ────────── Leaderboard ──────────
+  getLeaderboard: (gameType: string) => gameApi.getLeaderboard(gameType),
 };

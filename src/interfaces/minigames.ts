@@ -10,6 +10,7 @@ export interface Minigame {
   time_limit_seconds: number | null;
   image?: string; // ✅ Add this
   color?: string; // canonical color for the minigame (hex)
+  key?: string; // backend game key (e.g. 'crossword', 'wordsearch', 'hangman', 'debugging')
 }
 
 import wordsearchImg from "../assets/images/wordsearch.png";
@@ -42,6 +43,7 @@ export const mockGames: Minigame[] = [
     lives: 3,
     time_limit_seconds: null,
     color: "#4498FF",
+    key: "hangman",
   },
   {
     title: "Ship Debugging Game",
@@ -64,6 +66,7 @@ export const mockGames: Minigame[] = [
     lives: 1,
     time_limit_seconds: 180,
     color: "#FC4D66",
+    key: "debugging",
   },
   {
     title: "Python Word Search",
@@ -86,6 +89,7 @@ export const mockGames: Minigame[] = [
     lives: 3,
     time_limit_seconds: null,
     color: "#42BFAB",
+    key: "wordsearch",
   },
   {
     title: "Python Crossword",
@@ -106,6 +110,7 @@ export const mockGames: Minigame[] = [
     lives: 0,
     time_limit_seconds: 300,
     color: "#7E5CE3",
+    key: "crossword",
   },
 ];
 

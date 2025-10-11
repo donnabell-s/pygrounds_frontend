@@ -29,6 +29,9 @@ export interface GameContextType {
   fetchGameSession: (sessionId: string) => Promise<GameSession | null>;
   exitSession: (sessionId: string) => Promise<boolean>;
 
+  // Leaderboard
+  fetchLeaderboard: (gameType: string) => Promise<import("../types/game").LeaderboardEntry[] | null>;
+
   startHangmanGame: () => Promise<GameSession | null>;
   submitHangmanCode: (sessionId: string, code: string) => Promise<any>;
   startDebuggingGame: () => Promise<GameSession | null>;
@@ -122,6 +125,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return ok;
   };
 
+  const fetchLeaderboard = async (gameType: string) => {
+    try {
+      return await gameService.getLeaderboard(gameType);
+    } catch (err) {
+      console.error("fetchLeaderboard error", err);
+      return null;
+    }
+  };
+
   const startHangmanGame = async (): Promise<GameSession | null> => {
     const resp = await gameService.startHangman();
     if (!resp) return null;
@@ -187,6 +199,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         startDebuggingGame,
         submitDebuggingCode,
         submitPreAssessmentAnswers,
+        fetchLeaderboard,
       }}
     >
       {children}

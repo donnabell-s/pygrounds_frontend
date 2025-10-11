@@ -126,3 +126,15 @@ export type DebuggingSubmissionResponse = HangmanSubmissionResponse;
 
 // Pre-assessment answers
 export type PreAssessmentAnswers = Record<number, string>;
+
+// Leaderboard entry returned from backend
+export interface LeaderboardEntry {
+  user_id: number;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  score: number;
+  time_seconds: number;
+  session_id: string;
+  played_at: string;
+}
