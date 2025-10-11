@@ -4,6 +4,7 @@ import { FaCaretDown } from "react-icons/fa";
 import * as Components from "../../components";
 import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { PATHS } from "../../../constants";
 
 interface ProfileDropdownProps {
   mobile?: boolean;
@@ -52,6 +53,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => 
             label="Settings" 
             icon={<FiSettings size={20}/>}
             mobile={true}
+            onClick={() => navigate(`/${user?.id}/${PATHS.USER_VIEW.SETTINGS.path}`)}
           />
           <Components.ProfileDropdownLink 
             label="Logout" 
@@ -113,6 +115,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ mobile = false }) => 
           <Components.ProfileDropdownLink 
             label="Settings" 
             icon={<FiSettings size={16}/>}
+            onClick={() => navigate(`/${user?.id}/${PATHS.USER_VIEW.SETTINGS.path}`)}
           />
           <Components.ProfileDropdownLink 
             label="Logout" 

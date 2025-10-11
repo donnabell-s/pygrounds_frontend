@@ -2,7 +2,9 @@
 import React from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { FiEdit2 } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 import defaultCover from "../../../assets/images/default_cover.png"; // ⬅️ use your asset
+import { PATHS } from "../../../constants";
 
 interface ProfileHeaderProps {
   coverUrl?: string | null;
@@ -24,6 +26,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   showEditButton = true 
 }) => {
   const { user: authUser } = useAuth();
+  const navigate = useNavigate();
   
   // Use the passed user or fall back to current user
   const user = propUser || authUser;
@@ -75,8 +78,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             {showEditButton && (
               <button
                 type="button"
+                onClick={() => navigate(`/${user?.id}/${PATHS.USER_VIEW.SETTINGS.path}`)}
                 className="ml-4 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#7054D0] text-white text-sm font-medium shadow hover:opacity-95 w-auto"
-                title="Edit profile (coming soon)"
+                title="Edit profile"
               >
                 <FiEdit2 />
                 <span className="hidden sm:inline">Edit Profile</span>

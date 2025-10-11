@@ -35,6 +35,7 @@ export const AppRoutes = () => {
             <Route path={PATHS.USER_VIEW.LEADERBOARD.path} element={<Views.Leaderboard />} />
             <Route path={PATHS.GAME_VIEW.GAME_PREVIEW.path} element={<Views.GamePreview />} />
             <Route path={PATHS.GAME_VIEW.GAME_START.path} element={<ProtectedGameRoute><Views.GameStart /></ProtectedGameRoute>}/>
+            <Route path={PATHS.USER_VIEW.SETTINGS.path} element={<Views.Settings />} />
           </Route>
         </Route>
 

@@ -54,6 +54,10 @@ export const PATHS = {
         LEADERBOARD: {
             path: "leaderboard",
             label: "Leaderboard"
+        },
+        SETTINGS: {
+            path: "settings",
+            label: "Settings"
         }
     },
     ADMIN_VIEW: {

@@ -34,6 +34,7 @@ const GamePreview = () => {
           <Components.PreviewCards.Cards.Tips tips={selectedGame.tips} />
         </div>
       </div>
+      <Components.GameLeaderboard />
     </div>
   );
 };

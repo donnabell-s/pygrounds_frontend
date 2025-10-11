@@ -5,3 +5,4 @@ export * from "./Leaderboard";
 export * from "./UserMain";
 export * from "./GameView";
 export * from "./PythonLearn";
+export * from "./Settings";
