@@ -3,6 +3,9 @@ import { FaArrowRight } from "react-icons/fa";
 import { FaCode, FaChartLine } from "react-icons/fa6";
 import { RiBrain2Line } from "react-icons/ri";
 import HeroImage from "../../../assets/images/landing-hero3.png";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
+import { PATHS } from "../../../constants";
 // removed unused social icons
 
 const Landing = () => {
@@ -10,29 +13,47 @@ const Landing = () => {
     {
       title: "Interactive Coding",
       description: "Write real Python code to solve challenges and debug problems.",
-      icon: <FaCode size={38} className="inline-block text-[#4496FF]" />,
+      icon: <FaCode size={38} className="inline-block text-[#c26cc4]" />,
     },
     {
       title: "Progress Tracking",
       description: "Visual skill tracking with XP, levels, and personalized learning paths.",
-      icon: <FaChartLine size={38} className="inline-block p-1 text-[#41BFAC]" />,
+      icon: <FaChartLine size={38} className="inline-block p-1 text-[#dc93ca]" />,
     },
     {
       title: "Adaptive Learning",
       description: "AI-powered content that adapts to your strengths and weaknesses.",
-      icon: <RiBrain2Line size={38} className="inline-block text-[#FFC837]" />, // keep feature colors
+      icon: <RiBrain2Line size={38} className="inline-block text-[#bc64c4]" />, // keep feature colors
     },
   ];
 
   // keep feature card colors as-is
-  const cardBgClasses = ["bg-[#4496FF]/40", "bg-[#41BFAC]/40", "bg-[#FFC837]/40"];
-  const ringClasses = ["ring-[#4496FF]/40", "ring-[#41BFAC]/40", "ring-[#FFC837]/40"];
-  const dotClasses = ["bg-[#4496FF]", "bg-[#41BFAC]", "bg-[#FFC837]"];
+  const cardBgClasses = ["bg-[#c26cc4]/50", "bg-[#dc93ca]/50", "bg-[#bc64c4]/50"];
+  const ringClasses = ["ring-[#c26cc4]/60", "ring-[#dc93ca]/60", "ring-[#bc64c4]/60"];
+  const dotClasses = ["bg-[#c26cc4]", "bg-[#dc93ca]", "bg-[#bc64c4]"];
   const hoverGlows = [
-    "hover:shadow-[0_12px_30px_rgba(68,150,255,0.35)]",
-    "hover:shadow-[0_12px_30px_rgba(65,191,172,0.35)]",
-    "hover:shadow-[0_12px_30px_rgba(255,200,55,0.35)]",
+    // tighter glow: smaller vertical offset, smaller blur/spread, slightly lower opacity
+    "hover:shadow-[0_8px_20px_rgba(194,108,196,0.28)]",
+    "hover:shadow-[0_8px_20px_rgba(220,147,202,0.28)]",
+    "hover:shadow-[0_8px_20px_rgba(188,100,196,0.28)]",
   ];
+
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handlePrimaryClick = () => {
+    const token = localStorage.getItem("accessToken");
+    if (token || user) {
+      // go to user's home
+      const storedUser = user || (localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null);
+      const userId = storedUser?.id;
+      if (userId) navigate(`/${userId}/home`);
+      else navigate(PATHS.LOGIN.path);
+    } else {
+      // go to first registration step
+      navigate(`${PATHS.REGISTER.path}/${PATHS.REGISTER.USER_INFO.path}`);
+    }
+  };
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-gradient-to-b from-[#7053D0]/10 to-[#EAE7FE]/40">
@@ -62,6 +83,7 @@ const Landing = () => {
                 icon={<FaArrowRight size={16} />}
                 iconPosition="right"
                 // palette: primary + support
+                onClick={handlePrimaryClick}
               />
             </div>
           </div>
@@ -137,6 +159,7 @@ const Landing = () => {
                 fontSize="text-md"
                 icon={<FaArrowRight size={14} />}
                 iconPosition="right"
+                onClick={handlePrimaryClick}
               />
             </div>
           </div>
