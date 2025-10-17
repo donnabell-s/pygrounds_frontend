@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AdminTable } from '../../../components/UI';
+import { AdminTable, AdminModal } from '../../../components/UI';
 import { FiEdit2, FiTrash2, FiUser, FiMail, FiCalendar } from 'react-icons/fi';
 import RegisterAdmin from '../../Authentication/Register/RegisterAdmin/RegisterAdmin';
 import { adminApi } from '../../../../api/adminApi';
@@ -152,7 +152,7 @@ const ViewUsers = () => {
                 headerColumns={['ID', 'User', 'Email', 'Role', 'Status', 'Joined', 'Actions']}
                 renderRow={(user: AdminUser) => (
                     <tr key={user.id} className={!user.is_active ? "opacity-50 bg-gray-50" : ""}>
-                        <td className={`px-3 py-3 text-sm font-mono ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
+                        <td className={`px-3 py-3 text-sm font-mono text-center ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
                             {user.id}
                         </td>
                         <td className="px-3 py-3">
@@ -174,12 +174,12 @@ const ViewUsers = () => {
                                 {user.email}
                             </div>
                         </td>
-                        <td className="px-3 py-3 text-sm">
+                        <td className="px-3 py-3 text-sm text-center">
                             <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${getRoleDisplay(user).color}`}>
                                 {getRoleDisplay(user).text}
                             </span>
                         </td>
-                        <td className="px-3 py-3 text-sm">
+                        <td className="px-3 py-3 text-sm text-center">
                             <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
                                 user.is_active 
                                     ? 'bg-green-100 text-green-800' 
@@ -216,39 +216,30 @@ const ViewUsers = () => {
                 )}
             />
 
-            {/* Add User Modal */}
-            {isAddModalOpen && (
-                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-semibold">Add New User</h3>
-                            <button
-                                onClick={() => setIsAddModalOpen(false)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                ✕
-                            </button>
-                        </div>
-                        
-                        <RegisterAdmin 
-                            showTitle={false}
-                            inModal={true}
-                            onUserCreated={() => {
-                                setIsAddModalOpen(false);
-                                fetchUsers();
-                            }} 
-                        />
-                    </div>
-                </div>
-            )}
+            {/* Add Admin Modal */}
+            <AdminModal 
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                title="Add New Admin"
+            >
+                <RegisterAdmin 
+                    showTitle={false}
+                    inModal={true}
+                    onUserCreated={() => {
+                        setIsAddModalOpen(false);
+                        fetchUsers();
+                    }} 
+                />
+            </AdminModal>
 
             {/* Edit User Modal */}
-            {isEditModalOpen && editingUser && (
-                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-lg font-semibold mb-4">Edit User</h3>
-                        
-                        <form onSubmit={(e) => {
+            <AdminModal 
+                isOpen={isEditModalOpen && !!editingUser}
+                onClose={() => setIsEditModalOpen(false)}
+                title="Edit User"
+            >
+                {editingUser && (
+                    <form onSubmit={(e) => {
                             e.preventDefault();
                             const formData = new FormData(e.currentTarget);
                             const updatedData = {
@@ -256,24 +247,13 @@ const ViewUsers = () => {
                                 email: formData.get('email') as string,
                                 first_name: formData.get('first_name') as string,
                                 last_name: formData.get('last_name') as string,
-                                is_active: formData.get('is_active') === 'on',
-                                role: formData.get('is_staff') === 'admin' ? 'admin' : 'learner',
-                                is_staff: formData.get('is_staff') === 'admin',
-                                is_superuser: formData.get('is_staff') === 'admin',
+                                // Admin users are always active, others can be toggled
+                                is_active: editingUser.is_staff ? true : (formData.get('is_active') === 'on'),
+                                // Keep the existing role and permissions
+                                role: editingUser.is_staff ? 'admin' : 'learner',
+                                is_staff: editingUser.is_staff,
+                                is_superuser: editingUser.is_superuser,
                             };
-                            
-                            // Debug logging for edit
-                            console.log('Editing user - sending data:', {
-                                username: updatedData.username,
-                                email: updatedData.email,
-                                first_name: updatedData.first_name,
-                                last_name: updatedData.last_name,
-                                is_active: updatedData.is_active,
-                                role: updatedData.role,
-                                is_staff: updatedData.is_staff,
-                                is_superuser: updatedData.is_superuser,
-                                selectedUserType: formData.get('is_staff')
-                            });
                             
                             handleSaveEdit(updatedData);
                         }}>
@@ -324,30 +304,26 @@ const ViewUsers = () => {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">User Type</label>
-                                    <select
-                                        name="is_staff"
-                                        defaultValue={editingUser.is_staff ? 'admin' : 'learner'}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    >
-                                        <option value="learner">Learner</option>
-                                        <option value="admin">Admin</option>
-                                    </select>
-                                </div>
-
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        name="is_active"
-                                        id="edit_is_active"
-                                        defaultChecked={editingUser.is_active}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                    />
-                                    <label htmlFor="edit_is_active" className="ml-2 block text-sm text-gray-700">
-                                        Active User
-                                    </label>
+                                {/* Active status - show for all users with admin protection note */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            name="is_active"
+                                            id="edit_is_active"
+                                            defaultChecked={editingUser.is_active}
+                                            disabled={editingUser.is_staff} // Admin users cannot be deactivated
+                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                                        />
+                                        <label htmlFor="edit_is_active" className="ml-2 block text-sm text-gray-700">
+                                            Active User
+                                        </label>
+                                    </div>
+                                    {editingUser.is_staff && (
+                                        <p className="text-xs text-gray-500">
+                                            Admin users cannot be deactivated
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             
@@ -367,9 +343,8 @@ const ViewUsers = () => {
                                 </button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
+                    )}
+            </AdminModal>
         </div>
     );
 };

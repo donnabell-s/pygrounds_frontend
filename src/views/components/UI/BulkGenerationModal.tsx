@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Modal from './Modals/Modal';
+import AdminModal from './Modals/AdminModal';
 import type { PreAssessmentBulkGenerationParams } from '../../../types/questions';
 import type { AdminZone } from '../../../types/adaptive';
 import { adminApi } from '../../../api';
@@ -145,7 +145,7 @@ export const BulkGenerationModal = ({ isOpen, onClose, onSubmit }: BulkGeneratio
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Generate Pre-assessment Questions">
+        <AdminModal isOpen={isOpen} onClose={onClose} title="Generate Pre-assessment Questions">
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 {error && (
                     <div className="bg-red-100 text-red-700 p-3 rounded-md">
@@ -235,6 +235,6 @@ export const BulkGenerationModal = ({ isOpen, onClose, onSubmit }: BulkGeneratio
                     </button>
                 </div>
             </form>
-        </Modal>
+        </AdminModal>
     );
 };

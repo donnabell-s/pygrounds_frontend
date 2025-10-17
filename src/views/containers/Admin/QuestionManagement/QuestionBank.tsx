@@ -583,7 +583,7 @@ const QuestionBank = () => {
                         const question = item as GeneratedQuestion;
                         return (
                             <tr key={question.id}>
-                                <td className="px-3 py-3 text-sm font-mono">
+                                <td className="px-3 py-3 text-sm font-mono text-center">
                                     {question.id}
                                 </td>
                                 <td className="px-3 py-3">
@@ -595,7 +595,7 @@ const QuestionBank = () => {
                                 <td className="px-3 py-3 text-sm">
                                     <div className="line-clamp-1 max-w-[150px]">{question.subtopic?.name || 'Unknown Subtopic'}</div>
                                 </td>
-                                <td className="px-3 py-3 text-sm">
+                                <td className="px-3 py-3 text-sm text-center">
                                     <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
                                         question.game_type === 'coding' 
                                             ? 'bg-blue-100 text-blue-800' 
@@ -604,7 +604,7 @@ const QuestionBank = () => {
                                         {question.game_type === 'coding' ? 'Coding' : question.game_type === 'non_coding' ? 'Non-Coding' : 'Unknown'}
                                     </span>
                                 </td>
-                                <td className="px-3 py-3 text-sm">
+                                <td className="px-3 py-3 text-sm text-center">
                                     <span className={`px-2 py-1 rounded-full text-xs capitalize whitespace-nowrap ${
                                         question.estimated_difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
                                         question.estimated_difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
@@ -614,8 +614,8 @@ const QuestionBank = () => {
                                         {question.estimated_difficulty || 'Unknown'}
                                     </span>
                                 </td>
-                                <td className="px-3 py-3 text-sm">
-                                    <div className="flex items-center gap-2 whitespace-nowrap">
+                                <td className="px-3 py-3 text-sm text-center">
+                                    <div className="flex items-center justify-center gap-2 whitespace-nowrap">
                                         {getValidationStatusIcon(question.validation_status || 'pending')}
                                         <span className="capitalize text-xs">{(question.validation_status || 'pending').replace('_', ' ')}</span>
                                     </div>
@@ -644,7 +644,7 @@ const QuestionBank = () => {
                         const question = item as PreAssessmentQuestion;
                         return (
                             <tr key={question.id}>
-                                <td className="px-3 py-3 text-sm font-mono">
+                                <td className="px-3 py-3 text-sm font-mono text-center">
                                     {question.id}
                                 </td>
                                 <td className="px-3 py-3">
@@ -655,7 +655,7 @@ const QuestionBank = () => {
                                         {question.topic_ids?.join(', ') || 'No topics'}
                                     </div>
                                 </td>
-                                <td className="px-3 py-3 text-sm">
+                                <td className="px-3 py-3 text-sm text-center">
                                     <span className={`px-2 py-1 rounded-full text-xs capitalize whitespace-nowrap ${
                                         question.estimated_difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
                                         question.estimated_difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :

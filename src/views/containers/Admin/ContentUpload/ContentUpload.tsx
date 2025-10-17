@@ -295,7 +295,7 @@ export const ContentUpload = () => {
                         <td className="px-6 py-4">
                             <div className="line-clamp-1">{document.title}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div>
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
                                     ${document.processing_status === 'COMPLETED' && 'bg-green-100 text-green-800'}
@@ -316,14 +316,14 @@ export const ContentUpload = () => {
                                 )}
                             </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap capitalize">
+                        <td className="px-6 py-4 whitespace-nowrap capitalize text-center">
                             {document.difficulty}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
                             {new Date(document.uploaded_at).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex space-x-2">
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="flex justify-center space-x-2">
                                 {(document.processing_status === 'PROCESSING' || document.processing_status === 'QUEUED') ? (
                                     <button
                                         onClick={() => handleCancelPipeline(document.id)}

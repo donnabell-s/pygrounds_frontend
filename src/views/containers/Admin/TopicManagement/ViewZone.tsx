@@ -149,7 +149,7 @@ const ViewZone = () => {
                 itemsPerPage={itemsPerPage}
                 renderRow={(zone) => (
                     <tr key={zone.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 w-20 text-sm">{zone.id}</td>
+                        <td className="px-4 py-4 w-20 text-sm text-center">{zone.id}</td>
                         <td className="px-4 py-4 w-44 text-sm">
                             <div className="truncate">{zone.name}</div>
                         </td>

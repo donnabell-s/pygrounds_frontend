@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Modal from './Modal';
+import AdminModal from './AdminModal';
 import type { AdminSubtopic, AdminTopic } from '../../../../types/adaptive';
 
 type FormData = {
@@ -73,7 +73,7 @@ const SubtopicModal = ({ isOpen, onClose, onSubmit, initialData, title, topics }
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={title}>
+        <AdminModal isOpen={isOpen} onClose={onClose} title={title}>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 {error && (
                     <div className="bg-red-100 text-red-700 p-3 rounded-md">
@@ -150,7 +150,7 @@ const SubtopicModal = ({ isOpen, onClose, onSubmit, initialData, title, topics }
                     </button>
                 </div>
             </form>
-        </Modal>
+        </AdminModal>
     );
 };
 

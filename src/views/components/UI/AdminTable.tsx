@@ -62,12 +62,19 @@ const AdminTable = <T extends { id: number }>({
                             <thead className="bg-gray-50">
                                 <tr>
                                     {headerColumns.map((column, index) => {
-                                        // Base styling for all headers
+                                        // Base styling for headers
                                         let columnClass = "px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ";
                                         let widthClass = "";
-                                        let lastColumn = index === headerColumns.length - 1;
                                         
-                                        // Column-specific width classes optimized for questions table
+                                        // Center align specific column types
+                                        const centerAlignColumns = ['id', 'type', 'difficulty', 'status', 'actions', 'order', 'role'];
+                                        const shouldCenter = centerAlignColumns.some(col => column.toLowerCase().includes(col));
+                                        
+                                        if (shouldCenter) {
+                                            columnClass += "text-center ";
+                                        }
+                                        
+                                        // Column-specific width classes
                                         if (column.toLowerCase() === 'id') {
                                             widthClass = "w-16"; // Smaller ID column
                                         } else if (column.toLowerCase() === 'question') {
@@ -84,7 +91,14 @@ const AdminTable = <T extends { id: number }>({
                                             widthClass = "w-16"; // Small order column
                                         } else if (column.toLowerCase() === 'actions') {
                                             widthClass = "w-20"; // Actions column
-                                            columnClass += "text-center"; // Center align actions header
+                                        } else if (column.toLowerCase() === 'user') {
+                                            widthClass = "min-w-[150px]"; // User column
+                                        } else if (column.toLowerCase() === 'email') {
+                                            widthClass = "min-w-[200px]"; // Email column
+                                        } else if (column.toLowerCase() === 'name' || column.toLowerCase() === 'description') {
+                                            widthClass = "min-w-[150px]"; // Name/Description columns
+                                        } else if (column.toLowerCase() === 'joined' || column.toLowerCase() === 'role') {
+                                            widthClass = "min-w-[100px]"; // Date/Role columns
                                         } else {
                                             widthClass = "min-w-[100px]"; // Default minimum width
                                         }
@@ -94,7 +108,7 @@ const AdminTable = <T extends { id: number }>({
                                                 key={index}
                                                 className={`${columnClass} ${widthClass}`}
                                             >
-                                                <div className={`truncate ${lastColumn ? "text-center" : ""}`}>
+                                                <div className="truncate">
                                                     {column}
                                                 </div>
                                             </th>

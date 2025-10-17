@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Modal from './Modal';
+import AdminModal from './AdminModal';
 import type { GenerationStatus, WorkerStatus } from '../../../../types/questions';
 import { adminApi } from '../../../../api';
 
@@ -83,7 +83,7 @@ export const GenerationProgressModal = ({
     };
 
     return (
-        <Modal 
+        <AdminModal 
             isOpen={isOpen} 
             onClose={handleClose} 
             title="Question Generation Progress"
@@ -221,6 +221,6 @@ export const GenerationProgressModal = ({
                     </button>
                 </div>
             </div>
-        </Modal>
+        </AdminModal>
     );
 };

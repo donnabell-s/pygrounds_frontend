@@ -117,7 +117,7 @@ const ViewTopic = () => {
                 itemsPerPage={itemsPerPage}
                 renderRow={(topic) => (
                     <tr key={topic.id}>
-                        <td className="px-6 py-4 w-1/12 text-sm font-mono">{topic.id}</td>
+                        <td className="px-6 py-4 w-1/12 text-sm font-mono text-center">{topic.id}</td>
                         <td className="px-6 py-4 w-1/4">{topic.name}</td>
                         <td className="px-6 py-4 w-1/3">
                             <div className="max-w-xs truncate">

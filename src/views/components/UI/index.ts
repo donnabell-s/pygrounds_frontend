@@ -6,13 +6,13 @@ export { default as PrimaryButton } from "./PrimaryButton";
 export { default as BackButton } from "./BackButton";
 export { default as PageEmpty } from "./PageEmpty";
 export {
-    Modal,
     ZoneModal,
     TopicModal,
     SubtopicModal,
     BulkGenerationModal,
     GenerationProgressModal,
-    DocumentManagementModal
+    DocumentManagementModal,
+    AdminModal
 } from "./Modals";
 export { default as Pagination } from "./Pagination";
 export { default as AdminTable } from "./AdminTable";

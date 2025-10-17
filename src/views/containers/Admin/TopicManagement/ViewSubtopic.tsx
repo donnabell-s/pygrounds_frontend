@@ -161,13 +161,13 @@ const ViewSubtopic = () => {
                 itemsPerPage={itemsPerPage}
                 renderRow={(subtopic) => (
                     <tr key={subtopic.id}>
-                        <td className="px-6 py-4 w-1/12 text-sm font-mono">{subtopic.id}</td>
+                        <td className="px-6 py-4 w-1/12 text-sm font-mono text-center">{subtopic.id}</td>
                         <td className="px-6 py-4 w-1/6">
                             <div className="font-medium">{subtopic.name}</div>
                         </td>
                         <td className="px-6 py-4 w-1/12 text-center font-mono">{subtopic.topic}</td>
                         <td className="px-6 py-4 w-1/12">
-                            <div className="text-center">
+                            <div>
                                 {topics.find(t => t.id === subtopic.topic)?.name || subtopic.topic_name || 'Unknown'}
                             </div>
                         </td>

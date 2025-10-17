@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Modal from './Modal';
+import AdminModal from './AdminModal';
 import { ADMIN_BUTTON_STYLES } from '../../Layout';
 import type { AdminTopic, AdminZone } from '../../../../types/adaptive';
 
@@ -69,7 +69,7 @@ const TopicModal = ({ isOpen, onClose, onSubmit, initialData, title, zones }: To
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={title}>
+        <AdminModal isOpen={isOpen} onClose={onClose} title={title}>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 {error && (
                     <div className="bg-red-100 text-red-700 p-3 rounded-md">
@@ -134,7 +134,7 @@ const TopicModal = ({ isOpen, onClose, onSubmit, initialData, title, zones }: To
                     </button>
                 </div>
             </form>
-        </Modal>
+        </AdminModal>
     );
 };
 
