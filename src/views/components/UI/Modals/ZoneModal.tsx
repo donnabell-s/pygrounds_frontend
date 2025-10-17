@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from './Modal';
+import { ADMIN_BUTTON_STYLES } from '../../Layout';
 import type { AdminZone } from '../../../../types/adaptive';
 
 type FormData = {
@@ -109,13 +110,13 @@ const ZoneModal = ({ isOpen, onClose, onSubmit, initialData, title }: ZoneModalP
                     <button 
                         type="button" 
                         onClick={onClose}
-                        className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                        className={ADMIN_BUTTON_STYLES.SECONDARY}
                     >
                         Cancel
                     </button>
                     <button 
                         type="submit"
-                        className="px-4 py-2 bg-[#3776AB] text-white rounded-md hover:brightness-110"
+                        className={ADMIN_BUTTON_STYLES.PRIMARY}
                     >
                         {initialData ? 'Update' : 'Create'}
                     </button>

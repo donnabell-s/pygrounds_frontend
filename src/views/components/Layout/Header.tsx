@@ -2,7 +2,6 @@ import * as Components from "../../components";
 import { useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
-// removed unused FiArrowRightCircle
 import { PATHS } from "../../../constants";
 import Logo from "../../../assets/logo/Pygrounds_Logo.png";
 
@@ -12,7 +11,6 @@ const Header = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  const isLearner = user?.role === "learner";
   const isRegisterPage = location.pathname.startsWith("/register");
 
   return (
@@ -27,7 +25,7 @@ const Header = () => {
             />
           </Link>
 
-          {isLearner && (
+          {user && (
             <div className="hidden md:flex gap-3">
               <Components.HeaderLink label="Home" route={`/${user.id}/${PATHS.USER_VIEW.HOME.path}`} />
               <Components.HeaderLink label="My Profile" route={`/${user.id}/${PATHS.USER_VIEW.USER_PROFILE.path.replace(':profileId', user.id.toString())}`} />
@@ -38,7 +36,7 @@ const Header = () => {
         </div>
 
         <div className="ml-auto flex items-center gap-4">
-          {isLearner ? (
+          {user ? (
             <>
               <div className="hidden md:block">
                 <Components.ProfileDropdown />
@@ -78,7 +76,7 @@ const Header = () => {
       </div>
 
       {/* Mobile Menu */}
-      {mobileMenuOpen && isLearner && (
+      {mobileMenuOpen && user && (
         <div className="md:hidden fixed inset-0 bg-white z-40 mt-16 p-6 space-y-4">
           <Components.HeaderLink label="Home" route={`/${user.id}/${PATHS.USER_VIEW.HOME.path}`} mobile />
           <Components.HeaderLink label="My Profile" route={`/${user.id}/${PATHS.USER_VIEW.USER_PROFILE.path.replace(':profileId', user.id.toString())}`} mobile />

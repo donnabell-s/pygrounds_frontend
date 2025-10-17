@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../../../api';
 import { ZoneModal, AdminTable } from '../../../../views/components/UI';
+import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import type { AdminZone } from '../../../../types/adaptive';
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
@@ -161,14 +162,14 @@ const ViewZone = () => {
                             <div className="flex items-center justify-center space-x-2">
                                 <button
                                     onClick={() => startEdit(zone)}
-                                    className="p-1 text-gray-600 hover:text-yellow-600 transition-colors"
+                                    className={ADMIN_BUTTON_STYLES.ICON_PRIMARY}
                                     title="Edit"
                                 >
                                     <FiEdit2 className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => handleDeleteClick(zone.id)}
-                                    className="p-1 text-gray-600 hover:text-red-600 transition-colors"
+                                    className={ADMIN_BUTTON_STYLES.ICON_DANGER}
                                     title="Delete"
                                 >
                                     <FiTrash2 className="w-4 h-4" />
@@ -208,13 +209,13 @@ const ViewZone = () => {
                         <div className="flex justify-end space-x-3">
                             <button
                                 onClick={() => setDeleteConfirmation(null)}
-                                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                                className={ADMIN_BUTTON_STYLES.SECONDARY}
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleForceDelete}
-                                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                                className={ADMIN_BUTTON_STYLES.DANGER}
                             >
                                 Delete Zone & All Content
                             </button>

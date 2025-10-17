@@ -73,9 +73,11 @@ const Debugging: React.FC = () => {
   }, [activeSession, submitted, code, submitDebuggingCode]);
 
   const question = activeSession?.session_questions?.[0]?.question;
-  const prompt = question?.question_text ?? "";
-  const sampleInput = question?.game_data?.sample_input ?? "";
-  const sampleOutput = question?.game_data?.sample_output ?? "";
+  const gameData = question?.game_data;
+  
+  const prompt = gameData?.buggy_question_text ?? "";
+  const sampleInput = gameData?.sample_input ?? "";
+  const sampleOutput = gameData?.sample_output ?? "";
 
   const handleSubmit = async () => {
     if (!activeSession || submitted) return;

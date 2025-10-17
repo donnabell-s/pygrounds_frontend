@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pagination } from '.';
+import { ADMIN_BUTTON_STYLES } from '../Layout';
 
 interface AdminTableProps<T> {
     title: string;
@@ -39,7 +40,7 @@ const AdminTable = <T extends { id: number }>({
                 {onAdd && (
                     <button
                         onClick={onAdd}
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                        className={ADMIN_BUTTON_STYLES.PRIMARY}
                     >
                         Add New {title.replace(' Management', '')}
                     </button>

@@ -3,6 +3,7 @@ import { adminApi } from '../../../../api';
 import type { GeneratedQuestion, PreAssessmentQuestion, BulkGenerationParams, PreAssessmentBulkGenerationParams, QuestionListResponse } from '../../../../types/questions';
 import { AdminTable, BulkGenerationModal } from '../../../components/UI';
 import MinigameBulkGeneration from './MinigameBulkGeneration';
+import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import { FiEdit2, FiTrash2, FiCheck } from 'react-icons/fi';
 
 type QuestionType = 'minigame' | 'preassessment';
@@ -493,7 +494,7 @@ const QuestionBank = () => {
                             setIsBulkModalOpen(true);
                         }
                     }}
-                    className="bg-[#3776AB] text-white px-4 py-2 rounded hover:brightness-110 transition-all whitespace-nowrap"
+                    className={ADMIN_BUTTON_STYLES.PRIMARY}
                 >
                     Bulk Generate Questions
                 </button>
@@ -501,7 +502,7 @@ const QuestionBank = () => {
                 <button
                     onClick={handleBulkDifficultyCheck}
                     disabled={isCheckingDifficulty || loading}
-                    className="bg-orange-500 text-white px-4 py-2 rounded hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    className={`${ADMIN_BUTTON_STYLES.WARNING} disabled:opacity-50 disabled:cursor-not-allowed`}
                     title="Check difficulty for all questions (AI model not connected yet)"
                 >
                     {isCheckingDifficulty ? 'Checking...' : 'Check Difficulty'}
@@ -510,7 +511,7 @@ const QuestionBank = () => {
                 {activePreAssessmentSession && (
                     <button
                         onClick={() => handleCancelGeneration(activePreAssessmentSession, 'preassessment')}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:brightness-110 transition-all whitespace-nowrap"
+                        className={ADMIN_BUTTON_STYLES.DANGER}
                         title="Cancel pre-assessment generation"
                     >
                         Cancel Generation
@@ -520,7 +521,7 @@ const QuestionBank = () => {
                 {activeMinigameSession && (
                     <button
                         onClick={() => handleCancelGeneration(activeMinigameSession, 'minigame')}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:brightness-110 transition-all whitespace-nowrap"
+                        className={ADMIN_BUTTON_STYLES.DANGER}
                         title="Cancel minigame generation"
                     >
                         Cancel Generation
@@ -565,7 +566,7 @@ const QuestionBank = () => {
             />
 
             <AdminTable
-                title={questionType === 'minigame' ? 'Minigame Questions' : 'Pre-assessment Questions'}
+                title="Question Management"
                 loading={loading}
                 error={error}
                 items={questionType === 'minigame' ? (filteredQuestions || []) : (preassessmentQuestions || [])}

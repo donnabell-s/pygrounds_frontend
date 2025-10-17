@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../../../api';
 import { AdminTable, DocumentManagementModal } from '../../../components/UI';
+import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import { MdDelete } from 'react-icons/md';
 import { BsFillPlayFill } from 'react-icons/bs';
 import { FiSquare } from 'react-icons/fi';
@@ -280,7 +281,7 @@ export const ContentUpload = () => {
         <div className="space-y-4">
             <div className="overflow-x-auto">
                 <AdminTable
-                    title="Content Upload"
+                    title="Content Management"
                     loading={loading}
                     error={error}
                     items={documents}
@@ -326,7 +327,7 @@ export const ContentUpload = () => {
                                 {(document.processing_status === 'PROCESSING' || document.processing_status === 'QUEUED') ? (
                                     <button
                                         onClick={() => handleCancelPipeline(document.id)}
-                                        className="p-1 text-gray-600 hover:text-red-600 transition-colors"
+                                        className={ADMIN_BUTTON_STYLES.ICON_DANGER}
                                         title="Cancel Pipeline"
                                     >
                                         <FiSquare className="w-5 h-5" />
@@ -335,10 +336,10 @@ export const ContentUpload = () => {
                                     <button
                                         onClick={() => handleRunPipeline(document.id)}
                                         disabled={startingPipelines.has(document.id)}
-                                        className={`p-1 transition-colors ${
+                                        className={`${ADMIN_BUTTON_STYLES.ICON_SUCCESS} ${
                                             startingPipelines.has(document.id)
-                                                ? 'text-gray-400 cursor-not-allowed'
-                                                : 'text-gray-600 hover:text-green-600'
+                                                ? 'opacity-50 cursor-not-allowed'
+                                                : ''
                                         }`}
                                         title={startingPipelines.has(document.id) ? "Starting..." : "Run Pipeline"}
                                     >
@@ -351,7 +352,7 @@ export const ContentUpload = () => {
                                 )}
                                 <button
                                     onClick={() => handleDelete(document.id)}
-                                    className="p-1 text-gray-600 hover:text-red-600 transition-colors"
+                                    className={ADMIN_BUTTON_STYLES.ICON_DANGER}
                                     title="Delete"
                                 >
                                     <MdDelete className="w-5 h-5" />

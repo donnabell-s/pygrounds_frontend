@@ -1,36 +1,19 @@
 import { useState, useEffect } from 'react';
 import { AdminTable } from '../../../components/UI';
-import { FiEdit2, FiTrash2, FiPlus, FiUser, FiMail, FiCalendar } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiUser, FiMail, FiCalendar } from 'react-icons/fi';
 import RegisterAdmin from '../../Authentication/Register/RegisterAdmin/RegisterAdmin';
-
-interface User {
-    id: number;
-    username: string;
-    email: string;
-    first_name: string;
-    last_name: string;
-    is_active: boolean;
-    is_staff: boolean;
-    is_superuser: boolean;
-    date_joined: string;
-    last_login: string | null;
-}
-
-interface UserListResponse {
-    count: number;
-    next: string | null;
-    previous: string | null;
-    results: User[];
-}
+import { adminApi } from '../../../../api/adminApi';
+import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
+import type { AdminUser, AdminUserListResponse } from '../../../../types/admin';
 
 const ViewUsers = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [usersData, setUsersData] = useState<UserListResponse | null>(null);
+    const [usersData, setUsersData] = useState<AdminUserListResponse | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
 
     useEffect(() => {
         fetchUsers();
@@ -39,52 +22,14 @@ const ViewUsers = () => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            // Mock API call - replace with actual API endpoint
-            const mockUsers: User[] = [
-                {
-                    id: 1,
-                    username: "admin",
-                    email: "admin@pygrounds.com",
-                    first_name: "Admin",
-                    last_name: "User",
-                    is_active: true,
-                    is_staff: true,
-                    is_superuser: true,
-                    date_joined: "2024-01-15T10:30:00Z",
-                    last_login: "2024-10-07T08:15:00Z"
-                },
-                {
-                    id: 2,
-                    username: "teacher1",
-                    email: "teacher@pygrounds.com",
-                    first_name: "Jane",
-                    last_name: "Smith",
-                    is_active: true,
-                    is_staff: true,
-                    is_superuser: false,
-                    date_joined: "2024-02-20T14:45:00Z",
-                    last_login: "2024-10-06T16:20:00Z"
-                },
-                {
-                    id: 3,
-                    username: "student1",
-                    email: "student@example.com",
-                    first_name: "John",
-                    last_name: "Doe",
-                    is_active: true,
-                    is_staff: false,
-                    is_superuser: false,
-                    date_joined: "2024-03-10T09:00:00Z",
-                    last_login: "2024-10-07T12:30:00Z"
-                }
-            ];
-
-            setUsersData({
-                count: mockUsers.length,
-                next: null,
-                previous: null,
-                results: mockUsers
+            setError('');
+            
+            const response = await adminApi.getAllUsers({
+                page: currentPage,
+                page_size: 10
             });
+            
+            setUsersData(response);
         } catch (err: any) {
             console.error('Error fetching users:', err);
             setError(err.message || 'Failed to fetch users');
@@ -94,20 +39,56 @@ const ViewUsers = () => {
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm('Are you sure you want to delete this user?')) {
+        // Find the user to check if they're active
+        const user = usersData?.results?.find((user: AdminUser) => user.id === id);
+        if (!user) return;
+
+        let confirmMessage: string;
+        let isHardDelete = false;
+
+        if (user.is_active) {
+            confirmMessage = 'This will deactivate the user. Are you sure?';
+        } else {
+            confirmMessage = 'This user is already inactive. This will permanently delete the user. Are you sure?';
+            isHardDelete = true;
+        }
+
+        if (!window.confirm(confirmMessage)) {
             return;
         }
 
         try {
-            // Mock delete - replace with actual API call
-            console.log(`Deleting user with ID: ${id}`);
+            if (isHardDelete) {
+                // Hard delete for inactive users
+                await adminApi.deleteUser(id);
+            } else {
+                // Soft delete (deactivate) for active users
+                await adminApi.deactivateUser(id);
+            }
+            // Always refresh the user list after attempting deletion/deactivation
             await fetchUsers();
         } catch (err: any) {
-            setError(err.message || 'Failed to delete user');
+            // Even if there's an error, refresh the list to check if operation actually succeeded
+            await fetchUsers();
+            // Check if the operation succeeded despite the error
+            const updatedUser = usersData?.results?.find((user: AdminUser) => user.id === id);
+            let operationFailed = false;
+            
+            if (isHardDelete) {
+                // For hard delete, check if user still exists
+                operationFailed = !!updatedUser;
+            } else {
+                // For deactivation, check if user is still active
+                operationFailed = updatedUser?.is_active === true;
+            }
+            
+            if (operationFailed) {
+                setError(err.message || `Failed to ${isHardDelete ? 'delete' : 'deactivate'} user`);
+            }
         }
     };
 
-    const handleEdit = (user: User) => {
+    const handleEdit = (user: AdminUser) => {
         setEditingUser(user);
         setIsEditModalOpen(true);
     };
@@ -118,14 +99,14 @@ const ViewUsers = () => {
         first_name: string;
         last_name: string;
         is_active: boolean;
+        role: string;
         is_staff: boolean;
         is_superuser: boolean;
     }) => {
         if (!editingUser) return;
 
         try {
-            // Mock update - replace with actual API call
-            console.log('Updating user:', { id: editingUser.id, ...updatedData });
+            await adminApi.updateUser(editingUser.id, updatedData);
             setIsEditModalOpen(false);
             setEditingUser(null);
             await fetchUsers();
@@ -134,57 +115,62 @@ const ViewUsers = () => {
         }
     };
 
-    const getRoleDisplay = (user: User) => {
+    const getRoleDisplay = (user: AdminUser) => {
         if (user.is_superuser) return { text: 'Admin', color: 'bg-red-100 text-red-800' };
         return { text: 'User', color: 'bg-green-100 text-green-800' };
     };
 
     const formatDate = (dateString: string | null) => {
         if (!dateString) return 'Never';
-        return new Date(dateString).toLocaleDateString();
+        try {
+            const date = new Date(dateString);
+            // Check if date is valid
+            if (isNaN(date.getTime())) return 'Invalid date';
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return 'Invalid date';
+        }
     };
 
     return (
         <div className="space-y-4">
-            {/* Header and Actions */}
-            <div className="flex flex-wrap gap-3 mb-4 items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-                <button
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="bg-[#3776AB] text-white px-4 py-2 rounded hover:brightness-110 transition-all whitespace-nowrap flex items-center gap-2"
-                >
-                    <FiPlus className="w-4 h-4" />
-                    Add User
-                </button>
-            </div>
-
             <AdminTable
-                title="Users"
+                title="User Management"
                 loading={loading}
                 error={error}
                 items={usersData?.results || []}
                 total={usersData?.count}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
+                onAdd={() => setIsAddModalOpen(true)}
                 itemsPerPage={10}
-                headerColumns={['ID', 'User', 'Email', 'Role', 'Status', 'Joined', 'Last Login', 'Actions']}
-                renderRow={(user: User) => (
-                    <tr key={user.id}>
-                        <td className="px-3 py-3 text-sm font-mono">
+                headerColumns={['ID', 'User', 'Email', 'Role', 'Status', 'Joined', 'Actions']}
+                renderRow={(user: AdminUser) => (
+                    <tr key={user.id} className={!user.is_active ? "opacity-50 bg-gray-50" : ""}>
+                        <td className={`px-3 py-3 text-sm font-mono ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
                             {user.id}
                         </td>
                         <td className="px-3 py-3">
                             <div className="flex items-center gap-2">
-                                <FiUser className="w-4 h-4 text-gray-400" />
+                                <FiUser className={`w-4 h-4 ${user.is_active ? 'text-gray-400' : 'text-gray-300'}`} />
                                 <div>
-                                    <div className="font-medium text-sm">{user.username}</div>
-                                    <div className="text-xs text-gray-500">{user.first_name} {user.last_name}</div>
+                                    <div className={`font-medium text-sm ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
+                                        {user.username}
+                                    </div>
+                                    <div className={`text-xs ${user.is_active ? 'text-gray-500' : 'text-gray-400'}`}>
+                                        {user.first_name} {user.last_name}
+                                    </div>
                                 </div>
                             </div>
                         </td>
                         <td className="px-3 py-3">
-                            <div className="flex items-center gap-2 text-sm">
-                                <FiMail className="w-4 h-4 text-gray-400" />
+                            <div className={`flex items-center gap-2 text-sm ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
+                                <FiMail className={`w-4 h-4 ${user.is_active ? 'text-gray-400' : 'text-gray-300'}`} />
                                 {user.email}
                             </div>
                         </td>
@@ -197,33 +183,30 @@ const ViewUsers = () => {
                             <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
                                 user.is_active 
                                     ? 'bg-green-100 text-green-800' 
-                                    : 'bg-red-100 text-red-800'
+                                    : 'bg-gray-100 text-gray-600'
                             }`}>
                                 {user.is_active ? 'Active' : 'Inactive'}
                             </span>
                         </td>
-                        <td className="px-3 py-3 text-sm text-gray-600">
+                        <td className={`px-3 py-3 text-sm ${user.is_active ? 'text-gray-600' : 'text-gray-400'}`}>
                             <div className="flex items-center gap-1">
                                 <FiCalendar className="w-3 h-3" />
                                 {formatDate(user.date_joined)}
                             </div>
                         </td>
-                        <td className="px-3 py-3 text-sm text-gray-600">
-                            {formatDate(user.last_login)}
-                        </td>
                         <td className="px-3 py-3 text-center">
                             <div className="flex justify-center space-x-1">
                                 <button
                                     onClick={() => handleEdit(user)}
-                                    className="p-1 text-gray-600 hover:text-yellow-600 transition-colors"
+                                    className={ADMIN_BUTTON_STYLES.ICON_PRIMARY}
                                     title="Edit"
                                 >
                                     <FiEdit2 className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => handleDelete(user.id)}
-                                    className="p-1 text-gray-600 hover:text-red-600 transition-colors"
-                                    title="Delete"
+                                    className={user.is_active ? ADMIN_BUTTON_STYLES.ICON_WARNING : ADMIN_BUTTON_STYLES.ICON_DANGER}
+                                    title={user.is_active ? "Deactivate User" : "Permanently Delete User"}
                                 >
                                     <FiTrash2 className="w-4 h-4" />
                                 </button>
@@ -274,9 +257,24 @@ const ViewUsers = () => {
                                 first_name: formData.get('first_name') as string,
                                 last_name: formData.get('last_name') as string,
                                 is_active: formData.get('is_active') === 'on',
-                                is_staff: formData.get('role') === 'staff' || formData.get('role') === 'admin',
-                                is_superuser: formData.get('role') === 'admin',
+                                role: formData.get('is_staff') === 'admin' ? 'admin' : 'learner',
+                                is_staff: formData.get('is_staff') === 'admin',
+                                is_superuser: formData.get('is_staff') === 'admin',
                             };
+                            
+                            // Debug logging for edit
+                            console.log('Editing user - sending data:', {
+                                username: updatedData.username,
+                                email: updatedData.email,
+                                first_name: updatedData.first_name,
+                                last_name: updatedData.last_name,
+                                is_active: updatedData.is_active,
+                                role: updatedData.role,
+                                is_staff: updatedData.is_staff,
+                                is_superuser: updatedData.is_superuser,
+                                selectedUserType: formData.get('is_staff')
+                            });
+                            
                             handleSaveEdit(updatedData);
                         }}>
                             <div className="space-y-4">
@@ -327,18 +325,14 @@ const ViewUsers = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">User Type</label>
                                     <select
-                                        name="role"
-                                        defaultValue={
-                                            editingUser.is_superuser ? 'admin' : 
-                                            editingUser.is_staff ? 'staff' : 'user'
-                                        }
+                                        name="is_staff"
+                                        defaultValue={editingUser.is_staff ? 'admin' : 'learner'}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         required
                                     >
-                                        <option value="user">User</option>
-                                        <option value="staff">Staff</option>
+                                        <option value="learner">Learner</option>
                                         <option value="admin">Admin</option>
                                     </select>
                                 </div>
@@ -355,28 +349,19 @@ const ViewUsers = () => {
                                         Active User
                                     </label>
                                 </div>
-
-                                <div className="bg-gray-50 p-3 rounded-md">
-                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Read-Only Information</h4>
-                                    <div className="text-sm text-gray-600 space-y-1">
-                                        <p><strong>ID:</strong> {editingUser.id}</p>
-                                        <p><strong>Date Joined:</strong> {formatDate(editingUser.date_joined)}</p>
-                                        <p><strong>Last Login:</strong> {formatDate(editingUser.last_login)}</p>
-                                    </div>
-                                </div>
                             </div>
                             
                             <div className="flex justify-end space-x-3 mt-6">
                                 <button
                                     type="button"
                                     onClick={() => setIsEditModalOpen(false)}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                                    className={ADMIN_BUTTON_STYLES.SECONDARY}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                                    className={ADMIN_BUTTON_STYLES.PRIMARY}
                                 >
                                     Save Changes
                                 </button>

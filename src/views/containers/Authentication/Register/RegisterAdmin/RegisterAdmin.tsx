@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { adminApi } from '../../../../../api/adminApi';
 
 interface RegisterAdminProps {
     onUserCreated?: () => void;
@@ -17,6 +18,7 @@ const RegisterAdmin = ({ onUserCreated, showTitle = true, inModal = false }: Reg
         first_name: string;
         last_name: string;
         password: string;
+        role: string;
         is_staff: boolean;
         is_superuser: boolean;
     }) => {
@@ -25,8 +27,17 @@ const RegisterAdmin = ({ onUserCreated, showTitle = true, inModal = false }: Reg
             setError('');
             setSuccess('');
             
-            // Mock create - replace with actual API call
-            console.log('Creating new user:', userData);
+            // Create user via admin API
+            await adminApi.createUser({
+                username: userData.username,
+                email: userData.email,
+                first_name: userData.first_name,
+                last_name: userData.last_name,
+                password: userData.password,
+                role: userData.role,
+                is_staff: userData.is_staff,
+                is_superuser: userData.is_superuser,
+            });
             
             setSuccess('User created successfully!');
             
@@ -71,9 +82,23 @@ const RegisterAdmin = ({ onUserCreated, showTitle = true, inModal = false }: Reg
                     first_name: formData.get('first_name') as string,
                     last_name: formData.get('last_name') as string,
                     password: formData.get('password') as string,
-                    is_staff: formData.get('role') === 'admin',
-                    is_superuser: formData.get('role') === 'admin',
+                    role: formData.get('is_staff') === 'admin' ? 'admin' : 'learner',
+                    is_staff: formData.get('is_staff') === 'admin',
+                    is_superuser: formData.get('is_staff') === 'admin',
                 };
+                
+                // Debug logging to check what data is being sent
+                console.log('Sending data:', {
+                    username: userData.username,
+                    email: userData.email,
+                    first_name: userData.first_name,
+                    last_name: userData.last_name,
+                    password: userData.password ? "***" : "",
+                    role: userData.role,
+                    is_staff: userData.is_staff,
+                    is_superuser: userData.is_superuser
+                });
+                
                 handleAddUser(userData);
                 // Reset form
                 e.currentTarget.reset();
@@ -137,14 +162,14 @@ const RegisterAdmin = ({ onUserCreated, showTitle = true, inModal = false }: Reg
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">User Type</label>
                         <select
-                            name="role"
+                            name="is_staff"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                             disabled={loading}
                         >
-                            <option value="user">User</option>
+                            <option value="learner">Learner</option>
                             <option value="admin">Admin</option>
                         </select>
                     </div>

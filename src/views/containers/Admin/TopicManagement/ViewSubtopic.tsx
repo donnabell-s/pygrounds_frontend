@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../../../api';
 import { SubtopicModal, AdminTable } from '../../../../views/components/UI';
+import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import type { AdminSubtopic, AdminTopic } from '../../../../types/adaptive';
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
@@ -209,14 +210,14 @@ const ViewSubtopic = () => {
                             <div className="flex justify-start space-x-2">
                                 <button
                                     onClick={() => startEdit(subtopic)}
-                                    className="p-1 text-gray-600 hover:text-yellow-600 transition-colors"
+                                    className={ADMIN_BUTTON_STYLES.ICON_PRIMARY}
                                     title="Edit"
                                 >
                                     <FiEdit2 className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={() => handleDelete(subtopic.id)}
-                                    className="p-1 text-gray-600 hover:text-red-600 transition-colors"
+                                    className={ADMIN_BUTTON_STYLES.ICON_DANGER}
                                     title="Delete"
                                 >
                                     <FiTrash2 className="w-5 h-5" />
