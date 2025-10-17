@@ -3,6 +3,7 @@ import * as Views from "../views/containers";
 import { PATHS } from "../constants";
 import ProtectedRoute from "../routes/ProtectedRoute";
 import ProtectedGameRoute from "../routes/ProtectedGameRoute";
+import ProtectedAdminRoute from "../routes/ProtectedAdminRoute";
 
 export const AppRoutes = () => {
   
@@ -25,11 +26,9 @@ export const AppRoutes = () => {
           <Route index element={<Navigate to={PATHS.REGISTER.USER_INFO.path} replace />} />
         </Route>
 
-        {/* ✅ Protected Routes */}
-        <Route element={<ProtectedRoute roles={['learner']} />}>
+        <Route element={<ProtectedRoute />}>
           <Route path={PATHS.USER_MAIN.path} element={<Views.UserMain />}>
             <Route path={PATHS.USER_VIEW.HOME.path} element={<Views.Home />} />
-            {/* <Route path={PATHS.USER_VIEW.MY_PROFILE.path} element={<Views.MyProfile />} /> */}
             <Route path={PATHS.USER_VIEW.USER_PROFILE.path} element={<Views.UserProfile />} />
             <Route path={PATHS.USER_VIEW.PYTHON_LEARN.path} element={<Views.PythonLearn />} />
             <Route path={PATHS.USER_VIEW.LEADERBOARD.path} element={<Views.Leaderboard />} />
@@ -39,16 +38,18 @@ export const AppRoutes = () => {
           </Route>
         </Route>
 
-        <Route path={PATHS.ADMIN_MAIN.path} element={<Views.AdminMain />}>
-          <Route index element={<Navigate to={PATHS.ADMIN_VIEW.ADMIN_VIEWS.DASHBOARD.path} replace />} />
-          <Route path={PATHS.ADMIN_VIEW.ADMIN_VIEWS.DASHBOARD.path} element={<Views.Dashboard />} />
-          <Route path={PATHS.ADMIN_VIEW.ADMIN_VIEWS.NOTIFICATIONS.path} element={<Views.Notifications />} />
-          <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.ZONE.path} element={<Views.ViewZone />} />
-          <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.TOPIC.path} element={<Views.ViewTopic />} />
-          <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.SUBTOPIC.path} element={<Views.ViewSubtopic />} />
-          <Route path={PATHS.ADMIN_VIEW.CONTENT_UPLOAD.path} element={<Views.ContentUpload />} />
-          <Route path={PATHS.ADMIN_VIEW.USER_MANAGEMENT.VIEW_USERS.path} element={<Views.ViewUsers />} />
-          <Route path={PATHS.ADMIN_VIEW.QUESTION_MANAGEMENT.VIEW_QUESTIONS.path} element={<Views.QuestionBank />} />
+        <Route element={<ProtectedAdminRoute />}>
+          <Route path={PATHS.ADMIN_MAIN.path} element={<Views.AdminMain />}>
+            <Route index element={<Navigate to={PATHS.ADMIN_VIEW.ADMIN_VIEWS.DASHBOARD.path} replace />} />
+            <Route path={PATHS.ADMIN_VIEW.ADMIN_VIEWS.DASHBOARD.path} element={<Views.Dashboard />} />
+            <Route path={PATHS.ADMIN_VIEW.ADMIN_VIEWS.NOTIFICATIONS.path} element={<Views.Notifications />} />
+            <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.ZONE.path} element={<Views.ViewZone />} />
+            <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.TOPIC.path} element={<Views.ViewTopic />} />
+            <Route path={PATHS.ADMIN_VIEW.TOPIC_MANAGEMENT.SUBTOPIC.path} element={<Views.ViewSubtopic />} />
+            <Route path={PATHS.ADMIN_VIEW.CONTENT_UPLOAD.path} element={<Views.ContentUpload />} />
+            <Route path={PATHS.ADMIN_VIEW.USER_MANAGEMENT.VIEW_USERS.path} element={<Views.ViewUsers />} />
+            <Route path={PATHS.ADMIN_VIEW.QUESTION_MANAGEMENT.VIEW_QUESTIONS.path} element={<Views.QuestionBank />} />
+          </Route>
         </Route>
         
       </Routes>

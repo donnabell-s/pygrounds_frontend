@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../../../api';
 import { TopicModal, AdminTable } from '../../../../views/components/UI';
+import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import type { AdminTopic, AdminZone } from '../../../../types/adaptive';
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
@@ -116,7 +117,7 @@ const ViewTopic = () => {
                 itemsPerPage={itemsPerPage}
                 renderRow={(topic) => (
                     <tr key={topic.id}>
-                        <td className="px-6 py-4 w-1/12 text-sm font-mono">{topic.id}</td>
+                        <td className="px-6 py-4 w-1/12 text-sm font-mono text-center">{topic.id}</td>
                         <td className="px-6 py-4 w-1/4">{topic.name}</td>
                         <td className="px-6 py-4 w-1/3">
                             <div className="max-w-xs truncate">
@@ -129,14 +130,14 @@ const ViewTopic = () => {
                             <div className="flex justify-start space-x-2">
                                 <button
                                     onClick={() => startEdit(topic)}
-                                    className="p-1 text-gray-600 hover:text-yellow-600 transition-colors"
+                                    className={ADMIN_BUTTON_STYLES.ICON_PRIMARY}
                                     title="Edit"
                                 >
                                     <FiEdit2 className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={() => handleDelete(topic.id)}
-                                    className="p-1 text-gray-600 hover:text-red-600 transition-colors"
+                                    className={ADMIN_BUTTON_STYLES.ICON_DANGER}
                                     title="Delete"
                                 >
                                     <FiTrash2 className="w-5 h-5" />

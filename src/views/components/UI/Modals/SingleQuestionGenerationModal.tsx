@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Modal from './Modal';
+import AdminModal from './AdminModal';
 import type { SingleGenerationParams } from '../../../../types/questions';
 import type { AdminSubtopic } from '../../../../types/adaptive';
 
@@ -67,7 +67,7 @@ export const SingleQuestionGenerationModal = ({
     if (!subtopic) return null;
 
     return (
-        <Modal 
+        <AdminModal 
             isOpen={isOpen} 
             onClose={onClose} 
             title={`Generate Questions: ${subtopic.name}`}
@@ -169,6 +169,6 @@ export const SingleQuestionGenerationModal = ({
                     </button>
                 </div>
             </form>
-        </Modal>
+        </AdminModal>
     );
 };

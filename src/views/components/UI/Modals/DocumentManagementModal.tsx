@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal } from '.';
+import AdminModal from './AdminModal';
 
 interface DocumentManagementModalProps {
     isOpen: boolean;
@@ -40,7 +40,7 @@ export const DocumentManagementModal = ({
     };
 
     return (
-        <Modal 
+        <AdminModal 
             isOpen={isOpen} 
             onClose={onClose} 
             title={editMode ? "Edit Document" : "Upload Document"}
@@ -104,6 +104,6 @@ export const DocumentManagementModal = ({
                     </button>
                 </div>
             </form>
-        </Modal>
+        </AdminModal>
     );
 };

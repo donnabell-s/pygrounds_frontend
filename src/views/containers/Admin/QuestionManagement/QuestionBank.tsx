@@ -3,6 +3,7 @@ import { adminApi } from '../../../../api';
 import type { GeneratedQuestion, PreAssessmentQuestion, BulkGenerationParams, PreAssessmentBulkGenerationParams, QuestionListResponse } from '../../../../types/questions';
 import { AdminTable, BulkGenerationModal } from '../../../components/UI';
 import MinigameBulkGeneration from './MinigameBulkGeneration';
+import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import { FiEdit2, FiTrash2, FiCheck } from 'react-icons/fi';
 
 type QuestionType = 'minigame' | 'preassessment';
@@ -493,7 +494,7 @@ const QuestionBank = () => {
                             setIsBulkModalOpen(true);
                         }
                     }}
-                    className="bg-[#3776AB] text-white px-4 py-2 rounded hover:brightness-110 transition-all whitespace-nowrap"
+                    className={ADMIN_BUTTON_STYLES.PRIMARY}
                 >
                     Bulk Generate Questions
                 </button>
@@ -501,7 +502,7 @@ const QuestionBank = () => {
                 <button
                     onClick={handleBulkDifficultyCheck}
                     disabled={isCheckingDifficulty || loading}
-                    className="bg-orange-500 text-white px-4 py-2 rounded hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    className={`${ADMIN_BUTTON_STYLES.WARNING} disabled:opacity-50 disabled:cursor-not-allowed`}
                     title="Check difficulty for all questions (AI model not connected yet)"
                 >
                     {isCheckingDifficulty ? 'Checking...' : 'Check Difficulty'}
@@ -510,7 +511,7 @@ const QuestionBank = () => {
                 {activePreAssessmentSession && (
                     <button
                         onClick={() => handleCancelGeneration(activePreAssessmentSession, 'preassessment')}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:brightness-110 transition-all whitespace-nowrap"
+                        className={ADMIN_BUTTON_STYLES.DANGER}
                         title="Cancel pre-assessment generation"
                     >
                         Cancel Generation
@@ -520,7 +521,7 @@ const QuestionBank = () => {
                 {activeMinigameSession && (
                     <button
                         onClick={() => handleCancelGeneration(activeMinigameSession, 'minigame')}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:brightness-110 transition-all whitespace-nowrap"
+                        className={ADMIN_BUTTON_STYLES.DANGER}
                         title="Cancel minigame generation"
                     >
                         Cancel Generation
@@ -565,7 +566,7 @@ const QuestionBank = () => {
             />
 
             <AdminTable
-                title={questionType === 'minigame' ? 'Minigame Questions' : 'Pre-assessment Questions'}
+                title="Question Management"
                 loading={loading}
                 error={error}
                 items={questionType === 'minigame' ? (filteredQuestions || []) : (preassessmentQuestions || [])}
@@ -582,7 +583,7 @@ const QuestionBank = () => {
                         const question = item as GeneratedQuestion;
                         return (
                             <tr key={question.id}>
-                                <td className="px-3 py-3 text-sm font-mono">
+                                <td className="px-3 py-3 text-sm font-mono text-center">
                                     {question.id}
                                 </td>
                                 <td className="px-3 py-3">
@@ -594,7 +595,7 @@ const QuestionBank = () => {
                                 <td className="px-3 py-3 text-sm">
                                     <div className="line-clamp-1 max-w-[150px]">{question.subtopic?.name || 'Unknown Subtopic'}</div>
                                 </td>
-                                <td className="px-3 py-3 text-sm">
+                                <td className="px-3 py-3 text-sm text-center">
                                     <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
                                         question.game_type === 'coding' 
                                             ? 'bg-blue-100 text-blue-800' 
@@ -603,7 +604,7 @@ const QuestionBank = () => {
                                         {question.game_type === 'coding' ? 'Coding' : question.game_type === 'non_coding' ? 'Non-Coding' : 'Unknown'}
                                     </span>
                                 </td>
-                                <td className="px-3 py-3 text-sm">
+                                <td className="px-3 py-3 text-sm text-center">
                                     <span className={`px-2 py-1 rounded-full text-xs capitalize whitespace-nowrap ${
                                         question.estimated_difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
                                         question.estimated_difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
@@ -613,8 +614,8 @@ const QuestionBank = () => {
                                         {question.estimated_difficulty || 'Unknown'}
                                     </span>
                                 </td>
-                                <td className="px-3 py-3 text-sm">
-                                    <div className="flex items-center gap-2 whitespace-nowrap">
+                                <td className="px-3 py-3 text-sm text-center">
+                                    <div className="flex items-center justify-center gap-2 whitespace-nowrap">
                                         {getValidationStatusIcon(question.validation_status || 'pending')}
                                         <span className="capitalize text-xs">{(question.validation_status || 'pending').replace('_', ' ')}</span>
                                     </div>
@@ -643,7 +644,7 @@ const QuestionBank = () => {
                         const question = item as PreAssessmentQuestion;
                         return (
                             <tr key={question.id}>
-                                <td className="px-3 py-3 text-sm font-mono">
+                                <td className="px-3 py-3 text-sm font-mono text-center">
                                     {question.id}
                                 </td>
                                 <td className="px-3 py-3">
@@ -654,7 +655,7 @@ const QuestionBank = () => {
                                         {question.topic_ids?.join(', ') || 'No topics'}
                                     </div>
                                 </td>
-                                <td className="px-3 py-3 text-sm">
+                                <td className="px-3 py-3 text-sm text-center">
                                     <span className={`px-2 py-1 rounded-full text-xs capitalize whitespace-nowrap ${
                                         question.estimated_difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
                                         question.estimated_difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :

@@ -1,5 +1,6 @@
 import client from './client';
 import type { PreAssessmentQuestion, AdminZone, AdminTopic, AdminSubtopic, UploadedDocument, PipelineResult, DocumentListResponse } from '../types/adaptive';
+import type { AdminUser } from '../types/admin';
 import type { 
     BulkGenerationParams, 
     SingleGenerationParams, 
@@ -17,7 +18,9 @@ import type {
 } from '../types/questions';
 
 export const adminApi = {
-    // Question Generation APIs
+ 
+    // QUESTION GENERATION 
+ 
     generateBulkQuestions: async (params: BulkGenerationParams): Promise<BulkGenerationResponse> => {
         const response = await client.post<BulkGenerationResponse>('/generate/bulk/', params);
         return response.data;
@@ -28,7 +31,6 @@ export const adminApi = {
         return response.data;
     },
 
-    // Worker Tracking APIs
     getGenerationStatus: async (sessionId: string): Promise<GenerationStatus> => {
         const response = await client.get<GenerationStatus>(`/generate/status/${sessionId}/`);
         return response.data;
@@ -39,18 +41,13 @@ export const adminApi = {
         return response.data;
     },
 
-    // Cancel Generation APIs
     cancelGeneration: async (sessionId: string): Promise<CancelGenerationResponse> => {
         const response = await client.post<CancelGenerationResponse>(`/generate/cancel/${sessionId}/`, {});
         return response.data;
     },
 
-    // Difficulty Checker APIs (Standby - Model not connected yet)
     bulkCheckDifficulty: async (questionType: 'minigame' | 'preassessment'): Promise<DifficultyCheckResponse> => {
-        // TODO: Replace with actual API call when AI model is connected
         console.warn(`Bulk difficulty checker model not connected yet - would check all ${questionType} questions`);
-        
-        // Mock response for development
         return {
             status: 'success', 
             message: `Difficulty checker is not yet connected. Would analyze all ${questionType} questions and update their status from 'pending' to 'processed'.`,
@@ -63,7 +60,8 @@ export const adminApi = {
         };
     },
 
-    // Question Management APIs
+    // QUESTION MANAGEMENT 
+ 
     getAllQuestions: async (params?: {
         game_type?: 'coding' | 'non_coding';
         difficulty?: 'beginner' | 'intermediate' | 'advanced' | 'master';
@@ -134,7 +132,6 @@ export const adminApi = {
         game_type?: 'coding' | 'non_coding';
         game_data?: any;
         validation_status?: 'pending' | 'processed';
-        // Coding-specific fields
         correct_code?: string;
         sample_input?: string;
         sample_output?: string;
@@ -188,7 +185,8 @@ export const adminApi = {
         return response.data;
     },
 
-    // Additional Generation APIs
+    // PRE-ASSESSMENT 
+ 
     generatePreAssessmentQuestions: async (params: PreAssessmentBulkGenerationParams): Promise<PreAssessmentGenerationResponse> => {
         const response = await client.post<PreAssessmentGenerationResponse>('/generate/preassessment/', params);
         return response.data;
@@ -199,7 +197,6 @@ export const adminApi = {
         return response.data;
     },
 
-    // PreAssessment APIs
     getPreAssessmentQuestions: async (params?: {
         page?: number;
         page_size?: number;
@@ -266,7 +263,10 @@ export const adminApi = {
     deletePreAssessmentQuestion: async (questionId: number): Promise<void> => {
         await client.delete(`/admin/pre-assessment/${questionId}/`);
     },
-    // Zone APIs
+
+ 
+    // ZONE MANAGEMENT 
+ 
     getAllZones: async (params?: {
         page?: number;
         page_size?: number;
@@ -277,7 +277,7 @@ export const adminApi = {
         
         const url = `/zones/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
         const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminZone[] }>(url);
-        return response.data; // Return full paginated response for server-side pagination
+        return response.data;
     },
 
     getAllZonesNoPagination: async (): Promise<AdminZone[]> => {
@@ -290,7 +290,6 @@ export const adminApi = {
             
             if (data.results) {
                 allZones.push(...data.results);
-                // Extract the path from the full URL if next is a full URL, remove /api prefix
                 nextUrl = data.next ? new URL(data.next).pathname.replace('/api', '') + new URL(data.next).search : null;
             } else {
                 break;
@@ -328,7 +327,9 @@ export const adminApi = {
         await client.delete(url);
     },
 
-    // Topic APIs
+   
+    // TOPIC MANAGEMENT 
+
     getAllTopics: async (params?: {
         page?: number;
         page_size?: number;
@@ -339,7 +340,7 @@ export const adminApi = {
         
         const url = `/admin/topics/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
         const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminTopic[] }>(url);
-        return response.data; // Return full paginated response for server-side pagination
+        return response.data; 
     },
 
     getAllTopicsNoPagination: async (): Promise<AdminTopic[]> => {
@@ -352,7 +353,6 @@ export const adminApi = {
             
             if (data.results) {
                 allTopics.push(...data.results);
-                // Extract the path from the full URL if next is a full URL, remove /api prefix
                 nextUrl = data.next ? new URL(data.next).pathname.replace('/api', '') + new URL(data.next).search : null;
             } else {
                 break;
@@ -389,7 +389,9 @@ export const adminApi = {
         await client.delete(`/topics/${id}/`);
     },
 
-    // Subtopic APIs
+
+    // SUBTOPIC MANAGEMENT 
+
     getAllSubtopics: async (params?: {
         page?: number;
         page_size?: number;
@@ -400,7 +402,7 @@ export const adminApi = {
         
         const url = `/subtopics/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
         const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminSubtopic[] }>(url);
-        return response.data; // Return full paginated response for server-side pagination
+        return response.data;
     },
 
     getAllSubtopicsNoPagination: async (): Promise<AdminSubtopic[]> => {
@@ -413,7 +415,6 @@ export const adminApi = {
             
             if (data.results) {
                 allSubtopics.push(...data.results);
-                // Extract the path from the full URL if next is a full URL, remove /api prefix
                 nextUrl = data.next ? new URL(data.next).pathname.replace('/api', '') + new URL(data.next).search : null;
             } else {
                 break;
@@ -452,7 +453,9 @@ export const adminApi = {
         await client.delete(`/subtopics/${id}/`);
     },
 
-    // Document APIs
+
+    // DOCUMENT MANAGEMENT 
+
     getAllDocuments: async (): Promise<DocumentListResponse> => {
         try {
             const response = await client.get<DocumentListResponse>('/docs/');
@@ -483,10 +486,8 @@ export const adminApi = {
     },
 
     runPipeline: async (id: number, reprocess: boolean = false): Promise<PipelineResult> => {
-        // For queue-based processing, we expect immediate response (202 ACCEPTED)
-        // Set a longer timeout since backend might be processing before queuing
         const response = await client.post<PipelineResult>(`/pipeline/${id}/`, { reprocess }, {
-            timeout: 30000 // 30 seconds for queue-based processing
+            timeout: 30000
         });
         return response.data;
     },
@@ -500,21 +501,81 @@ export const adminApi = {
         return response.data;
     },
 
-    // Content Ingestion APIs - Fixed for pagination compatibility
+  
+    // CONTENT INGESTION 
+
     getTopics: async (): Promise<AdminTopic[]> => {
         const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminTopic[] }>('/content-ingestion/topics/');
-        return response.data.results; // Extract results from paginated response
+        return response.data.results;
     },
 
     getSubtopics: async (topicId: number): Promise<AdminSubtopic[]> => {
         const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminSubtopic[] }>(`/content-ingestion/subtopics/?topic=${topicId}`);
-        return response.data.results; // Extract results from paginated response
+        return response.data.results;
     },
 
     getDocuments: async (subtopicId: number): Promise<UploadedDocument[]> => {
         const response = await client.get<{ count: number; next: string | null; previous: string | null; results: UploadedDocument[] }>(`/content-ingestion/documents/?subtopic=${subtopicId}`);
-        return response.data.results; // Extract results from paginated response
+        return response.data.results;
     },
 
 
+    // USER MANAGEMENT
+
+    getAllUsers: async (params?: {
+        page?: number;
+        page_size?: number;
+        search?: string;
+    }): Promise<{ count: number; next: string | null; previous: string | null; results: AdminUser[] }> => {
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.append('page', params.page.toString());
+        if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
+        if (params?.search) queryParams.append('search', params.search);
+
+        const url = `/user/admin/users/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminUser[] }>(url);
+        return response.data;
+    },
+
+    createUser: async (userData: {
+        username: string;
+        email: string;
+        first_name: string;
+        last_name: string;
+        password: string;
+        role?: string;
+        is_staff?: boolean;
+        is_superuser?: boolean;
+    }): Promise<AdminUser> => {
+        const response = await client.post<AdminUser>('/user/admin/users/', userData);
+        return response.data;
+    },
+
+    updateUser: async (userId: number, userData: {
+        username?: string;
+        email?: string;
+        first_name?: string;
+        last_name?: string;
+        role?: string;
+        is_staff?: boolean;
+        is_superuser?: boolean;
+        is_active?: boolean;
+    }): Promise<AdminUser> => {
+        const response = await client.put<AdminUser>(`/user/admin/users/${userId}/`, userData);
+        return response.data;
+    },
+
+    deleteUser: async (userId: number): Promise<void> => {
+        await client.delete(`/user/admin/users/${userId}/`);
+    },
+
+    deactivateUser: async (userId: number): Promise<AdminUser> => {
+        const response = await client.patch<AdminUser>(`/user/admin/users/${userId}/deactivate/`);
+        return response.data;
+    },
+
+    activateUser: async (userId: number): Promise<AdminUser> => {
+        const response = await client.patch<AdminUser>(`/user/admin/users/${userId}/activate/`);
+        return response.data;
+    },
 };

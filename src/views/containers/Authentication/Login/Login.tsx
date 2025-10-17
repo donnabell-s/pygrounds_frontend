@@ -8,20 +8,22 @@ const Login = () => {
   const { refresh } = useAdaptive();
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState(""); // changed from email
+  const [username, setUsername] = useState(""); // backend expects username
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(""); // Clear previous errors
     try {
       const loggedInUser = await login(username, password);
       // Refresh adaptive data after successful login to ensure progress bar is updated
-      refresh();
+      await refresh();
       navigate(`/${loggedInUser.id}/home`);
     } catch (err: any) {
-      setError("Login failed. Please check your credentials.");
-      console.error(err);
+      console.error("Login error:", err);
+      const errorMessage = err?.response?.data?.detail || err?.response?.data?.message || "Login failed. Please check your credentials.";
+      setError(errorMessage);
     }
   };
 

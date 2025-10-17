@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import Modal from './Modal';
+import AdminModal from './AdminModal';
+import { ADMIN_BUTTON_STYLES } from '../../Layout';
 import type { AdminZone } from '../../../../types/adaptive';
 
 type FormData = {
@@ -62,7 +63,7 @@ const ZoneModal = ({ isOpen, onClose, onSubmit, initialData, title }: ZoneModalP
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={title}>
+        <AdminModal isOpen={isOpen} onClose={onClose} title={title}>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 {error && (
                     <div className="bg-red-100 text-red-700 p-3 rounded-md">
@@ -109,19 +110,19 @@ const ZoneModal = ({ isOpen, onClose, onSubmit, initialData, title }: ZoneModalP
                     <button 
                         type="button" 
                         onClick={onClose}
-                        className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                        className={ADMIN_BUTTON_STYLES.SECONDARY}
                     >
                         Cancel
                     </button>
                     <button 
                         type="submit"
-                        className="px-4 py-2 bg-[#3776AB] text-white rounded-md hover:brightness-110"
+                        className={ADMIN_BUTTON_STYLES.PRIMARY}
                     >
                         {initialData ? 'Update' : 'Create'}
                     </button>
                 </div>
             </form>
-        </Modal>
+        </AdminModal>
     );
 };
 

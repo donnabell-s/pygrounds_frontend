@@ -1,14 +1,25 @@
 import React from "react";
 import * as Component from "../../components";
 import { MdAdminPanelSettings } from "react-icons/md";
-import { FaBookOpen, FaUpload, FaUsers } from "react-icons/fa";
+import { FaBookOpen, FaUpload, FaUsers, FaSignOutAlt } from "react-icons/fa";
 import { BsDiagram3 } from "react-icons/bs";
+import { useAuth } from "../../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "../../../constants";
 
 interface AdminSideNavProps {
   nav: boolean;
 }
 
 const AdminSideNav: React.FC<AdminSideNavProps> = ({ nav }) => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate(PATHS.ADMIN_LOGIN.path);
+  };
+
   return (
     <div
       className={`fixed top-0 left-0 bg-white w-64 h-screen flex flex-col overflow-y-auto shadow-md transition-transform duration-300 ease-in-out z-20 pt-16
@@ -48,6 +59,18 @@ const AdminSideNav: React.FC<AdminSideNavProps> = ({ nav }) => {
         linkKey="USER_MANAGEMENT"
         />
 
+        {/* Logout button at the bottom */}
+        <div className="mt-auto mb-4">
+          <div
+            onClick={handleLogout}
+            className="flex items-center gap-4 p-3 hover:bg-gray-100 cursor-pointer rounded-md text-gray-800 text-md font-medium mx-4"
+          >
+            <span className="w-6 flex items-center justify-center">
+              <FaSignOutAlt size={20} />
+            </span>
+            <p>Logout</p>
+          </div>
+        </div>
     </div>
   );
 };
