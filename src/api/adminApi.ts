@@ -46,19 +46,57 @@ export const adminApi = {
         return response.data;
     },
 
+    //Difficulty Checker APIs (Connected to Backend Recalibrator)
     bulkCheckDifficulty: async (questionType: 'minigame' | 'preassessment'): Promise<DifficultyCheckResponse> => {
-        console.warn(`Bulk difficulty checker model not connected yet - would check all ${questionType} questions`);
+        try {
+        // Determine correct API path based on question type
+        const apiType =
+            questionType === 'preassessment'
+                ? 'preassessment'
+                : 'coding'; // default to coding for minigame
+
+        const response = await client.post<DifficultyCheckResponse>(
+            `/recalibrate-question/type/${apiType}/`,
+            {},
+            {
+                headers: {
+                    Authorization: `Bearer ${
+                        (
+                        localStorage.getItem('authToken') ||
+                        localStorage.getItem('access') ||
+                        localStorage.getItem('access_token') ||
+                        ''
+                        ).trim()
+                    }`,
+                    'Content-Type': 'application/json; charset=utf-8',
+                    },
+            }
+        );
+
         return {
-            status: 'success', 
-            message: `Difficulty checker is not yet connected. Would analyze all ${questionType} questions and update their status from 'pending' to 'processed'.`,
+            status: 'success',
+            message: response.data.message || `Recalibration triggered for ${apiType} questions.`,
             results: {
                 total_checked: 0,
                 updated_count: 0,
                 unchanged_count: 0,
-                error_count: 0
-            }
+                error_count: 0,
+            },
         };
-    },
+    } catch (error: any) {
+        console.error('Difficulty recalibration failed:', error);
+        return {
+            status: 'error',
+            message: error.response?.data?.message || 'Failed to recalibrate difficulty.',
+            results: {
+                total_checked: 0,
+                updated_count: 0,
+                unchanged_count: 0,
+                error_count: 1,
+            },
+        };
+    }
+},
 
     // QUESTION MANAGEMENT 
  

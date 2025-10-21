@@ -242,8 +242,15 @@ const QuestionBank = () => {
             
             // If it was successful, refresh the questions to show any updates
             if (response.status === 'success') {
-                await fetchQuestions();
+                setDifficultyCheckResult(response.message || 'Successfully recalibrated question difficulties.');
+                setTimeout(() => {
+                    setDifficultyCheckResult('');
+                    fetchQuestions();
+                }, 6000); // smoother refresh
+            } else {
+                setError(response.message || 'Failed to recalibrate difficulty.');
             }
+
         } catch (err: any) {
             setError(err.message || 'Failed to check question difficulty');
         } finally {
