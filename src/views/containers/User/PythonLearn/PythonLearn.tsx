@@ -1,6 +1,7 @@
 import { useState } from "react";
 import * as Components from "../../../components";
 import { FiMenu } from "react-icons/fi";
+import ReadingMaterialUser from "./ReadingMaterialUser"; // ✅ new import for user-side reading view
 
 const PythonLearn = () => {
   const [menuOpen, setMenuOpen] = useState(true);
@@ -22,7 +23,7 @@ const PythonLearn = () => {
 
       {/* Content Area */}
       <div className="flex flex-row gap-2">
-        {/* Sidebar that resizes smoothly without jump */}
+        {/* Sidebar */}
         <div
           className={`
             shadow-md rounded-md overflow-hidden
@@ -33,9 +34,9 @@ const PythonLearn = () => {
           <Components.TopicMenu />
         </div>
 
-        {/* Main Reading Content */}
+        {/* Main Reading Content (User View) */}
         <div className="flex-1 transition-all duration-300">
-          <Components.ReadingMaterial />
+          <ReadingMaterialUser />
         </div>
       </div>
     </div>

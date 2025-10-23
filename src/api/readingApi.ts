@@ -36,10 +36,19 @@ interface PaginatedResponse<T> {
 }
 export const readingApi = {
 
-  getAll: async (): Promise<any> => {
-    const response = await client.get("/reading/admin/materials/?ordering=-id");
-    return response.data;
-  },
+  getAll: async (isAdmin = false): Promise<any> => {
+  const endpoint = isAdmin
+    ? "/reading/admin/materials/?ordering=-id"
+    : "/reading-materials/?ordering=id";
+
+  const token =
+    localStorage.getItem("accessToken") || localStorage.getItem("access_token");
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const response = await client.get(endpoint, { headers });
+  return response.data;
+},
+
   
   create: async (data: {
     title: string;
