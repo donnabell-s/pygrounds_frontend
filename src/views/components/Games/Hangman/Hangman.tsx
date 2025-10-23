@@ -5,7 +5,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { useGame } from "../../../../context/GameContext";
 import * as Component from "../../../components";
 import { RxCross1 } from "react-icons/rx";
-import snakeImg from "../../../../assets/images/snake.png";
+import hangmanStatic from "../../../../assets/images/hangman_static.png";
 
 const Hangman: React.FC = () => {
   const navigate = useNavigate();
@@ -17,6 +17,7 @@ const Hangman: React.FC = () => {
   const [output, setOutput] = useState<string>("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<"code" | "output">("code");
 
   useEffect(() => {
     (async () => {
@@ -63,6 +64,11 @@ const Hangman: React.FC = () => {
     }
   }, [activeSession]);
 
+  // when new output arrives (e.g., after submit), show output tab by default
+  useEffect(() => {
+    if (output) setView("output");
+  }, [output]);
+
   useEffect(() => {
     if (!activeSession || submitted) return;
     const startMs = new Date(activeSession.start_time).getTime();
@@ -84,60 +90,92 @@ const Hangman: React.FC = () => {
   if (loading || !activeSession) return <div className="p-6">Loading...</div>;
 
   return (
-    <div className="flex flex-row my-6 gap-6  mx-auto">
-      <div className="flex flex-col items-center justify-between">
-        <div className="w-full flex justify-center">
-          <img className="h-90 w-90" src={snakeImg} />
-        </div>
-
-        <div className="flex flex-row items-center justify-center gap-2.5">
-          {Array.from({ length: 3 }).map((_, idx) => {
-            const lost = 3 - lives;
-            const isLost = idx < lost;
-            return (
-              <div
-                key={idx}
-                className={`w-15 h-15 rounded-full flex items-center justify-center border-2 ${isLost ? "bg-red-100 border-red-500" : "bg-[#ECECEF] border-[#6B7280]"}`}
-              >
-                {isLost && (
-                  <span className="text-red-500 font-bold">
-                    <RxCross1 size={30} />
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="flex flex-col flex-1 gap-6 max-w-4xl">
-        <div className="bg-white p-5 rounded-md shadow-md text-sm">
-          <p className="mb-4 text-lg">
-            <strong>Prompt:</strong> {prompt}
-            {functionName && (
-              <span className="ml-2 text-[#704EE7]">
-                (Function: <code>{functionName}</code>)
-              </span>
-            )}
-          </p>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#704EE7]/10 p-3 rounded-md">
-              <p className="font-semibold">Sample Input:</p>
-              <code className="block bg-white mt-2 max-w-max">{sampleInput}</code>
-            </div>
-            <div className="bg-[#704EE7]/10 p-3 rounded-md">
-              <p className="font-semibold">Expected Output:</p>
-              <code className="block bg-white mt-2 max-w-max">{sampleOutput}</code>
+    <div className="flex justify-center my-6">
+      {/* Game container: fixed size with static background */}
+      <div
+        className="relative w-[1080px] h-[665px] rounded-lg overflow-hidden shadow-lg"
+        style={{
+          backgroundImage: `url(${hangmanStatic})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* Overlay content (left lives + right editor) */}
+        <div className="absolute inset-0 flex flex-row gap-6 p-6">
+          {/* Left overlay for lives and future animations */}
+          <div className="w-1/3 flex flex-col items-center justify-between">
+            <div className="w-full h-44" />
+            <div className="flex flex-row items-center justify-center gap-3 mb-4">
+              {Array.from({ length: 3 }).map((_, idx) => {
+                const lost = 3 - lives;
+                const isLost = idx < lost;
+                return (
+                  <div
+                    key={idx}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${isLost ? "bg-red-100 border-red-500" : "bg-[#ECECEF] border-[#6B7280]"}`}
+                  >
+                    {isLost && (
+                      <span className="text-red-500 font-bold">
+                        <RxCross1 size={20} />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
+
+          {/* Right overlay: content area */}
+          <div className="flex flex-col flex-1 gap-6 max-w-4xl">
+            <div className="bg-white p-5 rounded-md shadow-md text-sm">
+              <p className="mb-4 text-lg">
+                <strong>Prompt:</strong> {prompt}
+                {functionName && (
+                  <span className="ml-2 text-[#704EE7]">
+                    (Function: <code>{functionName}</code>)
+                  </span>
+                )}
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-[#704EE7]/10 p-3 rounded-md">
+                  <p className="font-semibold">Sample Input:</p>
+                  <code className="block bg-white mt-2 max-w-max">{sampleInput}</code>
+                </div>
+                <div className="bg-[#704EE7]/10 p-3 rounded-md">
+                  <p className="font-semibold">Expected Output:</p>
+                  <code className="block bg-white mt-2 max-w-max">{sampleOutput}</code>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                className={`px-3 py-1 rounded ${view === "code" ? "bg-[#704EE7] text-white" : "bg-white border"}`}
+                onClick={() => setView("code")}
+              >
+                Code
+              </button>
+              <button
+                className={`px-3 py-1 rounded ${view === "output" ? "bg-[#704EE7] text-white" : "bg-white border"}`}
+                onClick={() => setView("output")}
+              >
+                Output
+              </button>
+            </div>
+
+            {/* Editor / Output container: fixed height so output doesn't stretch the page */}
+            <div className="w-full h-[250px]">
+              {view === "output" ? (
+                <pre className="h-full overflow-auto bg-gray-100 text-sm p-4 rounded whitespace-pre-wrap border">{output || "No output yet."}</pre>
+              ) : (
+                <Editor height="100%" language="python" value={code} onChange={(val) => setCode(val || "")} theme="vs-dark" defaultValue="# Write your function here" />
+              )}
+            </div>
+
+            {!submitted && <Component.PrimaryButton label="Submit Answers" onClick={handleSubmit} py="py-2" fontSize="text-md" />}
+          </div>
         </div>
-
-        {output && <pre className="bg-gray-100 text-sm p-4 rounded whitespace-pre-wrap border">{output}</pre>}
-
-        <Editor height="250px" language="python" value={code} onChange={(val) => setCode(val || "")} theme="vs-dark" defaultValue="# Write your function here" />
-
-        {!submitted && <Component.PrimaryButton label="Submit Answers" onClick={handleSubmit} py="py-2" fontSize="text-md" />}
       </div>
 
       {submitted && (
