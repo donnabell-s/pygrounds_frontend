@@ -5,6 +5,8 @@ import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import { MdDelete } from 'react-icons/md';
 import { BsFillPlayFill } from 'react-icons/bs';
 import { FiSquare } from 'react-icons/fi';
+import ReadingMaterialSelector from "./ReadingMaterialSelector";
+import ReadingMaterial from "../../../components/Features/ReadingMaterial";
 
 import type { UploadedDocument } from '../../../../types/adaptive';
 type Document = UploadedDocument;
@@ -18,6 +20,8 @@ export const ContentUpload = () => {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [processingDocuments, setProcessingDocuments] = useState<Set<number>>(new Set());
     const [startingPipelines, setStartingPipelines] = useState<Set<number>>(new Set());
+    const [viewType, setViewType] = useState<"documents" | "reading">("documents");
+
 
     useEffect(() => {
         fetchDocuments();
@@ -278,99 +282,159 @@ export const ContentUpload = () => {
     };
 
     return (
-        <div className="space-y-4">
-            <div className="overflow-x-auto">
-                <AdminTable
-                    title="Content Management"
-                    loading={loading}
-                    error={error}
-                    items={documents}
-                    total={totalDocuments}
-                    currentPage={currentPage}
-                    onPageChange={setCurrentPage}
-                    onAdd={() => setIsUploadModalOpen(true)}
-                    headerColumns={['Name', 'Status', 'Difficulty', 'Created At', 'Actions']}
-                    renderRow={(document: Document) => (
-                    <tr key={document.id}>
-                        <td className="px-6 py-4">
-                            <div className="line-clamp-1">{document.title}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <div>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
-                                    ${document.processing_status === 'COMPLETED' && 'bg-green-100 text-green-800'}
-                                    ${document.processing_status === 'COMPLETED_WITH_WARNINGS' && 'bg-yellow-100 text-yellow-800'}
-                                    ${document.processing_status === 'PROCESSING' && 'bg-blue-100 text-blue-800'}
-                                    ${document.processing_status === 'QUEUED' && 'bg-purple-100 text-purple-800'}
-                                    ${document.processing_status === 'PENDING' && 'bg-gray-100 text-gray-800'}
-                                    ${document.processing_status === 'FAILED' && 'bg-red-100 text-red-800'}
-                                `}>
-                                    {document.processing_status === 'COMPLETED_WITH_WARNINGS' 
-                                        ? 'completed (warnings)' 
-                                        : document.processing_status.toLowerCase()}
-                                </span>
-                                {document.processing_message && (
-                                    <p className="text-sm text-gray-500 mt-1 max-w-xs truncate" title={document.processing_message}>
-                                        {document.processing_message}
-                                    </p>
-                                )}
-                            </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap capitalize text-center">
-                            {document.difficulty}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                            {new Date(document.uploaded_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <div className="flex justify-center space-x-2">
-                                {(document.processing_status === 'PROCESSING' || document.processing_status === 'QUEUED') ? (
-                                    <button
-                                        onClick={() => handleCancelPipeline(document.id)}
-                                        className={ADMIN_BUTTON_STYLES.ICON_DANGER}
-                                        title="Cancel Pipeline"
-                                    >
-                                        <FiSquare className="w-5 h-5" />
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => handleRunPipeline(document.id)}
-                                        disabled={startingPipelines.has(document.id)}
-                                        className={`${ADMIN_BUTTON_STYLES.ICON_SUCCESS} ${
-                                            startingPipelines.has(document.id)
-                                                ? 'opacity-50 cursor-not-allowed'
-                                                : ''
-                                        }`}
-                                        title={startingPipelines.has(document.id) ? "Starting..." : "Run Pipeline"}
-                                    >
-                                        {startingPipelines.has(document.id) ? (
-                                            <div className="w-5 h-5 border-2 border-gray-400 border-t-green-500 rounded-full animate-spin"></div>
-                                        ) : (
-                                            <BsFillPlayFill className="w-5 h-5" />
-                                        )}
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => handleDelete(document.id)}
-                                    className={ADMIN_BUTTON_STYLES.ICON_DANGER}
-                                    title="Delete"
-                                >
-                                    <MdDelete className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                )}
-            />
-            </div>
+  <div className="space-y-4">
+    {/* Header Section */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Left side: Title + Dropdown */}
+      <div className="flex items-center space-x-3">
+        <h2 className="text-lg font-semibold text-gray-800"></h2>
 
-            <DocumentManagementModal
-                isOpen={isUploadModalOpen}
-                onClose={() => setIsUploadModalOpen(false)}
-                onSubmit={handleUpload}
-            />
+        {/* Dropdown Selector beside title */}
+        <div className="relative inline-block">
+  <select
+    onChange={(e) => setViewType(e.target.value as "documents" | "reading")}
+    value={viewType}
+    className="block w-56 appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 
+               shadow-sm focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] focus:outline-none focus-visible:ring-[#2563EB] 
+               transition duration-150"
+  >
+    <option value="documents">Uploaded Files</option>
+    <option value="reading">Reading Materials</option>
+  </select>
+
+  {/* custom arrow icon */}
+  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+    <svg
+      className="h-4 w-4 text-gray-500"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+    </svg>
+  </div>
+</div>
+</div>
+        
+
+      {/* Right side: Add New Button */}
+      {viewType === "documents" && (
+        <button
+          onClick={() => setIsUploadModalOpen(true)}
+          className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-colors"
+        >
+          Add New Content
+        </button>
+      )}
+    </div>
+
+    {/* Main Table or Reading Material Section */}
+    <div className="flex items-center space-x-3 mt-1">
+      {viewType === "documents" ? (
+        <AdminTable
+          title="Content Management"
+          loading={loading}
+          error={error}
+          items={documents}
+          total={totalDocuments}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          headerColumns={["Name", "Status", "Difficulty", "Created At", "Actions"]}
+          renderRow={(document: Document) => (
+            <tr key={document.id}>
+              <td className="px-6 py-4">
+                <div className="line-clamp-1">{document.title}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-center">
+                <div>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                      document.processing_status === "COMPLETED" && "bg-green-100 text-green-800"
+                    } ${
+                      document.processing_status === "FAILED" && "bg-red-100 text-red-800"
+                    } ${
+                      document.processing_status === "PROCESSING" && "bg-blue-100 text-blue-800"
+                    } ${
+                      document.processing_status === "QUEUED" && "bg-purple-100 text-purple-800"
+                    }`}
+                  >
+                    {document.processing_status.toLowerCase()}
+                  </span>
+                  {document.processing_message && (
+                    <p
+                      className="text-sm text-gray-500 mt-1 max-w-xs truncate"
+                      title={document.processing_message}
+                    >
+                      {document.processing_message}
+                    </p>
+                  )}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap capitalize text-center">
+                {document.difficulty}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-center">
+                {new Date(document.uploaded_at).toLocaleDateString()}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-center">
+                <div className="flex justify-center space-x-2">
+                  {(document.processing_status === "PROCESSING" ||
+                    document.processing_status === "QUEUED") && (
+                    <button
+                      onClick={() => handleCancelPipeline(document.id)}
+                      className={ADMIN_BUTTON_STYLES.ICON_DANGER}
+                      title="Cancel Pipeline"
+                    >
+                      <FiSquare className="w-5 h-5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleRunPipeline(document.id)}
+                    disabled={startingPipelines.has(document.id)}
+                    className={`${ADMIN_BUTTON_STYLES.ICON_SUCCESS} ${
+                      startingPipelines.has(document.id)
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
+                    title={
+                      startingPipelines.has(document.id)
+                        ? "Starting..."
+                        : "Run Pipeline"
+                    }
+                  >
+                    {startingPipelines.has(document.id) ? (
+                      <div className="w-5 h-5 border-2 border-gray-400 border-t-green-500 rounded-full animate-spin"></div>
+                    ) : (
+                      <BsFillPlayFill className="w-5 h-5" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(document.id)}
+                    className={ADMIN_BUTTON_STYLES.ICON_DANGER}
+                    title="Delete"
+                  >
+                    <MdDelete className="w-5 h-5" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          )}
+        />
+      ) : (
+        <div className="bg-gray-50 rounded-md p-6 border border-gray-200">
+          <ReadingMaterial />
         </div>
-    );
-};
+      )}
+    </div>
 
+    {/* Modal */}
+    <DocumentManagementModal
+      isOpen={isUploadModalOpen}
+      onClose={() => setIsUploadModalOpen(false)}
+      onSubmit={handleUpload}
+    />
+  </div>
+);
+}
 export default ContentUpload;
