@@ -88,6 +88,22 @@ const Crossword: React.FC = () => {
     }
   }, [gameEnded, submitted, activeSession]);
 
+  // When a placement is selected, focus its first input so typing begins immediately
+  useEffect(() => {
+    if (!selectedPlacement) return;
+    const cells = getCellsForPlacement(selectedPlacement);
+    if (!cells || cells.length === 0) return;
+    const firstKey = cells[0];
+    // delay slightly to ensure DOM updates if needed
+    setTimeout(() => {
+      const el = document.querySelector<HTMLInputElement>(`input[data-cell="${firstKey}"]`);
+      if (el) {
+        el.focus();
+        try { el.select(); } catch (err) { /* ignore */ }
+      }
+    }, 0);
+  }, [selectedPlacement]);
+
   const wordToGqId = useMemo(() => {
     const m = new Map<string, number>();
     const sqs = activeSession?.session_questions ?? [];
@@ -150,7 +166,8 @@ const Crossword: React.FC = () => {
   };
 
   const getCellClass = (key: string, isEditable: boolean) => {
-    if (!isEditable) return "bg-[#E4ECF7]";
+    // make non-editable (negative) cells a bit darker so they read better against the page
+    if (!isEditable) return "bg-[#C6D4E6]";
     if (!selectedPlacement) return "bg-white";
     const cells = getCellsForPlacement(selectedPlacement);
     return cells.includes(key) ? "bg-yellow-200" : "bg-white";
@@ -167,7 +184,10 @@ const Crossword: React.FC = () => {
       if (idx !== -1 && idx < cells.length - 1) {
         const nextKey = cells[idx + 1];
         const nextInput = document.querySelector<HTMLInputElement>(`input[data-cell="${nextKey}"]`);
-        nextInput?.focus();
+        if (nextInput) {
+          nextInput.focus();
+          try { nextInput.select(); } catch (err) { /* ignore */ }
+        }
       }
     }
   };
@@ -179,6 +199,29 @@ const Crossword: React.FC = () => {
     const idx = cells.indexOf(key);
     if (idx === -1) return;
 
+    // Backspace behavior: clear current cell if it has a value; otherwise move to previous cell and clear it.
+      if (e.key === "Backspace") {
+      e.preventDefault();
+      const currentVal = (letters[key] || "").toString();
+      if (currentVal.length > 0) {
+        setLetters((prev) => ({ ...prev, [key]: "" }));
+        const curInput = document.querySelector<HTMLInputElement>(`input[data-cell="${key}"]`);
+        if (curInput) {
+          curInput.focus();
+          try { curInput.select(); } catch (err) { /* ignore */ }
+        }
+      } else if (idx > 0) {
+        const prevKey = cells[idx - 1];
+        setLetters((prev) => ({ ...prev, [prevKey]: "" }));
+        const prevInput = document.querySelector<HTMLInputElement>(`input[data-cell="${prevKey}"]`);
+        if (prevInput) {
+          prevInput.focus();
+          try { prevInput.select(); } catch (err) { /* ignore */ }
+        }
+      }
+      return;
+    }
+
     let nextIdx = idx;
     if (e.key === "ArrowRight" && selectedPlacement.direction === "across") nextIdx = Math.min(idx + 1, cells.length - 1);
     else if (e.key === "ArrowLeft" && selectedPlacement.direction === "across") nextIdx = Math.max(idx - 1, 0);
@@ -188,7 +231,10 @@ const Crossword: React.FC = () => {
     if (nextIdx !== idx) {
       const nextKey = cells[nextIdx];
       const nextInput = document.querySelector<HTMLInputElement>(`input[data-cell="${nextKey}"]`);
-      nextInput?.focus();
+      if (nextInput) {
+        nextInput.focus();
+        try { nextInput.select(); } catch (err) { /* ignore */ }
+      }
       e.preventDefault();
     }
   };
@@ -231,13 +277,22 @@ const Crossword: React.FC = () => {
         const id = toNum(p.game_question_id) ?? wordToGqId.get(norm(p.word));
         const num = id ? gqIdToNumber.get(id) : undefined;
         const isSelected = selectedPlacement === p;
+        // consider a placement complete when all its boxes are filled (regardless of correctness)
+        const isComplete = (() => {
+          const cells = getCellsForPlacement(p);
+          return cells.length > 0 && cells.every((key) => {
+            const v = (letters[key] || "").toString().trim();
+            return v.length > 0;
+          });
+        })();
         return (
           <div
             key={`${p.word}-${p.row}-${p.col}-${p.direction}-${idx}`}
             className={`text-sm mb-1 cursor-pointer px-3 py-2 rounded transition-all border shadow-sm ${isSelected ? "bg-yellow-100 border-yellow-300 " : "bg-white hover:bg-gray-100 border-gray-200"}`}
             onClick={() => setSelectedPlacement(p)}
           >
-            <strong className="text-[#0077B6] mr-1">{num ?? ""}.</strong> {p.clue || ""}
+            <strong className="text-[#0B4BCB] mr-1">{num ?? ""}.</strong>
+            <span className={`${isComplete ? "line-through text-gray-500" : ""}`}>{p.clue || ""}</span>
           </div>
         );
       });
@@ -246,7 +301,7 @@ const Crossword: React.FC = () => {
 
   return (
     <div className="flex flex-col md:flex-row gap-10 py-6 px-4 justify-center items-start bg-[#F8FAFC] min-h-screen">
-      <div className="inline-block overflow-hidden border border-[#6B7280]">
+  <div className="inline-block overflow-hidden border border-[#6B7280]">
         <div className="grid grid-cols-15">
           {grid.map((row, rowIndex) =>
             row.split("").map((_, colIndex) => {
@@ -271,7 +326,7 @@ const Crossword: React.FC = () => {
                       data-cell={key}
                       onChange={(e) => handleCellChange(key, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, key)}
-                      className="w-full h-full text-center font-semibold text-sm outline-none focus:bg-yellow-100 focus:ring-1 focus:ring-[#6B7280]"
+                      className="w-full h-full text-center font-semibold text-sm outline-none focus:bg-yellow-100 focus:ring-1 focus:ring-[#0B4BCB]"
                     />
                   ) : null}
                 </div>
@@ -281,18 +336,25 @@ const Crossword: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 max-w-sm w-full">
+      <div className="flex flex-col gap-2 max-w-sm w-full">
         <div>
-          <h2 className="text-md font-bold mb-2 text-[#0077B6]">Across</h2>
+          <h2 className="text-md font-bold mb-2 text-[#0B4BCB]">Across</h2>
           {renderClueList("across")}
         </div>
         <div>
-          <h2 className="text-md font-bold mt-4 mb-2 text-[#0077B6]">Down</h2>
+          <h2 className="text-md font-bold mt-4 mb-2 text-[#0B4BCB]">Down</h2>
           {renderClueList("down")}
         </div>
 
         {!gameEnded && (
-          <Component.PrimaryButton label="Submit Answers" onClick={handleSubmit} py="py-2" fontSize="text-md" m="mt-6" />
+          <div className="mt-6">
+            <button
+              onClick={handleSubmit}
+              className="w-full py-2 bg-[#0B4BCB] hover:bg-[#083ea0] text-white rounded-md text-md font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[#BFD9FF]"
+            >
+              Submit Answers
+            </button>
+          </div>
         )}
       </div>
 

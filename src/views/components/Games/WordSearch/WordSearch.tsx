@@ -237,13 +237,13 @@ const WordSearch: React.FC = () => {
   const totalH = rows * (CELL_SIZE + GAP) - GAP;
 
   return (
-    <div className="flex flex-col md:flex-row gap-8 p-6">
+    <div className="flex flex-col md:flex-row gap-8 p-6 mt-6" style={{ backgroundColor: '#D7F0FF' }}>
       <div className="relative select-none" style={{ width: `${totalW}px`, height: `${totalH}px` }}>
         <canvas ref={canvasRef} width={totalW} height={totalH} className="absolute top-0 left-0 z-10 pointer-events-none" />
         <div className="absolute top-0 left-0 grid gap-[2px] shadow-md" style={{ gridTemplateColumns: `repeat(${cols},${CELL_SIZE}px)` }}>
           {matrix.map((row, r) =>
             row.split("").map((ch, c) => (
-              <div key={`${r}-${c}`} className="w-10 h-10  flex items-center justify-center text-sm font-medium bg-white shadow-sm" onMouseDown={() => startDrag(r, c)} onMouseEnter={() => moveDrag(r, c)} onMouseUp={finishDrag}>
+              <div key={`${r}-${c}`} className="w-10 h-10 flex items-center justify-center text-base font-medium bg-white shadow-sm" onMouseDown={() => startDrag(r, c)} onMouseEnter={() => moveDrag(r, c)} onMouseUp={finishDrag}>
                 {ch}
               </div>
             )),
@@ -251,39 +251,71 @@ const WordSearch: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 w-full max-w-sm">
-        <h2 className="text-lg font-bold">Questions</h2>
+  <div className="flex flex-col justify-between gap-2 w-full max-w-md pr-0 box-border" style={{ height: `${totalH}px` }}>
+        {/* top area: questions (will scroll only if they exceed the available space) */}
+  <div className="overflow-auto pr-1 space-y-1.5">
+          {/* <h2 className="text-lg font-bold">Questions</h2> */}
 
-        {placedQuestions.map((sq) => {
+          {placedQuestions.map((sq) => {
           const isSelected = selectedQ === sq.id;
           const isAnswered = Array.isArray(highlighted[sq.id]) && highlighted[sq.id].length > 1;
 
           const qText = sq.question?.question_text ?? "(question missing)";
           const qCss = questionCss[sq.id] ?? "bg-white";
-          const bgClass = isSelected ? qCss : isAnswered ? `${qCss} bg-opacity-50` : "bg-white hover:bg-gray-100";
-          const borderClass = isSelected ? "border-black" : isAnswered ? "border-transparent" : "border-gray-300";
+          // When answered: don't tint the question button with the assigned color.
+          // Instead show the question text with a line-through to indicate it's been found.
+          // The grid highlighting still uses `questionCss`/`questionRgba` elsewhere.
+          // Use a light-blue hover tint for the question buttons and a stronger blue for selected borders.
+          const bgClass = isSelected ? qCss : "bg-white hover:bg-[#DBEEFF]";
+          // Use assigned rgba color (with full alpha) for selected border when available.
+          const assignedRgba = questionRgba[sq.id];
+          const selectedBorderColor = isSelected
+            ? assignedRgba
+              ? assignedRgba.replace(/,\s*\d*\.?\d+\)/, ", 1)")
+              : "#1D4ED8"
+            : undefined;
+          const borderClass = isAnswered ? "border-transparent" : "border-gray-300";
+          const textClass = isAnswered && !isSelected ? "line-through text-gray-500" : "";
 
           return (
-            <button key={sq.id} onClick={() => setSelectedQ(sq.id)} className={`text-left px-3 py-2 rounded shadow-sm cursor-pointer border ${borderClass} ${bgClass}`}>
-              {qText}
+            <button
+              key={sq.id}
+              onClick={() => setSelectedQ(sq.id)}
+              className={`w-full text-left text-sm px-3 py-2 rounded shadow-sm cursor-pointer border ${borderClass} ${bgClass}`}
+              style={selectedBorderColor ? { borderColor: selectedBorderColor } : undefined}
+            >
+              <span className={`${textClass} block w-full`}>{qText}</span>
             </button>
           );
-        })}
+          })}
+        </div>
 
-        {!gameEnded && <Component.PrimaryButton label="Submit Answers" onClick={doSubmit} py="py-2" fontSize="text-md" m="mt-6" />}
+        {/* bottom area: submit button or results modal - anchored to bottom */}
+        <div>
+          {!gameEnded && (
+            <div>
+              <button
+                onClick={doSubmit}
+                className="w-full py-2 bg-[#1D4ED8] hover:bg-[#1748c1] text-white rounded-md text-md font-semibold shadow-sm cursor-pointer"
+              >
+                Submit Answers
+              </button>
+            </div>
+          )}
 
-        {gameEnded && submitted && (
-          <div>
-            <Component.ResultsModal
-              onClose={() => {
-                clearActiveSession();
-                resetGameEnd();
-                localStorage.removeItem("submitted");
-                navigate(`/${user?.id}/home`);
-              }}
-            />
-          </div>
-        )}
+          {gameEnded && submitted && (
+            <div>
+              <Component.ResultsModal
+                onClose={() => {
+                  clearActiveSession();
+                  resetGameEnd();
+                  localStorage.removeItem("submitted");
+                  navigate(`/${user?.id}/home`);
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

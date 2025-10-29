@@ -15,6 +15,7 @@ export interface Minigame {
 
 import wordsearchImg from "../assets/images/wordsearch.png";
 import crosswordImg from "../assets/images/crossword.png";
+import hangmanImg from "../assets/images/hangman.png";
 
 export const mockGames: Minigame[] = [
   {
@@ -43,6 +44,7 @@ export const mockGames: Minigame[] = [
     lives: 3,
     time_limit_seconds: null,
     color: "#4498FF",
+    image: hangmanImg,
     key: "hangman",
   },
   {
