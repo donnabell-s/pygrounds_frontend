@@ -376,14 +376,14 @@ export const adminApi = {
         if (params?.page) queryParams.append('page', params.page.toString());
         if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
         
-        const url = `/admin/topics/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const url = `/topics/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
         const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminTopic[] }>(url);
         return response.data; 
     },
 
     getAllTopicsNoPagination: async (): Promise<AdminTopic[]> => {
         const allTopics: AdminTopic[] = [];
-        let nextUrl: string | null = '/admin/topics/';
+        let nextUrl: string | null = '/topics/';
         
         while (nextUrl) {
             const response = await client.get<{ count: number; next: string | null; previous: string | null; results: AdminTopic[] }>(nextUrl);
