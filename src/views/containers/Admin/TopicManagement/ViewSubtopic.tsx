@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../../../api';
 import { SubtopicModal, AdminTable } from '../../../../views/components/UI';
+import SubtopicStatusTracker from '../../../components/Features/SubtopicStatusTracker';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import type { AdminSubtopic, AdminTopic } from '../../../../types/adaptive';
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
@@ -179,31 +180,15 @@ const ViewSubtopic = () => {
                         </td>
                         <td className="px-6 py-4 w-1/12">
                             <div className="text-center">
-                                {subtopic.embedding_status === 'not_started' && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        Not Started
-                                    </span>
-                                )}
-                                {subtopic.embedding_status === 'pending' && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                        Pending
-                                    </span>
-                                )}
-                                {subtopic.embedding_status === 'processing' && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        Processing
-                                    </span>
-                                )}
-                                {subtopic.embedding_status === 'completed' && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Completed
-                                    </span>
-                                )}
-                                {subtopic.embedding_status === 'failed' && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        Failed
-                                    </span>
-                                )}
+                                <SubtopicStatusTracker 
+                                    subtopic={subtopic}
+                                    onStatusChange={(updatedSubtopic) => {
+                                        // Update the subtopic in the list when status changes
+                                        setSubtopics(prev => 
+                                            prev.map(s => s.id === updatedSubtopic.id ? updatedSubtopic : s)
+                                        );
+                                    }}
+                                />
                             </div>
                         </td>
                         <td className="px-6 py-4 w-1/12">

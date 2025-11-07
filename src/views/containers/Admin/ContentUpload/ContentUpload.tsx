@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '../../../../api';
 import { AdminTable, DocumentManagementModal } from '../../../components/UI';
+import StatusBadge from '../../../components/UI/StatusBadge';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import { MdDelete } from 'react-icons/md';
 import { BsFillPlayFill } from 'react-icons/bs';
@@ -348,19 +349,11 @@ export const ContentUpload = () => {
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-center">
                 <div>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                      document.processing_status === "COMPLETED" && "bg-green-100 text-green-800"
-                    } ${
-                      document.processing_status === "FAILED" && "bg-red-100 text-red-800"
-                    } ${
-                      document.processing_status === "PROCESSING" && "bg-blue-100 text-blue-800"
-                    } ${
-                      document.processing_status === "QUEUED" && "bg-purple-100 text-purple-800"
-                    }`}
-                  >
-                    {document.processing_status.toLowerCase()}
-                  </span>
+                  <StatusBadge
+                    status={document.processing_status.toLowerCase()}
+                    error={document.processing_message}
+                    size="sm"
+                  />
                   {document.processing_message && (
                     <p
                       className="text-sm text-gray-500 mt-1 max-w-xs truncate"

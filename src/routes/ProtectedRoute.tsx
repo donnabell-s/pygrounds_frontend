@@ -10,7 +10,7 @@ const ProtectedRoute = ({ roles }: ProtectedRouteProps) => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div>Loading...</div>; // or a proper loader
+    return null; // Return null to prevent rendering anything while loading
   }
 
   if (!user) {

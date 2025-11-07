@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { adminApi } from '../../../../api';
 import type { GeneratedQuestion, PreAssessmentQuestion, BulkGenerationParams, PreAssessmentBulkGenerationParams, QuestionListResponse } from '../../../../types/questions';
 import { AdminTable, BulkGenerationModal } from '../../../components/UI';
+import StatusBadge from '../../../components/UI/StatusBadge';
 import MinigameBulkGeneration from './MinigameBulkGeneration';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import { FiEdit2, FiTrash2, FiCheck } from 'react-icons/fi';
@@ -622,10 +623,10 @@ const QuestionBank = () => {
                                     </span>
                                 </td>
                                 <td className="px-3 py-3 text-sm text-center">
-                                    <div className="flex items-center justify-center gap-2 whitespace-nowrap">
-                                        {getValidationStatusIcon(question.validation_status || 'pending')}
-                                        <span className="capitalize text-xs">{(question.validation_status || 'pending').replace('_', ' ')}</span>
-                                    </div>
+                                    <StatusBadge
+                                        status={question.validation_status || 'pending'}
+                                        size="sm"
+                                    />
                                 </td>
                                 <td className="px-3 py-3 text-center">
                                     <div className="flex justify-center space-x-1">
