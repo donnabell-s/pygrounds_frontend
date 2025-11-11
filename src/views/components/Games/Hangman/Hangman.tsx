@@ -5,7 +5,11 @@ import { useAuth } from "../../../../context/AuthContext";
 import { useGame } from "../../../../context/GameContext";
 import * as Component from "../../../components";
 import { RxCross1 } from "react-icons/rx";
-import hangmanStatic from "../../../../assets/images/hangman_static.png";
+import hangmanHappyStaticMp4 from "../../../../assets/images/hangman_animation/hangman_happy_static.mp4";
+import hangmanSadMp4 from "../../../../assets/images/hangman_animation/hangman_sad.mp4";
+import hangmanHappyMp4 from "../../../../assets/images/hangman_animation/hangman_happy.mp4";
+import hangmanLoseMp4 from "../../../../assets/images/hangman_animation/hangman_lose.mp4";
+import hangmanLoseStaticMp4 from "../../../../assets/images/hangman_animation/hangman_lose_static.mp4";
 
 const Hangman: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +22,35 @@ const Hangman: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"code" | "output">("code");
+
+  // Background animation state machine
+  const [bgMedia, setBgMedia] = useState<{ kind: "image" | "video"; src: string }>({ kind: "video", src: hangmanHappyStaticMp4 });
+  const sequenceRef = React.useRef<Array<{ kind: "image" | "video"; src: string; holdMs?: number }>>([]);
+  const timeoutRef = React.useRef<number | null>(null);
+  const prevLivesRef = React.useRef<number | null>(null);
+
+  // Helper to clear any running sequence/timeouts
+  const resetSequence = () => {
+    sequenceRef.current = [];
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
+  // Advance to next media in the queued sequence
+  const playNextInSequence = () => {
+    const next = sequenceRef.current.shift();
+    if (!next) return;
+    setBgMedia({ kind: next.kind, src: next.src });
+    if (next.kind === "image" && next.holdMs) {
+      // For images that should be shown briefly, schedule next step
+      timeoutRef.current = window.setTimeout(() => {
+        timeoutRef.current = null;
+        playNextInSequence();
+      }, next.holdMs);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -81,6 +114,43 @@ const Hangman: React.FC = () => {
     return () => clearTimeout(timer);
   }, [activeSession, submitted]);
 
+  // Track lives changes to trigger animation sequences
+  useEffect(() => {
+    if (prevLivesRef.current === null) {
+      prevLivesRef.current = lives;
+      // Ensure we start on happy static (looping video)
+      setBgMedia({ kind: "video", src: hangmanHappyStaticMp4 });
+      return;
+    }
+
+    const prevLives = prevLivesRef.current;
+    if (lives === prevLives) return;
+
+    // Only respond to life loss (ignore gains just in case)
+    if (lives < prevLives) {
+      resetSequence();
+      if (lives <= 0) {
+        // All lives lost: sad -> lose -> lose static (loop)
+        sequenceRef.current = [
+          { kind: "video", src: hangmanSadMp4 },
+          { kind: "video", src: hangmanLoseMp4 },
+          { kind: "video", src: hangmanLoseStaticMp4 },
+        ];
+      } else {
+        // Single life lost: sad -> happy -> back to happy static (loop)
+        sequenceRef.current = [
+          { kind: "video", src: hangmanSadMp4 },
+          { kind: "video", src: hangmanHappyMp4 },
+          { kind: "video", src: hangmanHappyStaticMp4 },
+        ];
+      }
+      // Kick off the sequence
+      playNextInSequence();
+    }
+
+    prevLivesRef.current = lives;
+  }, [lives]);
+
   const handleClose = () => {
     clearActiveSession();
     resetGameEnd();
@@ -94,12 +164,32 @@ const Hangman: React.FC = () => {
       {/* Game container: fixed size with static background */}
       <div
         className="relative w-[1080px] h-[665px] rounded-lg overflow-hidden shadow-lg"
-        style={{
-          backgroundImage: `url(${hangmanStatic})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
       >
+        {/* Background layer: plays static image or video animations */}
+        <div className="absolute inset-0">
+          {bgMedia.kind === "image" ? (
+            <img
+              src={bgMedia.src}
+              alt="hangman background"
+              className="w-full h-full object-cover select-none pointer-events-none"
+            />
+          ) : (
+            <video
+              key={bgMedia.src}
+              src={bgMedia.src}
+              className="w-full h-full object-cover"
+              autoPlay
+              muted
+              playsInline
+              loop={bgMedia.kind === "video" && (bgMedia.src === hangmanHappyStaticMp4 || bgMedia.src === hangmanLoseStaticMp4)}
+              onEnded={() => {
+                // Advance once the current video finishes
+                playNextInSequence();
+              }}
+            />
+          )}
+        </div>
+
         {/* Overlay content (left lives + right editor) */}
         <div className="absolute inset-0 flex flex-row gap-6 p-6">
           {/* Left overlay for lives and future animations (lives shown at top) */}
