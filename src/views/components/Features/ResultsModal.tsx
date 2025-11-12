@@ -132,8 +132,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
   const percent = total > 0 ? (correctCount / total) * 100 : 0;
 
   // --- feedback effects (audio + confetti) ---
-  const wompRef = useRef<HTMLAudioElement>(null);
-  const cheerRef = useRef<HTMLAudioElement>(null); // NEW: success sound
+  // Updated sound refs: lose & win replacements
+  const loseRef = useRef<HTMLAudioElement>(null);
+  const winRef = useRef<HTMLAudioElement>(null);
   const [celebrated, setCelebrated] = useState(false);
   const [sounded, setSounded] = useState(false);
 
@@ -146,9 +147,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
 
       // Play success sound
       try {
-        if (cheerRef.current) {
-          cheerRef.current.currentTime = 0;
-          cheerRef.current.play().catch(() => {});
+        if (winRef.current) {
+          winRef.current.currentTime = 0;
+          winRef.current.play().catch(() => {});
         }
       } catch {}
 
@@ -168,9 +169,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
 
       // Play womp-womp
       try {
-        if (wompRef.current) {
-          wompRef.current.currentTime = 0;
-          wompRef.current.play().catch(() => {});
+        if (loseRef.current) {
+          loseRef.current.currentTime = 0;
+          loseRef.current.play().catch(() => {});
         }
       } catch {}
     }
@@ -191,8 +192,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2D2D2D]/40">
       {/* audio elements */}
-      <audio ref={wompRef} preload="auto" src="/sounds/wompwomp.mp3" />
-      <audio ref={cheerRef} preload="auto" src="/sounds/cheer.mp3" />{/* NEW: success sound */}
+  <audio ref={loseRef} preload="auto" src="/sounds/lose.wav" />
+  <audio ref={winRef} preload="auto" src="/sounds/win.wav" />
 
       <div className="bg-white rounded-xl shadow-xl w-[90%] max-w-xl relative border border-gray-200">
         <div>

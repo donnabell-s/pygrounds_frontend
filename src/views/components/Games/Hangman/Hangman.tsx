@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { useAuth } from "../../../../context/AuthContext";
@@ -28,6 +28,7 @@ const Hangman: React.FC = () => {
   const sequenceRef = React.useRef<Array<{ kind: "image" | "video"; src: string; holdMs?: number }>>([]);
   const timeoutRef = React.useRef<number | null>(null);
   const prevLivesRef = React.useRef<number | null>(null);
+  const loseLifeRef = useRef<HTMLAudioElement>(null);
 
   // Helper to clear any running sequence/timeouts
   const resetSequence = () => {
@@ -128,6 +129,16 @@ const Hangman: React.FC = () => {
 
     // Only respond to life loss (ignore gains just in case)
     if (lives < prevLives) {
+      // Play lose-life sound only if not game over (avoid overlap with final lose sound)
+      if (lives > 0) {
+        try {
+          if (loseLifeRef.current) {
+            loseLifeRef.current.currentTime = 0;
+            loseLifeRef.current.play().catch(() => {});
+          }
+        } catch {}
+      }
+
       resetSequence();
       if (lives <= 0) {
         // All lives lost: sad -> lose -> lose static (loop)
@@ -161,6 +172,8 @@ const Hangman: React.FC = () => {
 
   return (
     <div className="flex justify-center my-6">
+      {/* audio: life lost */}
+      <audio ref={loseLifeRef} preload="auto" src="/sounds/loselife.wav" />
       {/* Game container: fixed size with static background */}
       <div
         className="relative w-[1080px] h-[665px] rounded-lg overflow-hidden shadow-lg"

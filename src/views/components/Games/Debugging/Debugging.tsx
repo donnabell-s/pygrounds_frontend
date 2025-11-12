@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { useAuth } from "../../../../context/AuthContext";
@@ -28,6 +28,8 @@ const Debugging: React.FC = () => {
   const [output, setOutput] = useState<string>("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const prevLivesRef = useRef<number | null>(null);
+  const loseLifeRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     (async () => {
@@ -83,8 +85,18 @@ const Debugging: React.FC = () => {
     if (!activeSession || submitted) return;
     const result = await submitDebuggingCode(activeSession.session_id, code);
     if (!result) return;
-
-    setLives(clampLives(result.remaining_lives));
+    const nextLives = clampLives(result.remaining_lives);
+    // Detect life loss to play sound, but not when reaching zero (game over)
+    const prev = prevLivesRef.current;
+    if (prev !== null && nextLives < prev && nextLives > 0) {
+      try {
+        if (loseLifeRef.current) {
+          loseLifeRef.current.currentTime = 0;
+          loseLifeRef.current.play().catch(() => {});
+        }
+      } catch {}
+    }
+    setLives(nextLives);
     setSubmitted(result.success || result.game_over);
     setOutput(
       result.success
@@ -93,6 +105,24 @@ const Debugging: React.FC = () => {
     );
     if (result.traceback) setOutput((prev) => prev + `\n\nTraceback:\n${result.traceback}`);
   };
+
+  // Track lives across renders for life-loss detection outside submissions (e.g., timeouts)
+  useEffect(() => {
+    if (lives === null) return;
+    if (prevLivesRef.current === null) {
+      prevLivesRef.current = lives;
+      return;
+    }
+    if (lives < prevLivesRef.current && lives > 0) {
+      try {
+        if (loseLifeRef.current) {
+          loseLifeRef.current.currentTime = 0;
+          loseLifeRef.current.play().catch(() => {});
+        }
+      } catch {}
+    }
+    prevLivesRef.current = lives;
+  }, [lives]);
 
   const handleClose = () => {
     clearActiveSession();
@@ -107,6 +137,8 @@ const Debugging: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center p-6">
+      {/* audio: life lost */}
+      <audio ref={loseLifeRef} preload="auto" src="/sounds/loselife.wav" />
       <div className="flex gap-4 mb-4">
         {Array.from({ length: MAX_LIVES }).map((_, idx) => {
           const isLost = idx < lost;
