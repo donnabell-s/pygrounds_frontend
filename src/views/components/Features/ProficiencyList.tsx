@@ -1,10 +1,24 @@
-import { proficiencies } from "../../../interfaces";
+import { useEffect, useMemo, useState } from "react";
+import PageEmpty from "../UI/PageEmpty";
+import { useAuth } from "../../../context/AuthContext";
+import { useAdaptive } from "../../../context/AdaptiveContext";
+import { FaAngleRight, FaAngleLeft } from "react-icons/fa";
 
-const getRating = (percent: number) => {
-  if (percent === 0) return { label: "Not Started", color: "#8B0000" };
-  if (percent < 40) return { label: "Beginner", color: "#0077B6" };
-  if (percent < 75) return { label: "Intermediate", color: "#F39C12" };
-  return { label: "Advanced", color: "#2E8B57" };
+// ✅ Config for proficiency levels
+const PROFICIENCY_LEVELS = [
+  { threshold: 0, label: "No Progress", color: "#6B7280" },
+  { threshold: 1, label: "Beginner", color: "#2563EB" },
+  { threshold: 33, label: "Intermediate", color: "#CA8A04" },
+  { threshold: 66, label: "Advanced", color: "#15803D" },
+  { threshold: 100, label: "Master", color: "#7E5CE3" },
+];
+
+// ✅ Utility functions
+const getProficiencyLevel = (percent: number) => {
+  for (let i = PROFICIENCY_LEVELS.length - 1; i >= 0; i--) {
+    if (percent >= PROFICIENCY_LEVELS[i].threshold) return PROFICIENCY_LEVELS[i];
+  }
+  return PROFICIENCY_LEVELS[0];
 };
 
 const hexToRgba = (hex: string, opacity: number) => {
@@ -15,20 +29,35 @@ const hexToRgba = (hex: string, opacity: number) => {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
-const ProficiencyCard = ({ topic, percentMastery }: { topic: string; percentMastery: number }) => {
-  const { label, color } = getRating(percentMastery);
+// 🔎 Zone helpers (reads directly from topic.zone)
+type ZoneShape = { number?: number; id?: number; name?: string } | number | string | null | undefined;
+
+const getZoneNumber = (zone: ZoneShape): number => {
+  if (zone && typeof zone === "object") return Number(zone.number ?? zone.id ?? 0);
+  return Number(zone ?? 0);
+};
+
+const getZoneLabel = (zone: ZoneShape): string => {
+  if (zone && typeof zone === "object") return zone.name ?? `Zone ${getZoneNumber(zone) || 0}`;
+  return `Zone ${getZoneNumber(zone) || 0}`;
+};
+
+// ✅ Reusable Card
+const ProficiencyCard = ({ topic, percent }: { topic: string; percent: number }) => {
+  const { label, color } = getProficiencyLevel(percent);
 
   return (
-    <div className="flex items-start gap-4 px-4 py-5 bg-[#F1F5FA] border border-[#E4ECF7] rounded-lg shadow-sm">
-      <div className="flex flex-col w-full gap-3">
+    <div className="relative overflow-hidden flex items-start gap-4 px-4 py-5 bg-[#704EE7]/15 border border-[#E4ECF7] rounded-xl shadow-sm">
+      {/* Overlay */}
+      <div className="pointer-events-none absolute inset-0 z-0 rounded-xl bg-gradient-to-br from-white/30 to-transparent" />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col w-full gap-3">
         <div className="flex justify-between items-center">
           <h4 className="text-md font-bold text-[#111827]">{topic}</h4>
           <span
             className="text-xs font-semibold px-3 py-1 rounded-full"
-            style={{
-              color: color,
-              backgroundColor: hexToRgba(color, 0.15),
-            }}
+            style={{ color, backgroundColor: hexToRgba(color, 0.15) }}
           >
             {label}
           </span>
@@ -37,14 +66,15 @@ const ProficiencyCard = ({ topic, percentMastery }: { topic: string; percentMast
         <div className="flex flex-col gap-2">
           <div className="flex justify-between text-xs mt-1">
             <span className="font-bold text-[#6B7280]">Proficiency</span>
-            <span className="font-bold" style={{ color }}>{percentMastery}%</span>
+            <span className="font-bold" style={{ color }}>
+              {percent.toFixed(0)}%
+            </span>
           </div>
-
           <div className="w-full h-3 bg-white rounded-full overflow-hidden">
             <div
               className="h-full transition-all duration-500"
-              style={{ width: `${percentMastery}%`, backgroundColor: color }}
-            ></div>
+              style={{ width: `${percent}%`, backgroundColor: color }}
+            />
           </div>
         </div>
       </div>
@@ -52,20 +82,148 @@ const ProficiencyCard = ({ topic, percentMastery }: { topic: string; percentMast
   );
 };
 
-const ProficiencyList = () => {
+type TP = {
+  topic: {
+    id: number;
+    name: string;
+    zone?: ZoneShape; // ← uses topicProgress[i].topic.zone
+  };
+  proficiency_percent: number;
+};
+
+type ProficiencyListProps = {
+  user?: any;
+};
+
+const ProficiencyList = ({ user }: ProficiencyListProps) => {
+  const { topicProgress, isLoading } = useAdaptive();
+  const effectiveTopicProgress = user?.topic_proficiencies ?? topicProgress;
+
+  const { isLoading: authLoading } = useAuth();
+  const { sessionExpired } = useAuth();
+  if (sessionExpired && !authLoading) return null;
+
+  // ✅ Move ALL hooks to the top before any conditionals
+  const sortedTopics: TP[] = useMemo(
+    () => (effectiveTopicProgress ? [...effectiveTopicProgress].sort((a: TP, b: TP) => a.topic.id - b.topic.id) : []),
+    [effectiveTopicProgress]
+  );
+
+  // Build available zones from topic.zone
+  const zones = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const p of sortedTopics) {
+      const zn = getZoneNumber(p.topic.zone);
+      const lbl = getZoneLabel(p.topic.zone);
+      if (zn) m.set(zn, lbl);
+    }
+    // Don't add default Zone 0 if no real zones exist
+    return Array.from(m.entries()).sort((a, b) => a[0] - b[0]); // [zoneNumber, label][]
+  }, [sortedTopics]);
+
+  const [activeZone, setActiveZone] = useState<number | null>(null);
+
+  // ✅ Update activeZone whenever zones change or when initially loaded
+  useEffect(() => {
+    if (zones.length > 0) {
+      // If activeZone is null or doesn't exist in current zones, set to first available zone
+      if (activeZone === null || !zones.some(([zoneNum]) => zoneNum === activeZone)) {
+        setActiveZone(zones[0][0]);
+      }
+    } else {
+      // No zones available, reset activeZone
+      setActiveZone(null);
+    }
+  }, [zones, activeZone]);
+
+  const visibleTopics = useMemo(() => {
+    if (activeZone == null) return [];
+    return sortedTopics.filter((p) => getZoneNumber(p.topic.zone) === activeZone);
+  }, [sortedTopics, activeZone]);
+
+  const zoneIndex = zones.findIndex(([n]) => n === activeZone);
+  const onPrev = () => {
+    if (!zones.length || activeZone == null) return;
+    const i = zoneIndex <= 0 ? zones.length - 1 : zoneIndex - 1;
+    setActiveZone(zones[i][0]);
+  };
+  const onNext = () => {
+    if (!zones.length || activeZone == null) return;
+    const i = zoneIndex >= zones.length - 1 ? 0 : zoneIndex + 1;
+    setActiveZone(zones[i][0]);
+  };
+
+  // ✅ Now handle loading and empty states AFTER all hooks
+  if (isLoading) {
+    return <PageEmpty title="Loading topic proficiency..." />;
+  }
+
+  if (!topicProgress?.length) {
+    return <PageEmpty title="No topic progress found" subtitle="This user has not started any topics yet." />;
+  }
+
   return (
-    <div className="bg-[#FFFFFF] w-full rounded-lg shadow-md">
-      <div className="flex flex-col px-6 py-3.5 bg-[#F1F5FA] gap-1 shadow-sm">
+    <div className="relative overflow-hidden bg-[#FFFFFF] w-full rounded-2xl shadow-md border border-white/40 ring-1 ring-[#704EE7]/20">
+      {/* Overlay */}
+      <div className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-gradient-to-br from-white/30 to-transparent" />
+
+      {/* Header (clean, no pagination) */}
+      <div className="relative z-10 flex flex-col px-6 py-3.5 bg-[#704EE7]/15 gap-1 shadow-sm rounded-t-2xl">
         <h3 className="text-xl font-semibold">Topic Proficiency</h3>
-        <p className="text-sm text-[#6B7280]">
-          Track your mastery across Python concepts
-        </p>
+        <p className="text-sm text-[#6B7280]">Track your mastery across Python concepts</p>
       </div>
 
-      <div className="p-6 flex flex-col gap-4">
-        {proficiencies.map((p) => (
-          <ProficiencyCard key={p.id} topic={p.topic} percentMastery={p.percentMastery} />
-        ))}
+      {/* Cards */}
+      <div className="relative z-10 p-6 flex flex-col gap-4">
+        {visibleTopics.length === 0 ? (
+          <div className="text-sm text-[#6B7280]">No topics found in this zone.</div>
+        ) : (
+          visibleTopics.map((p) => (
+            <ProficiencyCard key={p.topic.id} topic={p.topic.name} percent={p.proficiency_percent} />
+          ))
+        )}
+      </div>
+
+      {/* Footer pagination at the bottom */}
+      <div className="relative z-10 px-6 py-3.5 bg-white border-t border-[#E4ECF7] rounded-b-2xl flex items-center justify-between">
+        <div className="text-xs text-[#6B7280]">
+          {activeZone != null && zones.length
+            ? `${zones[zoneIndex]?.[1] ?? `Zone ${activeZone}`} • ${visibleTopics.length} topic${
+                visibleTopics.length !== 1 ? "s" : ""
+              }`
+            : "No zones"}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onPrev}
+            className="text-sm transition cursor-pointer"
+            aria-label="Previous zone"
+          >
+            <FaAngleLeft size={20}/>
+          </button>
+
+          <select
+            className="px-3 py-2 text-sm rounded-lg border border-[#E4ECF7] bg-white"
+            value={activeZone ?? ""}
+            onChange={(e) => setActiveZone(Number(e.target.value))}
+            aria-label="Select zone"
+          >
+            {zones.map(([zn, label]) => (
+              <option key={zn} value={zn}>
+                {label}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={onNext}
+            className="text-sm transition cursor-pointer"
+            aria-label="Next zone"
+          >
+            <FaAngleRight size={20}/>
+          </button>
+        </div>
       </div>
     </div>
   );

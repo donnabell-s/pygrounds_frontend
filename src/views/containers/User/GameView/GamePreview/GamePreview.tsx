@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import * as Interfaces from "../../../../../interfaces";
 import * as Components from "../../../../components";
+import { useGame } from "../../../../../context/GameContext";
 
 const convertSlugToTitle = (slug: string) => {
   return slug
@@ -18,6 +19,8 @@ const GamePreview = () => {
     return <div className="text-center py-10 text-gray-600">Game not found.</div>;
   }
 
+  const { fetchLeaderboard } = useGame();
+
   return (
     <div className="flex flex-col gap-11 py-8">
       <Components.PreviewAction selectedGame={selectedGame} />
@@ -34,6 +37,7 @@ const GamePreview = () => {
           <Components.PreviewCards.Cards.Tips tips={selectedGame.tips} />
         </div>
       </div>
+      <Components.GameLeaderboard fetchLeaderboard={() => fetchLeaderboard(selectedGame?.key || "")} title={`${selectedGame?.title} Leaderboard`} />
     </div>
   );
 };

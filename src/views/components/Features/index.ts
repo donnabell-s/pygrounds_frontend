@@ -5,3 +5,7 @@ export { default as PreviewAction } from "./PreviewAction";
 export { default as AchievementList } from "./AchievementList";
 export { default as ProficiencyList } from "./ProficiencyList";
 export { default as ReadingMaterial } from "./ReadingMaterial";
+export { default as ResultsModal } from "./ResultsModal";
+export { default as PreTestQuestionCard } from "./PreTestQuestionCard";
+export { default as ProfileHeader } from "./ProfileHeader";
+export { default as GameLeaderboard } from "./GameLeaderboard";
