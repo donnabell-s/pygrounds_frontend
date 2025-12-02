@@ -1,183 +1,171 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import { readingApi } from "../../../../api/readingApi";
+
+export interface ReadingMaterialUserRef {
+  jumpToSubtopic: (subId: number) => void;
+}
 
 interface ReadingMaterial {
   id: number;
   title: string;
   content: string;
-  topic_name?: string;
-  subtopic_name?: string;
   topic_ref?: number;
   subtopic_ref?: number;
+  topic_name?: string;
+  subtopic_name?: string;
 }
 
-const ReadingMaterialUser = () => {
-  const [materials, setMaterials] = useState<ReadingMaterial[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+interface Props {
+  setActiveSubtopic: (id: number) => void;
+}
 
-  const fetchMaterials = async () => {
-    try {
-      setLoading(true);
-      const response = await readingApi.getAll();
-      const data = Array.isArray(response) ? response : response?.results ?? [];
-      setMaterials(data);
-      console.log("Raw data length from API:", data.length);
-    } catch (err) {
-      console.error("Failed to load reading materials:", err);
-      setError("Failed to load reading materials.");
-    } finally {
-      setLoading(false);
-    }
-  };
+const ReadingMaterialUser = forwardRef<ReadingMaterialUserRef, Props>(
+  ({ setActiveSubtopic }, ref) => {
+    const [materials, setMaterials] = useState<ReadingMaterial[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    fetchMaterials();
-  }, []);
+    const ITEMS_PER_PAGE = 10;
 
-  // ✅ Sort by topic (alphabetically), then by ID ascending
-  const sortedMaterials = [...materials].sort((a, b) => {
-    const topicA = (a.topic_name || "Uncategorized").toLowerCase();
-    const topicB = (b.topic_name || "Uncategorized").toLowerCase();
-    if (topicA < topicB) return -1;
-    if (topicA > topicB) return 1;
-    return a.id - b.id;
-  });
+    const fetchMaterials = async () => {
+      try {
+        setLoading(true);
+        const response = await readingApi.getAll();
+        const data = Array.isArray(response) ? response : response?.results ?? [];
 
-  // ✅ Group by topic
-  const groupedByTopic: Record<string, ReadingMaterial[]> = sortedMaterials.reduce(
-    (acc, item) => {
-      const topic = item.topic_name || "Uncategorized";
-      if (!acc[topic]) acc[topic] = [];
-      acc[topic].push(item);
-      return acc;
-    },
-    {} as Record<string, ReadingMaterial[]>
-  );
+        // 🔥 FINAL ORDER (Seeder order)
+        const sorted = [...data].sort((a, b) => {
+          if (a.topic_ref !== b.topic_ref) return a.topic_ref - b.topic_ref;
+          if (a.subtopic_ref !== b.subtopic_ref)
+            return a.subtopic_ref - b.subtopic_ref;
+          return a.id - b.id;
+        });
 
-  // ✅ Remove duplicates within each topic (by title + content)
-  for (const topic in groupedByTopic) {
-    const uniqueMap = new Map<string, ReadingMaterial>();
-    groupedByTopic[topic].forEach((m) => {
-      const key = `${m.title.trim().toLowerCase()}|${m.content
-        .trim()
-        .toLowerCase()}`;
-      if (!uniqueMap.has(key)) uniqueMap.set(key, m);
-    });
-    groupedByTopic[topic] = Array.from(uniqueMap.values());
-  }
+        setMaterials(sorted);
+      } catch (err) {
+        setError("Failed to load reading materials.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // ✅ Flatten all topics (preserve topic group but for pagination)
-  const flattened: ReadingMaterial[] = Object.keys(groupedByTopic)
-    .sort((a, b) => a.localeCompare(b)) // sort topics alphabetically
-    .flatMap((topic) =>
-      groupedByTopic[topic].sort((a, b) => a.id - b.id).map((m) => ({
-        ...m,
-        topic_name: topic,
-      }))
+    useEffect(() => {
+      fetchMaterials();
+    }, []);
+
+    // pagination
+    const totalPages = Math.ceil(materials.length / ITEMS_PER_PAGE);
+    const startIndex = (page - 1) * ITEMS_PER_PAGE;
+    const currentMaterials = materials.slice(
+      startIndex,
+      startIndex + ITEMS_PER_PAGE
     );
 
-console.log("📦 Flattened materials length:", flattened.length); // 👈 INSERT HERE
-console.log("📄 Total pages:", Math.ceil(flattened.length / ITEMS_PER_PAGE));
+    // ⭐ GROUP BY REAL TOPIC NAME
+const grouped = currentMaterials.reduce((acc, item) => {
+  // Use the actual topic name from backend
+  const topic = item.topic_name ?? `Topic ${item.topic_ref}`;
 
-  // ✅ Pagination logic
-  const totalPages = Math.ceil(flattened.length / ITEMS_PER_PAGE);
-  const startIndex = (page - 1) * ITEMS_PER_PAGE;
-  const currentMaterials = flattened.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  );
+  if (!acc[topic]) acc[topic] = [];
+  acc[topic].push(item);
 
-  // ✅ Group current materials by topic for rendering
-  const groupedCurrent: Record<string, ReadingMaterial[]> = currentMaterials.reduce(
-    (acc, item) => {
-      const topic = item.topic_name || "Uncategorized";
-      if (!acc[topic]) acc[topic] = [];
-      acc[topic].push(item);
-      return acc;
-    },
-    {} as Record<string, ReadingMaterial[]>
-  );
+  return acc;
+}, {} as Record<string, ReadingMaterial[]>);
 
-  // ✅ Scroll back to top on page change
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page]);
 
-  return (
-    <div className="flex flex-col gap-10">
 
-      {/* ✅ Loading / Error / Empty states */}
-      {loading ? (
-        <p className="text-gray-500">Loading materials...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
-      ) : flattened.length === 0 ? (
-        <p className="text-gray-500 italic">No reading materials available.</p>
-      ) : (
-        // ✅ Render grouped topics for the current page
-        Object.keys(groupedCurrent).map((topic) => (
-          <div key={topic} className="flex flex-col gap-4">
-            <h3 className="text-xl font-bold text-[#3776AB] uppercase tracking-wide border-b border-gray-300 pb-1">
-              {topic}
-            </h3>
+    // ⭐ expose jumpToSubtopic to parent
+    useImperativeHandle(ref, () => ({
+      jumpToSubtopic(subId: number) {
+        const index = materials.findIndex((m) => m.subtopic_ref === subId);
+        if (index === -1) return;
 
-            {groupedCurrent[topic].map((mat) => (
-              <div
-                key={mat.id}
-                className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-all"
-              >
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  {mat.title}
-                </h4>
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                  {mat.content}
-                </p>
-              </div>
-            ))}
-          </div>
-        ))
-      )}
+        const targetPage = Math.floor(index / ITEMS_PER_PAGE) + 1;
 
-      {/* ✅ Pagination Controls (always visible when > 1 page) */}
+        setPage(targetPage);
+
+        setTimeout(() => {
+          const el = document.getElementById(`subtopic-${subId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+            setActiveSubtopic(subId);
+          }
+        }, 250);
+      },
+    }));
+
+    useEffect(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, [page]);
+
+    return (
+      <div className="flex flex-col gap-12">
+        {loading ? (
+          <p>Loading…</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : (
+          // 🔥🔥 NEW: Render by topic with topic header
+          Object.keys(grouped).map((topicLabel) => (
+            <div key={topicLabel} className="flex flex-col gap-6">
+              {/* TOPIC TITLE */}
+              <h2 className="text-2xl font-bold text-[#3776AB] tracking-wide">
+                {topicLabel}
+              </h2>
+
+              {/* SUBTOPIC CARDS */}
+              {grouped[topicLabel].map((mat) => (
+                <div
+                  key={mat.id}
+                  id={`subtopic-${mat.subtopic_ref}`}
+                  className="scroll-mt-32 bg-white border border-gray-200 rounded-lg p-5 shadow-sm"
+                >
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {mat.title}
+                  </h3>
+
+                  <p className="text-gray-700 whitespace-pre-line mt-2">
+                    {mat.content}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ))
+        )}
+
+        {/* Pagination */}
         {totalPages > 1 && (
-        <div className="w-full flex justify-center mt-12 mb-8">
-            <div className="flex items-center gap-6 bg-white border border-gray-200 rounded-xl shadow-sm px-6 py-3">
+          <div className="flex justify-center gap-6 mt-10">
             <button
-                onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                disabled={page === 1}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                page === 1
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                    : "bg-[#3776AB] text-white hover:bg-[#2f5f8f]"
-                }`}
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50"
             >
-                ← Previous
+              ← Previous
             </button>
 
-            <span className="text-sm font-medium text-gray-700">
-                Page <span className="font-semibold text-[#3776AB]">{page}</span> of{" "}
-                <span className="font-semibold">{totalPages}</span>
+            <span className="text-gray-600">
+              Page {page} / {totalPages}
             </span>
 
             <button
-                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                disabled={page === totalPages}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                page === totalPages
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                    : "bg-[#3776AB] text-white hover:bg-[#2f5f8f]"
-                }`}
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50"
             >
-                Next →
+              Next →
             </button>
-            </div>
-        </div>
+          </div>
         )}
-    </div>
-  );
-};
+      </div>
+    );
+  }
+);
 
 export default ReadingMaterialUser;

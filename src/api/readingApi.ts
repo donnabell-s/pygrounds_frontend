@@ -16,17 +16,19 @@ export interface ReadingMaterial {
   };
 }
 
-interface Topic {
+export interface Topic {
   id: number;
   name: string;
 }
 
-interface Subtopic {
+
+export interface Subtopic {
   id: number;
   name: string;
   topic_ref?: number;
   topic_name?: string;
 }
+
 
 interface PaginatedResponse<T> {
   count: number;
