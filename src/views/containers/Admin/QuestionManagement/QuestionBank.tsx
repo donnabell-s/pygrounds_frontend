@@ -102,9 +102,12 @@ const QuestionBank = () => {
         fetchQuestions();
     }, [currentPage]);
 
-    const fetchQuestions = async () => {
+    const fetchQuestions = async (options?: { silent?: boolean }) => {
+        const silent = options?.silent ?? false;
         try {
-            setLoading(true);
+            if (!silent) {
+                setLoading(true);
+            }
             if (questionType === 'minigame') {
                 const response = await adminApi.getAllQuestions({
                     game_type: gameType === 'all' ? undefined : gameType as 'coding' | 'non_coding',
@@ -140,7 +143,9 @@ const QuestionBank = () => {
             console.error('Error fetching questions:', err);
             setError(err.message || 'Failed to fetch questions');
         } finally {
-            setLoading(false);
+            if (!silent) {
+                setLoading(false);
+            }
         }
     };
 
@@ -263,6 +268,9 @@ const QuestionBank = () => {
         // Save session to localStorage for persistence across page refreshes
         localStorage.setItem('preassessment_generation_session', sessionId);
         setActivePreAssessmentSession(sessionId);
+
+        let lastSeenQuestionsGenerated = -1;
+        let lastRefreshAt = 0;
         
         const pollInterval = setInterval(async () => {
             try {
@@ -272,10 +280,21 @@ const QuestionBank = () => {
                 
                 // Update message with progress
                 setGenerationSuccess(`Pre-assessment generation: ${status.questions_generated} questions generated...`);
+
+                // Refresh table when backend reports new questions
+                if (status.questions_generated > lastSeenQuestionsGenerated) {
+                    lastSeenQuestionsGenerated = status.questions_generated;
+                    const now = Date.now();
+                    if (lastSeenQuestionsGenerated > 0 && now - lastRefreshAt >= 5000) {
+                        lastRefreshAt = now;
+                        await fetchQuestions({ silent: true });
+                    }
+                }
                 
                 // Stop polling if completed or error
                 if (status.status === 'completed' || status.status === 'error') {
                     clearInterval(pollInterval);
+                    clearTimeout(pollTimeout);
                     
                     // Clear session from localStorage
                     localStorage.removeItem('preassessment_generation_session');
@@ -292,6 +311,7 @@ const QuestionBank = () => {
             } catch (error: any) {
                 console.error('Error polling pre-assessment status:', error);
                 clearInterval(pollInterval);
+                clearTimeout(pollTimeout);
                 
                 // Clear session from localStorage on error
                 localStorage.removeItem('preassessment_generation_session');
@@ -301,12 +321,19 @@ const QuestionBank = () => {
                 setGenerationSuccess('');
             }
         }, 3000); // Poll every 3 seconds
-        
-        // Clear interval after 10 minutes to prevent infinite polling
-        setTimeout(() => {
+
+        const pollTimeout = window.setTimeout(() => {
+            // Only time out the same active session
+            if (localStorage.getItem('preassessment_generation_session') !== sessionId) {
+                return;
+            }
+
             clearInterval(pollInterval);
             localStorage.removeItem('preassessment_generation_session');
             setActivePreAssessmentSession(null);
+            setGenerationSuccess('');
+            setError('');
+            window.location.reload();
         }, 600000);
     };
 
@@ -314,6 +341,9 @@ const QuestionBank = () => {
         // Save session to localStorage for persistence across page refreshes
         localStorage.setItem('minigame_generation_session', sessionId);
         setActiveMinigameSession(sessionId);
+
+        let lastSeenQuestionsGenerated = -1;
+        let lastRefreshAt = 0;
         
         const pollInterval = setInterval(async () => {
             try {
@@ -327,6 +357,17 @@ const QuestionBank = () => {
                 // Use the worker_summary from the main status response
                 const workerSummary = status.worker_summary;
                 const overallProgress = status.overall_progress;
+                const questionsGenerated = overallProgress?.total_questions_generated ?? 0;
+
+                // Refresh table when backend reports new questions
+                if (questionsGenerated > lastSeenQuestionsGenerated) {
+                    lastSeenQuestionsGenerated = questionsGenerated;
+                    const now = Date.now();
+                    if (lastSeenQuestionsGenerated > 0 && now - lastRefreshAt >= 5000) {
+                        lastRefreshAt = now;
+                        await fetchQuestions({ silent: true });
+                    }
+                }
                 
                 if (workerSummary && workerSummary.total_workers > 0) {
                     const activeWorkers = workerSummary.active_workers;
@@ -338,16 +379,18 @@ const QuestionBank = () => {
                     let statusMessage = '';
                     
                     if (activeWorkers > 0) {
-                        statusMessage = `🔄 Generating questions... ${activeWorkers} workers active, ${completedWorkers} completed`;
+                        statusMessage = `🔄 Generating questions... ${activeWorkers} workers active, ${completedWorkers} questions`;
                     } else if (pendingWorkers > 0) {
-                        statusMessage = `⏳ Starting workers... ${pendingWorkers} workers pending, ${completedWorkers} completed`;
+                        statusMessage = `⏳ Starting workers... ${pendingWorkers} workers pending, ${completedWorkers} questions`;
                     } else if (completedWorkers > 0) {
                         statusMessage = `✅ Processing... ${completedWorkers}/${totalWorkers} workers completed`;
                     } else {
                         statusMessage = `🚀 Initializing ${totalWorkers} workers...`;
                     }
-                    
-                    statusMessage += ` | Generated: ${overallProgress.total_questions_generated || 0} questions`;
+
+                    if (questionsGenerated > 0) {
+                        statusMessage += ` | ${questionsGenerated} questions`;
+                    }
                     
                     if (failedWorkers > 0) {
                         statusMessage += ` | ⚠️ ${failedWorkers} failed`;
@@ -355,12 +398,17 @@ const QuestionBank = () => {
                     
                     setMinigameGenerationStatus(statusMessage);
                 } else {
-                    setMinigameGenerationStatus(`Generating questions... ${overallProgress.total_questions_generated || 0} questions generated`);
+                    if (questionsGenerated > 0) {
+                        setMinigameGenerationStatus(`Generating questions... ${questionsGenerated} questions`);
+                    } else {
+                        setMinigameGenerationStatus('Generating questions...');
+                    }
                 }
                 
                 // Stop polling if completed or error
                 if (status.status === 'completed' || status.status === 'error') {
                     clearInterval(pollInterval);
+                    clearTimeout(pollTimeout);
                     
                     // Clear session from localStorage
                     localStorage.removeItem('minigame_generation_session');
@@ -384,6 +432,7 @@ const QuestionBank = () => {
             } catch (error: any) {
                 console.error('Error polling minigame generation status:', error);
                 clearInterval(pollInterval);
+                clearTimeout(pollTimeout);
                 
                 // Clear session from localStorage on error
                 localStorage.removeItem('minigame_generation_session');
@@ -393,12 +442,19 @@ const QuestionBank = () => {
                 setMinigameGenerationStatus('');
             }
         }, 2000); // Poll every 2 seconds for more responsive worker tracking
-        
-        // Clear interval after 15 minutes to prevent infinite polling
-        setTimeout(() => {
+
+        const pollTimeout = window.setTimeout(() => {
+            // Only time out the same active session
+            if (localStorage.getItem('minigame_generation_session') !== sessionId) {
+                return;
+            }
+
             clearInterval(pollInterval);
             localStorage.removeItem('minigame_generation_session');
             setActiveMinigameSession(null);
+            setMinigameGenerationStatus('');
+            setError('');
+            window.location.reload();
         }, 900000);
     };
 
@@ -589,6 +645,7 @@ const QuestionBank = () => {
                 renderRow={(item: GeneratedQuestion | PreAssessmentQuestion) => {
                     if (questionType === 'minigame') {
                         const question = item as GeneratedQuestion;
+                        getValidationStatusIcon(question.validation_status || 'pending');
                         return (
                             <tr key={question.id}>
                                 <td className="px-3 py-3 text-sm font-mono text-center">
@@ -701,63 +758,14 @@ const QuestionBank = () => {
             />
 
             {generationSuccess && (
-                <div className="mb-4 bg-green-100 text-green-700 p-3 rounded-md flex justify-between items-center">
+                <div className="mb-4 bg-green-100 text-green-700 p-3 rounded-md">
                     <span>{generationSuccess}</span>
-                    <div className="flex items-center space-x-2">
-                        {activePreAssessmentSession && (
-                            <button 
-                                onClick={() => handleCancelGeneration(activePreAssessmentSession, 'preassessment')}
-                                className="bg-red-500 text-white px-2 py-1 text-xs rounded hover:bg-red-600 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                        )}
-                        <button 
-                            onClick={() => setGenerationSuccess('')}
-                            className="ml-2 text-green-500 hover:text-green-700 text-lg"
-                        >
-                            ×
-                        </button>
-                    </div>
                 </div>
             )}
 
             {minigameGenerationStatus && (
-                <div className="mb-4 bg-blue-100 text-blue-700 p-3 rounded-md flex justify-between items-center">
+                <div className="mb-4 bg-blue-100 text-blue-700 p-3 rounded-md">
                     <span>{minigameGenerationStatus}</span>
-                    <div className="flex items-center space-x-2">
-                        {activeMinigameSession && (
-                            <button 
-                                onClick={() => handleCancelGeneration(activeMinigameSession, 'minigame')}
-                                className="bg-red-500 text-white px-2 py-1 text-xs rounded hover:bg-red-600 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                        )}
-                        <button 
-                            onClick={() => setMinigameGenerationStatus('')}
-                            className="ml-2 text-blue-500 hover:text-blue-700 text-lg"
-                        >
-                            ×
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {activeMinigameSession && (
-                <div className="mb-4 flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Minigame generation in progress...</span>
-                    <button
-                        onClick={() => {
-                            localStorage.removeItem('minigame_generation_session');
-                            setActiveMinigameSession(null);
-                            setMinigameGenerationStatus('');
-                        }}
-                        className="bg-red-500 text-white px-3 py-1 text-sm rounded hover:brightness-110 transition-all"
-                        title="Stop minigame generation tracking"
-                    >
-                        Stop Tracking
-                    </button>
                 </div>
             )}
 
@@ -885,13 +893,6 @@ const QuestionBank = () => {
                                         min="1"
                                         required
                                     />
-                                </div>
-
-                                <div className="bg-gray-50 p-3 rounded-md">
-                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Read-Only Information</h4>
-                                    <div className="text-sm text-gray-600 space-y-1">
-                                        <p><strong>ID:</strong> {editingQuestion.id}</p>
-                                    </div>
                                 </div>
                             </div>
                             
@@ -1033,16 +1034,6 @@ const QuestionBank = () => {
                                         </div>
                                     </div>
                                 )}
-
-                                <div className="bg-gray-50 p-3 rounded-md">
-                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Read-Only Information</h4>
-                                    <div className="text-sm text-gray-600 space-y-1">
-                                        <p><strong>Topic:</strong> {editingMinigameQuestion.topic.name}</p>
-                                        <p><strong>Subtopic:</strong> {editingMinigameQuestion.subtopic.name}</p>
-                                        <p><strong>Zone:</strong> {editingMinigameQuestion.topic.zone.name}</p>
-                                        <p><strong>Status:</strong> {editingMinigameQuestion.validation_status}</p>
-                                    </div>
-                                </div>
                             </div>
                             
                             <div className="flex justify-end space-x-3 mt-6">
