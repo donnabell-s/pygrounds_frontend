@@ -270,7 +270,7 @@ const MinigameBulkGeneration = ({ onBack, onSubmit }: MinigameBulkGenerationProp
     };
 
     return (
-        <div className="max-w-6xl mx-auto p-6">
+        <div className="w-full max-w-none p-6">
             <div className="mb-6">
                 <button
                     onClick={onBack}
