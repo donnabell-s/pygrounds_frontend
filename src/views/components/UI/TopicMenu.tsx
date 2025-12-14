@@ -15,8 +15,9 @@ const TopicMenu = ({ onSelectSubtopic, activeSubtopic }: Props) => {
 
   useEffect(() => {
     const load = async () => {
-      const t = await readingApi.getTopics();
-      const s = await readingApi.getSubtopics();
+      const t = await readingApi.getPublicTopics();
+      const s = await readingApi.getPublicSubtopics();
+
 
       // Preserve original seeder order
       setTopics([...t].sort((a, b) => a.id - b.id));
