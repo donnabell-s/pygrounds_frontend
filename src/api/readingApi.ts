@@ -23,9 +23,9 @@ export interface Topic {
 export interface Subtopic {
   id: number;
   name: string;
-  topic_ref?: number;
-  topic_name?: string;
+  topic: number;       
 }
+
 
 interface PaginatedResponse<T> {
   count: number;
@@ -138,7 +138,23 @@ export const readingApi = {
   },
 
   getPublicSubtopics: async (): Promise<Subtopic[]> => {
-    const res = await axios.get(`${API_BASE_URL}/subtopics/`);
-    return Array.isArray(res.data) ? res.data : res.data.results;
-  },
+  let allResults: Subtopic[] = [];
+  let nextUrl: string | null = `${API_BASE_URL}/subtopics/`;
+
+  while (nextUrl) {
+    const res: AxiosResponse<PaginatedResponse<Subtopic>> =
+      await axios.get(nextUrl);
+
+    const data = res.data;
+
+    if (Array.isArray(data.results)) {
+      allResults = [...allResults, ...data.results];
+      nextUrl = data.next;
+    } else {
+      nextUrl = null;
+    }
+  }
+
+  return allResults;
+},
 };

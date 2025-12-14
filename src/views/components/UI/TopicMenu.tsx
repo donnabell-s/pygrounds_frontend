@@ -3,6 +3,8 @@ import type { Topic, Subtopic } from "../../../api/readingApi";
 import { readingApi } from "../../../api/readingApi";
 import { FiChevronRight } from "react-icons/fi";
 
+
+
 interface Props {
   onSelectSubtopic: (id: number) => void;
   activeSubtopic: number | null;
@@ -14,20 +16,25 @@ const TopicMenu = ({ onSelectSubtopic, activeSubtopic }: Props) => {
   const [openTopic, setOpenTopic] = useState<number | null>(null);
 
   useEffect(() => {
-    const load = async () => {
+  const load = async () => {
+    try {
       const t = await readingApi.getPublicTopics();
       const s = await readingApi.getPublicSubtopics();
 
-
-      // Preserve original seeder order
       setTopics([...t].sort((a, b) => a.id - b.id));
       setSubtopics([...s].sort((a, b) => a.id - b.id));
-    };
-    load();
-  }, []);
+    } catch (err) {
+      console.error("Failed to load public topics/subtopics", err);
+    }
+  };
+
+  load();
+}, []);
+
 
   const getSubtopics = (topicId: number) =>
-    subtopics.filter((s) => s.topic_ref === topicId);
+  subtopics.filter((s) => s.topic === topicId);
+
 
   return (
     <div className="mt-3 flex flex-col pl-3 border-l-2 border-gray-200">
@@ -91,4 +98,4 @@ const TopicMenu = ({ onSelectSubtopic, activeSubtopic }: Props) => {
   );
 };
 
-export default TopicMenu;
+export default TopicMenu
