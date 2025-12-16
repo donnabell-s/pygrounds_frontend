@@ -12,6 +12,25 @@ type GameType = 'all' | 'coding' | 'non_coding';
 type ValidationStatus = 'all' | 'pending' | 'processed';
 type DifficultyFilter = 'all' | 'beginner' | 'intermediate' | 'advanced' | 'master';
 
+type BulkDifficultyCheckPayload = {
+  questionType: "minigame" | "preassessment";
+  gameType?: "coding" | "non_coding";
+  validationStatus?: "pending" | "processed";
+  difficultyFilter?: "beginner" | "intermediate" | "advanced" | "master";
+};
+
+type BulkDifficultyCheckResponse = {
+  status: "success" | "error";
+  message?: string;
+  results?: {
+    total_checked: number;
+    updated_count: number;
+    unchanged_count: number;
+    error_count: number;
+  };
+};
+
+
 const QuestionBank = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
@@ -35,6 +54,8 @@ const QuestionBank = () => {
     const [editingMinigameQuestion, setEditingMinigameQuestion] = useState<GeneratedQuestion | null>(null);
     const [isMinigameEditModalOpen, setIsMinigameEditModalOpen] = useState(false);
     const [showMinigameBulkGeneration, setShowMinigameBulkGeneration] = useState(false);
+
+
 
     const handleCancelGeneration = async (sessionId: string, generationType: 'minigame' | 'preassessment') => {
         try {
@@ -237,32 +258,63 @@ const QuestionBank = () => {
 
     const filteredQuestions = questionsData?.results || [];
 
-    const handleBulkDifficultyCheck = async () => {
-        try {
-            setIsCheckingDifficulty(true);
-            setError('');
-            setDifficultyCheckResult('');
-            
-            const response = await adminApi.bulkCheckDifficulty(questionType);
-            setDifficultyCheckResult(response.message);
-            
-            // If it was successful, refresh the questions to show any updates
-            if (response.status === 'success') {
-                setDifficultyCheckResult(response.message || 'Successfully recalibrated question difficulties.');
-                setTimeout(() => {
-                    setDifficultyCheckResult('');
-                    fetchQuestions();
-                }, 6000); // smoother refresh
-            } else {
-                setError(response.message || 'Failed to recalibrate difficulty.');
-            }
 
-        } catch (err: any) {
-            setError(err.message || 'Failed to check question difficulty');
-        } finally {
-            setIsCheckingDifficulty(false);
-        }
+const handleBulkDifficultyCheck = async () => {
+  try {
+    setIsCheckingDifficulty(true);
+    setError("");
+    setDifficultyCheckResult("");
+
+    // Build payload based on CURRENT UI filters
+    const payload = {
+    questionType,
+    gameType: questionType === "minigame" && gameType !== "all" ? gameType : undefined,
+    validationStatus: questionType === "minigame" && validationStatus !== "all" ? validationStatus : undefined,
+    difficultyFilter: difficultyFilter !== "all" ? difficultyFilter : undefined,
     };
+
+
+    const response: BulkDifficultyCheckResponse =
+      await adminApi.bulkCheckDifficulty(payload);
+
+    // error status
+    if (response.status !== "success") {
+      setDifficultyCheckResult(`❌ ${response.message || "Difficulty check failed."}`);
+      return;
+    }
+
+    // success but no results (allowed)
+    if (!response.results) {
+      setDifficultyCheckResult(`✅ ${response.message || "Difficulty check done."}`);
+      return;
+    }
+
+    const r = response.results;
+    const summary =
+      `✅ Difficulty Check Completed!\n` +
+      `Total checked: ${r.total_checked}\n` +
+      `Updated: ${r.updated_count}\n` +
+      `Unchanged: ${r.unchanged_count}\n` +
+      `Errors: ${r.error_count}`;
+
+    setDifficultyCheckResult(summary);
+
+    // If admin was viewing Pending, after check they become Processed
+    if (questionType === "minigame" && validationStatus === "pending") {
+      setValidationStatus("processed");
+    }
+
+    setTimeout(() => {
+      setDifficultyCheckResult("");
+      fetchQuestions();
+    }, 2000);
+  } catch (err: any) {
+    setError(err?.message || "Failed to check question difficulty");
+  } finally {
+    setIsCheckingDifficulty(false);
+  }
+};
+
 
     const pollPreAssessmentStatus = async (sessionId: string) => {
         // Save session to localStorage for persistence across page refreshes
