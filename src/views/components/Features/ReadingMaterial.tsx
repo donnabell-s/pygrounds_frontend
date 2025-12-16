@@ -177,8 +177,8 @@ const ReadingMaterial = () => {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-800">Reading Materials</h2>
+      <div className="flex items-center justify-between pt-2">
+        <h2 className="text-3xl font-medium text-gray-800">Reading Materials Management</h2>
         <button
           onClick={() => {
             setEditingMaterial(null);
@@ -195,7 +195,7 @@ const ReadingMaterial = () => {
 
       {/* Table */}
       <AdminTable
-        title="Reading Materials Management"
+        title=""
         loading={loading}
         error={error}
         items={materials}
