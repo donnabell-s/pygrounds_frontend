@@ -1,7 +1,6 @@
 import axios, { type AxiosResponse } from "axios";
 import client from "./client"; 
 
-
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
@@ -21,12 +20,10 @@ export interface Topic {
   name: string;
 }
 
-
 export interface Subtopic {
   id: number;
   name: string;
-  topic_ref?: number;
-  topic_name?: string;
+  topic: number;       
 }
 
 
@@ -36,22 +33,25 @@ interface PaginatedResponse<T> {
   previous: string | null;
   results: T[];
 }
+
 export const readingApi = {
 
+  // ===============================
+  // EXISTING (DO NOT TOUCH)
+  // ===============================
   getAll: async (isAdmin = false): Promise<any> => {
-  const endpoint = isAdmin
-    ? "/reading/admin/materials/?ordering=-id"
-    : "/reading-materials/?ordering=id";
+    const endpoint = isAdmin
+      ? "/reading/admin/materials/?ordering=-id"
+      : "/reading-materials/?ordering=id";
 
-  const token =
-    localStorage.getItem("accessToken") || localStorage.getItem("access_token");
-  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const token =
+      localStorage.getItem("accessToken") || localStorage.getItem("access_token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-  const response = await client.get(endpoint, { headers });
-  return response.data;
-},
+    const response = await client.get(endpoint, { headers });
+    return response.data;
+  },
 
-  
   create: async (data: {
     title: string;
     content: string;
@@ -80,6 +80,7 @@ export const readingApi = {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     return axios.delete(`${API_BASE_URL}/reading/admin/materials/${id}/`, { headers });
   },
+
   getTopics: async (): Promise<Topic[]> => {
     const token =
       localStorage.getItem("accessToken") || localStorage.getItem("access_token");
@@ -89,12 +90,10 @@ export const readingApi = {
     let nextUrl: string | null = `${API_BASE_URL}/reading/admin/topics/`;
 
     while (nextUrl) {
-      const res: AxiosResponse<PaginatedResponse<Topic>> = await axios.get<
-        PaginatedResponse<Topic>
-      >(nextUrl, { headers });
+      const res: AxiosResponse<PaginatedResponse<Topic>> =
+        await axios.get(nextUrl, { headers });
 
-      const data: PaginatedResponse<Topic> = res.data;
-
+      const data = res.data;
       if (Array.isArray(data.results)) {
         allResults = [...allResults, ...data.results];
         nextUrl = data.next;
@@ -103,7 +102,6 @@ export const readingApi = {
       }
     }
 
-    console.log("Loaded total topics:", allResults.length);
     return allResults;
   },
 
@@ -116,12 +114,10 @@ export const readingApi = {
     let nextUrl: string | null = `${API_BASE_URL}/reading/admin/subtopics/`;
 
     while (nextUrl) {
-      const res: AxiosResponse<PaginatedResponse<Subtopic>> = await axios.get<
-        PaginatedResponse<Subtopic>
-      >(nextUrl, { headers });
+      const res: AxiosResponse<PaginatedResponse<Subtopic>> =
+        await axios.get(nextUrl, { headers });
 
-      const data: PaginatedResponse<Subtopic> = res.data;
-
+      const data = res.data;
       if (Array.isArray(data.results)) {
         allResults = [...allResults, ...data.results];
         nextUrl = data.next;
@@ -130,9 +126,35 @@ export const readingApi = {
       }
     }
 
-    console.log("Loaded total subtopics:", allResults.length);
     return allResults;
   },
-};
 
- 
+  // ===============================
+  // ✅ ADDED (PUBLIC / NON-ADMIN)
+  // ===============================
+  getPublicTopics: async (): Promise<Topic[]> => {
+    const res = await axios.get(`${API_BASE_URL}/topics/`);
+    return Array.isArray(res.data) ? res.data : res.data.results;
+  },
+
+  getPublicSubtopics: async (): Promise<Subtopic[]> => {
+  let allResults: Subtopic[] = [];
+  let nextUrl: string | null = `${API_BASE_URL}/subtopics/`;
+
+  while (nextUrl) {
+    const res: AxiosResponse<PaginatedResponse<Subtopic>> =
+      await axios.get(nextUrl);
+
+    const data = res.data;
+
+    if (Array.isArray(data.results)) {
+      allResults = [...allResults, ...data.results];
+      nextUrl = data.next;
+    } else {
+      nextUrl = null;
+    }
+  }
+
+  return allResults;
+},
+};

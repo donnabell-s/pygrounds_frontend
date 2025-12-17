@@ -1,5 +1,4 @@
-// src/api/client.ts
-import axios from "axios";
+import axios, { AxiosHeaders } from "axios";
 
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api",
@@ -7,15 +6,22 @@ const client = axios.create({
 });
 
 client.interceptors.request.use((config) => {
+  // NOTE: make sure sakto ni nga key sa inyong login
+  // common keys: "accessToken", "access_token", "token"
   const token = localStorage.getItem("accessToken");
 
-  // Ensure headers object exists
-  if (!config.headers) {
-    config.headers = {};
-  }
-
   if (token) {
-    (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+    // Axios v1 uses AxiosHeaders
+    if (!config.headers) {
+      config.headers = new AxiosHeaders();
+    }
+
+    if (config.headers instanceof AxiosHeaders) {
+      config.headers.set("Authorization", `Bearer ${token}`);
+    } else {
+      // fallback if headers is still a plain object
+      (config.headers as any)["Authorization"] = `Bearer ${token}`;
+    }
   }
 
   return config;
@@ -29,12 +35,9 @@ client.interceptors.response.use(
     const status = error?.response?.status;
     if (status === 401) {
       try {
-        // If another tab already handled expiry, don't re-dispatch
         if (localStorage.getItem("tokenExpiredHandled")) {
           return Promise.reject(error);
         }
-
-        // Prevent flooding: set a flag so we only notify once per expiry
         if (!localStorage.getItem("tokenExpired")) {
           localStorage.setItem("tokenExpired", "1");
           window.dispatchEvent(new CustomEvent("auth:expired"));

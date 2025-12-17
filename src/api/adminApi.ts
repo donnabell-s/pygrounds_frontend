@@ -46,57 +46,116 @@ export const adminApi = {
         return response.data;
     },
 
-    //Difficulty Checker APIs (Connected to Backend Recalibrator)
-    bulkCheckDifficulty: async (questionType: 'minigame' | 'preassessment'): Promise<DifficultyCheckResponse> => {
-        try {
-        // Determine correct API path based on question type
-        const apiType =
-            questionType === 'preassessment'
-                ? 'preassessment'
-                : 'coding'; // default to coding for minigame
+// Difficulty Checker APIs (NEW ML CHECK DIFFICULTY)
+bulkCheckDifficulty: async (payload: {
+  questionType: "minigame" | "preassessment";
+  gameType?: "coding" | "non_coding";          // optional
+  validationStatus?: "pending" | "processed";  // optional
+  difficultyFilter?: "beginner" | "intermediate" | "advanced" | "master"; // optional
+}): Promise<DifficultyCheckResponse> => {
+  const buildBody = () => ({
+    question_type_filter: payload.questionType, // keep if backend expects it
+    status_filter: payload.validationStatus ?? "all",
+    difficulty_filter: payload.difficultyFilter ?? "all",
+  });
 
-        const response = await client.post<DifficultyCheckResponse>(
-            `/recalibrate-question/type/${apiType}/`,
-            {},
-            {
-                headers: {
-                    Authorization: `Bearer ${
-                        (
-                        localStorage.getItem('authToken') ||
-                        localStorage.getItem('access') ||
-                        localStorage.getItem('access_token') ||
-                        ''
-                        ).trim()
-                    }`,
-                    'Content-Type': 'application/json; charset=utf-8',
-                    },
-            }
-        );
-
-        return {
-            status: 'success',
-            message: response.data.message || `Recalibration triggered for ${apiType} questions.`,
-            results: {
-                total_checked: 0,
-                updated_count: 0,
-                unchanged_count: 0,
-                error_count: 0,
-            },
-        };
-    } catch (error: any) {
-        console.error('Difficulty recalibration failed:', error);
-        return {
-            status: 'error',
-            message: error.response?.data?.message || 'Failed to recalibrate difficulty.',
-            results: {
-                total_checked: 0,
-                updated_count: 0,
-                unchanged_count: 0,
-                error_count: 1,
-            },
-        };
+  const normalize = (data: any) => {
+    if (data?.status === "error") {
+      return {
+        status: "error" as const,
+        message: data?.message || "Failed to check difficulty.",
+        results: { total_checked: 0, updated_count: 0, unchanged_count: 0, error_count: 1 },
+      };
     }
+
+    return {
+      status: "success" as const,
+      message: data?.message || "Difficulty check done.",
+      results: data?.results || {
+        total_checked: data?.total_checked ?? 0,
+        updated_count: data?.updated_count ?? data?.updated ?? 0,
+        unchanged_count: data?.unchanged_count ?? data?.unchanged ?? 0,
+        error_count: data?.error_count ?? 0,
+      },
+    };
+  };
+
+  try {
+    const body = buildBody();
+
+    // ✅ preassessment: single endpoint
+    if (payload.questionType === "preassessment") {
+      const res = await client.post(`/ml/check-difficulty/preassessment/`, body);
+      return normalize(res.data);
+    }
+
+    // ✅ minigame with explicit type: single endpoint
+    if (payload.gameType === "coding" || payload.gameType === "non_coding") {
+      const res = await client.post(`/ml/check-difficulty/${payload.gameType}/`, body);
+      return normalize(res.data);
+    }
+
+    // ✅ minigame ALL types: call BOTH coding + non_coding then merge
+    const [codingRes, nonCodingRes] = await Promise.allSettled([
+      client.post(`/ml/check-difficulty/coding/`, body),
+      client.post(`/ml/check-difficulty/non_coding/`, body),
+    ]);
+
+    const okResults: Array<ReturnType<typeof normalize>> = [];
+    const errors: string[] = [];
+
+    if (codingRes.status === "fulfilled") okResults.push(normalize(codingRes.value.data));
+    else errors.push("coding failed");
+
+    if (nonCodingRes.status === "fulfilled") okResults.push(normalize(nonCodingRes.value.data));
+    else errors.push("non_coding failed");
+
+    if (okResults.length === 0) {
+      return {
+        status: "error",
+        message: `Failed to check difficulty (${errors.join(", ")}).`,
+        results: { total_checked: 0, updated_count: 0, unchanged_count: 0, error_count: 1 },
+      };
+    }
+
+    // merge counts
+    const merged = okResults.reduce(
+      (acc, cur) => {
+        const r = cur.results;
+        if (!r) return acc;
+        acc.total_checked += r.total_checked ?? 0;
+        acc.updated_count += r.updated_count ?? 0;
+        acc.unchanged_count += r.unchanged_count ?? 0;
+        acc.error_count += r.error_count ?? 0;
+        return acc;
+      },
+      { total_checked: 0, updated_count: 0, unchanged_count: 0, error_count: 0 }
+    );
+
+    return {
+      status: "success",
+      message: errors.length
+        ? `Difficulty check partially done (${errors.join(", ")}).`
+        : "Difficulty check done for Coding + Non-Coding.",
+      results: merged,
+    };
+  } catch (error: any) {
+    const msg =
+      error?.response?.data?.message ||
+      error?.response?.data?.detail ||
+      error?.message ||
+      "Failed to check difficulty.";
+
+    return {
+      status: "error",
+      message: msg,
+      results: { total_checked: 0, updated_count: 0, unchanged_count: 0, error_count: 1 },
+    };
+  }
 },
+
+
+
 
     // QUESTION MANAGEMENT 
  
