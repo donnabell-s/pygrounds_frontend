@@ -82,24 +82,15 @@ const ViewSubtopic = () => {
 
     const handleCreate = async (data: Omit<AdminSubtopic, 'id'>) => {
         try {
-            // Start the API call but don't wait for it
-            adminApi.createSubtopic(data).then(() => {
-                // Refresh the list in background after API completes
-                fetchSubtopics().catch(err => {
-                    console.error('Error refreshing subtopics:', err);
-                });
-            }).catch(err => {
-                const errorMessage = err.response?.data?.error || err.response?.data?.detail || err.response?.data?.message || 'Failed to create subtopic';
-                console.error('Error creating subtopic:', err.response?.data);
-                setError(errorMessage);
-            });
-            
-            // Close modal immediately
-            setShowCreateForm(false);
             setError('');
+            await adminApi.createSubtopic(data);
+            await fetchSubtopics();
+            setShowCreateForm(false);
         } catch (err: any) {
-            // This should not happen since we're not awaiting
-            console.error('Unexpected error:', err);
+            const errorMessage = err.response?.data?.error || err.response?.data?.detail || err.response?.data?.message || err.message || 'Failed to create subtopic';
+            console.error('Error creating subtopic:', err.response?.data || err);
+            setError(errorMessage);
+            throw new Error(errorMessage);
         }
     };
 
@@ -107,24 +98,15 @@ const ViewSubtopic = () => {
         if (!editingSubtopic) return;
 
         try {
-            // Start the API call but don't wait for it
-            adminApi.updateSubtopic(editingSubtopic.id, data).then(() => {
-                // Refresh the list in background after API completes
-                fetchSubtopics().catch(err => {
-                    console.error('Error refreshing subtopics:', err);
-                });
-            }).catch(err => {
-                const errorMessage = err.response?.data?.error || err.response?.data?.detail || err.response?.data?.message || 'Failed to update subtopic';
-                console.error('Error updating subtopic:', err.response?.data);
-                setError(errorMessage);
-            });
-            
-            // Close modal immediately
-            setEditingSubtopic(null);
             setError('');
+            await adminApi.updateSubtopic(editingSubtopic.id, data);
+            await fetchSubtopics();
+            setEditingSubtopic(null);
         } catch (err: any) {
-            // This should not happen since we're not awaiting
-            console.error('Unexpected error:', err);
+            const errorMessage = err.response?.data?.error || err.response?.data?.detail || err.response?.data?.message || err.message || 'Failed to update subtopic';
+            console.error('Error updating subtopic:', err.response?.data || err);
+            setError(errorMessage);
+            throw new Error(errorMessage);
         }
     };
 

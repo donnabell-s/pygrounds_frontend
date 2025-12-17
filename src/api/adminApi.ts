@@ -532,7 +532,7 @@ bulkCheckDifficulty: async (payload: {
         concept_intent?: string,
         code_intent?: string
     }): Promise<AdminSubtopic> => {
-        const response = await client.post<AdminSubtopic>('/subtopics/', data);
+        const response = await client.post<AdminSubtopic>('/subtopics/', data, { timeout: 30000 });
         return response.data;
     },
 
@@ -542,7 +542,7 @@ bulkCheckDifficulty: async (payload: {
         concept_intent?: string,
         code_intent?: string
     }): Promise<AdminSubtopic> => {
-        const response = await client.put<AdminSubtopic>(`/subtopics/${id}/`, data);
+        const response = await client.put<AdminSubtopic>(`/subtopics/${id}/`, data, { timeout: 30000 });
         return response.data;
     },
 
