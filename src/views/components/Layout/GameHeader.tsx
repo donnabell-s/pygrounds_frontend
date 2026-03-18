@@ -41,9 +41,15 @@ const GameHeader = () => {
 
   if (!activeSession) return null;
 
+  // Apply transparency only for debugging game
+  const isDebuggingGame = activeSession.game_type === "as";
+  const headerClasses = isDebuggingGame
+    ? "absolute top-0 left-0 right-0 h-16 flex items-center px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 z-50"
+    : "sticky top-0 bg-[#FFFFFF] h-16 flex items-center shadow-sm px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 z-50";
+
   return (
     <>
-      <div className="sticky top-0 bg-[#FFFFFF] h-16 flex items-center shadow-sm px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 z-50">
+      <div className={headerClasses}>
         {!gameEnded && (
           <div className="flex flex-row items-center gap-6">
             <Component.BackButton label="Exit Game" onClick={() => setShowExitModal(true)}/>

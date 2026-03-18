@@ -13,6 +13,7 @@ export const AppRoutes = () => {
         <Route path="/" element={<Navigate to={PATHS.LANDING.path} />} />
 
         <Route path={PATHS.LANDING.path} element={<Views.Landing />} />
+      
         
         <Route path={PATHS.LOGIN.path} element={<Views.Login />} />
         
