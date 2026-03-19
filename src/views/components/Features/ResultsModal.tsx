@@ -6,6 +6,7 @@ import * as Component from "../../components";
 import { FaRegClock } from "react-icons/fa6";
 import { HiOutlineLightningBolt } from "react-icons/hi";
 import { TiStarOutline } from "react-icons/ti";
+import QuestionResultCard from "./QuestionResultCard";
 
 interface ResultsModalProps {
   onClose: () => void;
@@ -23,6 +24,7 @@ type RespRow = {
 type SQ = {
   id: number;
   question?: {
+    id?: number;
     question_text?: string;
     correct_answer?: string | null;
     explanation?: string | null;
@@ -97,6 +99,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
       const correctAnswer = q.correct_answer ?? "";
       const explanation = q.explanation ?? q.game_data?.explanation ?? "";
       const isCoding = sessionIsCoding || (q.game_type ?? "").toLowerCase() === "coding";
+      const questionId = q.id;
 
       const fetched = respMap[sq.id] || {};
       const userAnswerRaw = fetched.ua ?? sq.user_answer ?? sq.response?.user_answer ?? null;
@@ -117,6 +120,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
 
       return {
         id: sq.id,
+        questionId,
         qText,
         correctAnswer,
         explanation,
@@ -243,47 +247,17 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
         <div className="px-6 pb-2">
           <div className="max-h-[55vh] overflow-auto space-y-3">
             {items.map((it, idx) => (
-              <div
+              <QuestionResultCard
                 key={it.id ?? idx}
-                className={`rounded-lg border p-3 shadow-sm ${
-                  it.isCorrect ? "border-[#42BFAC]/80 bg-[#42BFAC]/10" : "border-[#FD4E66]/80 bg-[#FD4E66]/10"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="text-sm">
-                    <div className="font-semibold">
-                      {idx + 1}. {it.qText}
-                    </div>
-                    <div className="mt-1 space-y-0.5">
-                      <div className="text-[13px]">
-                        <span className="font-medium text-gray-700">Your answer:</span>{" "}
-                        <span className="font-mono break-words">{it.userAnswer}</span>
-                      </div>
-                      {!it.isCoding && (
-                        <div className="text-[13px]">
-                          <span className="font-medium text-gray-700">Correct answer:</span>{" "}
-                          <span className="font-mono break-words">{it.correctAnswer || "—"}</span>
-                        </div>
-                      )}
-                      {it.isCoding && (
-                        <div className="text-[13px]">
-                          <span className="font-medium text-gray-700">Explanation:</span>{" "}
-                          <span className="break-words">
-                            {it.explanation?.trim() ? it.explanation : "No explanation yet."}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <span
-                    className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
-                      it.isCorrect ? "bg-[#42BFAC] text-white" : "bg-[#FD4E66] text-white"
-                    }`}
-                  >
-                    {it.isCorrect ? "Correct" : "Wrong"}
-                  </span>
-                </div>
-              </div>
+                questionNumber={idx + 1}
+                questionText={it.qText}
+                userAnswer={it.userAnswer}
+                correctAnswer={it.correctAnswer}
+                explanation={it.explanation}
+                isCorrect={it.isCorrect}
+                isCoding={it.isCoding}
+                questionId={it.questionId}
+              />
             ))}
             {total === 0 && <div className="text-sm text-gray-600">No questions found for this session.</div>}
           </div>
