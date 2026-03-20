@@ -6,4 +6,5 @@ export * from "./gameApi";
 export { adaptiveApi } from "./adaptiveApi";
 export { adminApi } from "./adminApi";
 export { adminQuestionApi } from "./adminQuestionApi";
+export * from "./flagApi";
 export { default as client } from "./client";

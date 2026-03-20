@@ -12,6 +12,7 @@ type GameType = 'all' | 'coding' | 'non_coding';
 type ValidationStatus = 'all' | 'pending' | 'processed';
 type DifficultyFilter = 'all' | 'beginner' | 'intermediate' | 'advanced' | 'master';
 
+
 type BulkDifficultyCheckPayload = {
   questionType: "minigame" | "preassessment";
   gameType?: "coding" | "non_coding";
@@ -555,6 +556,10 @@ const handleBulkDifficultyCheck = async () => {
 
     return (
         <div className="space-y-4">
+            <div>
+                <h2 className="text-2xl font-semibold text-gray-800">Question Bank</h2>
+                <p className="text-sm text-gray-500">Manage and review minigame and pre-assessment questions.</p>
+            </div>
             {/* Filters and Action Buttons Container - Responsive Layout */}
             <div className="flex flex-wrap gap-3 mb-4 items-center">
                 <select
@@ -682,7 +687,7 @@ const handleBulkDifficultyCheck = async () => {
             />
 
             <AdminTable
-                title="Question Management"
+                title="Question Bank"
                 loading={loading}
                 error={error}
                 items={questionType === 'minigame' ? (filteredQuestions || []) : (preassessmentQuestions || [])}
@@ -832,6 +837,7 @@ const handleBulkDifficultyCheck = async () => {
                     </button>
                 </div>
             )}
+
 
             {/* Edit Pre-Assessment Question Modal */}
             {isEditModalOpen && editingQuestion && (

@@ -16,7 +16,7 @@ export const PATHS = {
         label: "Login"
     },
     ADMIN_LOGIN: {
-        path: "/admin-login",
+        path: "/",
         label: "Admin Login"
     },
     REGISTER: {
@@ -90,6 +90,10 @@ export const PATHS = {
             VIEW_QUESTIONS: {
                 path: "questions/view",
                 label: "Question Bank"
+            },
+            FLAGGED_QUESTIONS: {
+                path: "questions/flagged",
+                label: "Flagged Questions"
             }
         },
         CONTENT_UPLOAD: {

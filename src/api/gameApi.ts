@@ -201,6 +201,20 @@ export const gameApi = {
       return null;
     }
   },
+
+  // ────────── Question Flagging ──────────
+  flagQuestion: async (questionId: number, reason: string, note: string): Promise<{ status: string; message: string } | null> => {
+    try {
+      const res = await client.post<{ status: string; message: string }>(
+        `/question/${questionId}/toggle-flag/`,
+        { reason, note }
+      );
+      return res.data;
+    } catch (err) {
+      console.error("gameApi.flagQuestion error", err);
+      return null;
+    }
+  },
 };
 
 export default gameApi;
