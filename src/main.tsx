@@ -6,18 +6,15 @@ import { AuthProvider } from "./context/AuthContext";
 import { GameProvider } from "./context/GameContext";
 import { AdaptiveProvider } from "./context/AdaptiveContext";
 import { UserProvider } from "./context/UserContext";
-import { AchievementProvider } from "./context/AchievementContext";
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AdaptiveProvider>
       <AuthProvider>
         <UserProvider>
-          <AchievementProvider>
-            <GameProvider>
-              <App />
-            </GameProvider>
-          </AchievementProvider>
+          <GameProvider>
+            <App />
+          </GameProvider>
         </UserProvider>
       </AuthProvider>
     </AdaptiveProvider>

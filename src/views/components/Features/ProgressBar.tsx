@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useAdaptive } from "../../../context/AdaptiveContext";
-import { useAchievement } from "../../../context/AchievementContext";
+import { getAchievements } from "../../../services/achievementService";
+import * as Interfaces from "../../../interfaces";
 import { FaCode, FaKeyboard, FaLaptopCode, FaServer } from "react-icons/fa";
 import { LEVELS } from "../../../types/game"; // ← thresholds only\
 import { TiStarburst } from "react-icons/ti";
@@ -33,7 +34,7 @@ const ProgressBar = ({ user }: ProgressBarProps) => {
   // If session expired, let parent show unified fallback instead of this component's messages
   if (sessionExpired && !authLoading) return null;
   const { zoneProgress, isLoading } = useAdaptive();
-  const { achievements: ctxAchievements, refresh } = useAchievement();
+  const [achievements, setAchievements] = useState<Interfaces.Achievement[]>([]);
   // If a user is passed (viewing other user's profile), use their zone_progresses
   const zone = user?.zone_progresses?.length ? user.zone_progresses[0] : zoneProgress?.[0] || null;
 
@@ -47,9 +48,16 @@ const ProgressBar = ({ user }: ProgressBarProps) => {
 
   // Refresh achievements for this user (or current user if no user prop)
   useEffect(() => {
-    // refresh returns a promise; we don't need to await it here
-    refresh(user?.id || undefined).catch(() => {});
-  }, [user?.id, refresh]);
+    const fetchAchievements = async () => {
+      try {
+        const data = await getAchievements(user?.id || undefined);
+        setAchievements(data);
+      } catch (error) {
+        console.error("Failed to fetch achievements", error);
+      }
+    };
+    fetchAchievements();
+  }, [user?.id]);
 
   if (isLoading || !zone) return <LoadingSkeleton />;
 
@@ -113,7 +121,7 @@ return (
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-[#6B7280] gap-1 sm:gap-0">
-          <p className="text-xs">{ctxAchievements ? `${ctxAchievements.filter(a => a.isUnlocked).length} achievement${ctxAchievements.filter(a => a.isUnlocked).length === 1 ? '' : 's'} unlocked` : 'Loading achievements...'}</p>
+          <p className="text-xs">{achievements ? `${achievements.filter(a => a.isUnlocked).length} achievement${achievements.filter(a => a.isUnlocked).length === 1 ? '' : 's'} unlocked` : 'Loading achievements...'}</p>
           <p className="text-xs">{zone.completion_percent.toFixed(0)}% Topic Mastery</p>
         </div>
       </div>
