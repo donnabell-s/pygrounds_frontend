@@ -4,7 +4,9 @@ import {
   useImperativeHandle,
   forwardRef,
 } from "react";
+import ReactMarkdown from "react-markdown";
 import { readingApi } from "../../../../api/readingApi";
+import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
 
 export interface ReadingMaterialUserRef {
   jumpToSubtopic: (subId: number) => void;
@@ -104,64 +106,63 @@ const grouped = currentMaterials.reduce((acc, item) => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, [page]);
 
+    const PaginationButtons = () => (
+      <div className="flex justify-between items-center">
+        <button
+          onClick={() => setPage((p) => Math.max(p - 1, 1))}
+          disabled={page === 1}
+          className="flex flex-row items-center gap-0.5 bg-[#04AA6D] text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <FaAngleLeft/> Previous
+        </button>
+
+        <button
+          onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+          disabled={page === totalPages}
+          className="flex flex-row items-center gap-0.5 bg-[#04AA6D] text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          Next <FaAngleRight/>
+        </button>
+      </div>
+    );
+
     return (
-      <div className="flex flex-col gap-12">
+      <div className="flex flex-col gap-5 mx-auto">
         {loading ? (
           <p>Loading…</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : (
-          // 🔥🔥 NEW: Render by topic with topic header
-          Object.keys(grouped).map((topicLabel) => (
-            <div key={topicLabel} className="flex flex-col gap-6">
-              {/* TOPIC TITLE */}
-              <h2 className="text-2xl font-bold text-[#3776AB] tracking-wide">
-                {topicLabel}
-              </h2>
+          <>
+            {totalPages > 1 && <PaginationButtons />}
+            {/* 🔥🔥 NEW: Render by topic with topic header */}
+            {Object.keys(grouped).map((topicLabel) => (
+              <div key={topicLabel} className="flex flex-col gap-3">
+                {/* TOPIC TITLE */}
+                <h2 className="text-2xl font-semibold text-[#3776AB] tracking-wide">
+                  {topicLabel}
+                </h2>
 
-              {/* SUBTOPIC CARDS */}
-              {grouped[topicLabel].map((mat) => (
-                <div
-                  key={mat.id}
-                  id={`subtopic-${mat.subtopic_ref}`}
-                  className="scroll-mt-32 bg-white border border-gray-200 rounded-lg p-5 shadow-sm"
-                >
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {mat.title}
-                  </h3>
+                {/* SUBTOPIC CARDS */}
+                {grouped[topicLabel].map((mat) => (
+                  <div
+                    key={mat.id}
+                    id={`subtopic-${mat.subtopic_ref}`}
+                    className="scroll-mt-32 bg-white border border-gray-200 rounded-lg p-5 shadow-sm"
+                  >
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {mat.title}
+                    </h3>
 
-                  <p className="text-gray-700 whitespace-pre-line mt-2">
-                    {mat.content}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ))
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-6 mt-10">
-            <button
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              disabled={page === 1}
-              className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50"
-            >
-              ← Previous
-            </button>
-
-            <span className="text-gray-600">
-              Page {page} / {totalPages}
-            </span>
-
-            <button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-              disabled={page === totalPages}
-              className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50"
-            >
-              Next →
-            </button>
-          </div>
+                    <div className="prose prose-lg max-w-none mt-2">
+                      <ReactMarkdown>{mat.content}</ReactMarkdown>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+            {totalPages > 1 && <PaginationButtons />}
+          </>
         )}
       </div>
     );

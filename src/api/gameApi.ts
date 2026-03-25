@@ -112,6 +112,21 @@ export const gameApi = {
     }
   },
 
+  // ────────── Questions ──────────
+  toggleQuestionFlag: async (
+    questionId: number
+  ): Promise<{ success: boolean; is_flagged: boolean; message?: string } | null> => {
+    try {
+      const res = await client.post<{ success: boolean; is_flagged: boolean; message?: string }>(
+        `/question/${questionId}/toggle-flag/`
+      );
+      return res.data;
+    } catch (err) {
+      console.error("gameApi.toggleQuestionFlag error", err);
+      return null;
+    }
+  },
+
   // ────────── Hangman ──────────
   startHangman: async (): Promise<GameSession | null> => {
     try {
