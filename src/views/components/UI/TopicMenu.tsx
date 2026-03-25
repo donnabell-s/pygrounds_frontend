@@ -63,7 +63,7 @@ const TopicMenu = ({ onSelectSubtopic, activeSubtopic }: Props) => {
   }
 
   return (
-    <div className="flex flex-col border-l-2 border-gray-200">
+    <div className="flex flex-col  border-gray-200 ">
       {/* <h2 className="text-xl font-extrabold text-[#3776AB] mb-4 tracking-wide">
         TOPICS
       </h2> */}
@@ -78,8 +78,8 @@ const TopicMenu = ({ onSelectSubtopic, activeSubtopic }: Props) => {
                 onClick={() => setOpenTopic(isOpen ? null : topic.id)}
                 className={`
   w-full flex flex-row items-center justify-start gap-3
-  px-4 py-3 transition cursor-pointer
-  ${isOpen ? "bg-blue-50 " : "hover:bg-gray-100"}
+  px-4 py-3 transition cursor-pointer rounded-lg
+  ${isOpen ? "bg-[#704EE7]/15 " : "hover:bg-[#704EE7]/5"}
 `}
 
               >

@@ -7,6 +7,8 @@ export interface User {
   email: string;
   role: string;
   token: string; // ✅ add optional token
+  profile_picture?: string;
+  date_joined?: string;
 }
 
 
