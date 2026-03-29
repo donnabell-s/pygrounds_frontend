@@ -9,6 +9,7 @@ type AuthContextType = {
   login: (u: string, p: string) => Promise<User>;
   register: (d: SignupData) => Promise<User>;
   logout: () => void;
+  updateUser: (updated: User) => void;
   isLoading: boolean;
   sessionExpired: boolean;
 };
@@ -58,6 +59,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
  
+  const updateUser = (updated: User) => {
+    setUser(updated);
+    localStorage.setItem("user", JSON.stringify(updated));
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
@@ -118,7 +124,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading, sessionExpired }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser, isLoading, sessionExpired }}>
       {children}
     </AuthContext.Provider>
   );
