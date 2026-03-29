@@ -17,17 +17,10 @@ s profile */
     }
   },
 
-  /** Update the current user
-'
-s profile */
+  /** Update the current user's profile */
   updateProfile: async (data: Partial<User>): Promise<User | null> => {
-    try {
-      const res = await client.put<User>("/user/profile/", data);
-      return res.data;
-    } catch (err) {
-      console.error("userApi.updateProfile error", err);
-      return null;
-    }
+    const res = await client.patch<User>("/user/profile/", data);
+    return res.data;
   },
 
   /** Fetch another user
