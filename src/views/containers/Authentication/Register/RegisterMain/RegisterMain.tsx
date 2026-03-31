@@ -9,8 +9,8 @@ import type { Dispatch, SetStateAction } from "react";
 export type RegistrationContextType = {
   signupData: SignupData;
   setSignupData: Dispatch<SetStateAction<SignupData>>;
-  preTestAnswers: Record<string, any>;
-  setPreTestAnswers: Dispatch<SetStateAction<Record<string, any>>>;
+  preTestAnswers: Record<string, { user_answer: string; time_taken: number }>;
+  setPreTestAnswers: Dispatch<SetStateAction<Record<string, { user_answer: string; time_taken: number }>>>;
 };
 
 const defaultSignup: SignupData = {
@@ -24,7 +24,7 @@ const defaultSignup: SignupData = {
 
 const RegisterMain: React.FC = () => {
   const [signupData,    setSignupData]    = useState<SignupData>(defaultSignup);
-  const [preTestAnswers, setPreTestAnswers] = useState<Record<string, any>>({});
+  const [preTestAnswers, setPreTestAnswers] = useState<Record<string, { user_answer: string; time_taken: number }>>({});
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-gradient-to-b from-[#7053D0]/10 to-[#EAE7FE]/40 text-[#2D2D2D]">
