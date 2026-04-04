@@ -61,7 +61,7 @@ const AchievementCard = ({ achievement }: { achievement: Interfaces.Achievement 
 
 import { useEffect, useState } from "react";
 import { FaAngleRight, FaAngleLeft } from "react-icons/fa";
-import { useAchievement } from "../../../context/AchievementContext";
+import { getAchievements } from "../../../services/achievementService";
 import { useAdaptive } from "../../../context/AdaptiveContext";
 import PageEmpty from "../UI/PageEmpty";
 import { useAuth } from "../../../context/AuthContext";
@@ -71,29 +71,35 @@ type Props = {
 };
 
 const AchievementList = ({ userId }: Props) => {
-  const { achievements: ctxAchievements, refresh } = useAchievement();
+  const [achievements, setAchievements] = useState<Interfaces.Achievement[]>([]);
   const { lastUpdated } = useAdaptive();
   const { isLoading: authLoading } = useAuth();
   const { sessionExpired } = useAuth();
   if (sessionExpired && !authLoading) return null;
   const [pageStart, setPageStart] = useState(0); // index of first achievement on current page
 
+  const fetchAchievements = async (id?: number) => {
+    try {
+      const data = await getAchievements(id);
+      setAchievements(data);
+    } catch (error) {
+      console.error("Failed to fetch achievements", error);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      await refresh(userId || undefined);
-      // reset page when user changes
-      setPageStart(0);
-    })();
-  }, [userId, refresh]);
+    fetchAchievements(userId || undefined);
+    setPageStart(0);
+  }, [userId]);
 
   // Keep achievements in sync when adaptive data refreshes (so progressbar and achievements match)
   useEffect(() => {
     if (!lastUpdated) return;
     // re-fetch achievements when adaptive context updates
-    refresh(userId || undefined).catch(() => {});
-  }, [lastUpdated, userId, refresh]);
+    fetchAchievements(userId || undefined);
+  }, [lastUpdated, userId]);
 
-  const sortedAchievements = [...ctxAchievements].sort((a, b) => {
+  const sortedAchievements = [...achievements].sort((a, b) => {
     if (a.isUnlocked !== b.isUnlocked) {
       return Number(b.isUnlocked) - Number(a.isUnlocked);
     }

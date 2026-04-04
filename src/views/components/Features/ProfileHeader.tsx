@@ -79,7 +79,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <button
                 type="button"
                 onClick={() => navigate(`/${user?.id}/${PATHS.USER_VIEW.SETTINGS.path}`)}
-                className="ml-4 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#7054D0] text-white text-sm font-medium shadow hover:opacity-95 w-auto"
+                className="cursor-pointer ml-4 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#7054D0] text-white text-sm font-medium shadow hover:opacity-95 w-auto"
                 title="Edit profile"
               >
                 <FiEdit2 />

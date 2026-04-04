@@ -6,8 +6,7 @@ import * as Component from "../../components";
 import { FaRegClock } from "react-icons/fa6";
 import { HiOutlineLightningBolt } from "react-icons/hi";
 import { TiStarOutline } from "react-icons/ti";
-import { FiFlag } from "react-icons/fi";
-import gameApi from "../../../api/gameApi";
+import QuestionResultCard from "./QuestionResultCard";
 
 interface ResultsModalProps {
   onClose: () => void;
@@ -25,6 +24,7 @@ type RespRow = {
 type SQ = {
   id: number;
   question?: {
+    id?: number;
     question_text?: string;
     correct_answer?: string | null;
     explanation?: string | null;
@@ -35,18 +35,6 @@ type SQ = {
   response?: { user_answer?: string | null; is_correct?: boolean | null } | null;
   is_correct?: boolean | null;
   correct?: boolean | null;
-};
-
-type FlagReason = "incorrect" | "different" | "unclear" | "bug" | "other";
-
-type FlagDraft = {
-  reason: FlagReason | "";
-  note: string;
-};
-
-type FlaggingItem = {
-  id: number;
-  question: string;
 };
 
 const normalize = (s?: string | null) =>
@@ -71,20 +59,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
   const timeStr = `${minutes}m ${seconds.toString().padStart(2, "0")}s`;
 
   const [respMap, setRespMap] = useState<Record<number, { ua?: string | null; ok?: boolean | null }>>({});
-  const [flaggingItem, setFlaggingItem] = useState<FlaggingItem | null>(null);
-  const [flagDraft, setFlagDraft] = useState<FlagDraft>({ reason: "", note: "" });
-  const [flagged, setFlagged] = useState<Record<number, FlagDraft>>({});
-  const [flagSubmitting, setFlagSubmitting] = useState(false);
-  const [flagError, setFlagError] = useState("");
-  const [flagSuccess, setFlagSuccess] = useState(false);
-
-  const flagReasons: { value: FlagReason; label: string }[] = [
-    { value: "incorrect", label: "Incorrect answer" },
-    { value: "different", label: "Different valid answer" },
-    { value: "unclear", label: "Unclear or ambiguous" },
-    { value: "bug", label: "Bug in tests" },
-    { value: "other", label: "Other" },
-  ];
 
   useEffect(() => {
     (async () => {
@@ -125,6 +99,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
       const correctAnswer = q.correct_answer ?? "";
       const explanation = q.explanation ?? q.game_data?.explanation ?? "";
       const isCoding = sessionIsCoding || (q.game_type ?? "").toLowerCase() === "coding";
+      const questionId = q.id;
 
       const fetched = respMap[sq.id] || {};
       const userAnswerRaw = fetched.ua ?? sq.user_answer ?? sq.response?.user_answer ?? null;
@@ -143,26 +118,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
       const computedCorrect = !isCoding ? normalize(userAnswerRaw) === normalize(correctAnswer) : undefined;
       const isCorrect = serverCorrect ?? (typeof computedCorrect === "boolean" ? computedCorrect : false);
 
-      // Extract the actual GeneratedQuestion ID from session question
-      // Multi-question games (CrossWord, WordSearch) might have different structure
-      let questionId = sq.id;
-      
-      // Try multiple possible fields
-      if ((sq as any).question_id) {
-        questionId = (sq as any).question_id;
-      } else if ((q as any).id) {
-        questionId = (q as any).id;
-      } else if ((sq as any).generated_question_id) {
-        questionId = (sq as any).generated_question_id;
-      }
-      
-      // Debug log for multi-question games
-      if ((activeSession?.session_questions?.length ?? 0) > 1) {
-        console.debug("Multi-question game - SessionQ:", { sq, extractedId: questionId });
-      }
-
       return {
-        id: questionId,
+        id: sq.id,
+        questionId,
         qText,
         correctAnswer,
         explanation,
@@ -232,43 +190,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
     navigate(`/${userId}/home`);
   };
 
-  const handleStartFlag = (itemId: number, question: string) => {
-    const existing = flagged[itemId];
-    setFlagDraft({ reason: existing?.reason ?? "", note: existing?.note ?? "" });
-    setFlaggingItem({ id: itemId, question });
-  };
-
-  const handleCancelFlag = () => {
-    setFlagDraft({ reason: "", note: "" });
-    setFlaggingItem(null);
-  };
-
-  const handleSubmitFlag = async (itemId: number) => {
-    if (!flagDraft.reason) return;
-    
-    setFlagSubmitting(true);
-    setFlagError("");
-    setFlagSuccess(false);
-
-    const result = await gameApi.flagQuestion(itemId, flagDraft.reason, flagDraft.note);
-    
-    if (result) {
-      setFlagged((prev) => ({ ...prev, [itemId]: { reason: flagDraft.reason, note: flagDraft.note } }));
-      setFlagSuccess(true);
-      
-      // Clear form and close modal after 1.5 seconds
-      setTimeout(() => {
-        setFlagDraft({ reason: "", note: "" });
-        setFlaggingItem(null);
-        setFlagSuccess(false);
-      }, 1500);
-    } else {
-      setFlagError("Failed to submit flag. Please try again.");
-    }
-    
-    setFlagSubmitting(false);
-  };
-
   const hintsDisplay =
     activeSession && (activeSession as any).hints_used != null ? String((activeSession as any).hints_used) : "—";
 
@@ -326,67 +247,17 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
         <div className="px-6 pb-2">
           <div className="max-h-[55vh] overflow-auto space-y-3">
             {items.map((it, idx) => (
-              <div
+              <QuestionResultCard
                 key={it.id ?? idx}
-                className={`rounded-lg border p-3 shadow-sm ${
-                  it.isCorrect ? "border-[#42BFAC]/80 bg-[#42BFAC]/10" : "border-[#FD4E66]/80 bg-[#FD4E66]/10"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="text-sm">
-                    <div className="font-semibold">
-                      {idx + 1}. {it.qText}
-                    </div>
-                    <div className="mt-1 space-y-0.5">
-                      <div className="text-[13px]">
-                        <span className="font-medium text-gray-700">Your answer:</span>{" "}
-                        <span className="font-mono break-words">{it.userAnswer}</span>
-                      </div>
-                      {!it.isCoding && (
-                        <div className="text-[13px]">
-                          <span className="font-medium text-gray-700">Correct answer:</span>{" "}
-                          <span className="font-mono break-words">{it.correctAnswer || "—"}</span>
-                        </div>
-                      )}
-                      {it.isCoding && (
-                        <div className="text-[13px]">
-                          <span className="font-medium text-gray-700">Explanation:</span>{" "}
-                          <span className="break-words">
-                            {it.explanation?.trim() ? it.explanation : "No explanation yet."}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
-                        it.isCorrect ? "bg-[#42BFAC] text-white" : "bg-[#FD4E66] text-white"
-                      }`}
-                    >
-                      {it.isCorrect ? "Correct" : "Wrong"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleStartFlag(it.id, it.qText)}
-                      disabled={Boolean(flagged[it.id])}
-                      className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-semibold transition ${
-                        flagged[it.id]
-                          ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-                          : "border-[#704EE7]/40 bg-white text-[#704EE7] hover:bg-[#704EE7]/10"
-                      }`}
-                    >
-                      <FiFlag className="h-3.5 w-3.5" />
-                      {flagged[it.id] ? "Flagged" : "Flag"}
-                    </button>
-                  </div>
-                </div>
-                {flagged[it.id] && flaggingItem?.id !== it.id && (
-                  <div className="mt-2 text-xs text-gray-700">
-                    Flagged for: {flagReasons.find((r) => r.value === flagged[it.id].reason)?.label || "Other"}
-                  </div>
-                )}
-              </div>
+                questionNumber={idx + 1}
+                questionText={it.qText}
+                userAnswer={it.userAnswer}
+                correctAnswer={it.correctAnswer}
+                explanation={it.explanation}
+                isCorrect={it.isCorrect}
+                isCoding={it.isCoding}
+                questionId={it.questionId}
+              />
             ))}
             {total === 0 && <div className="text-sm text-gray-600">No questions found for this session.</div>}
           </div>
@@ -396,103 +267,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ onClose }) => {
           <Component.PrimaryButton label="Return Home" onClick={handleClose} py="py-2" fontSize="text-md" />
         </div>
       </div>
-
-      {flaggingItem && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-lg rounded-lg bg-white p-5 shadow-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-800">Flag Question</h3>
-              <button
-                type="button"
-                onClick={handleCancelFlag}
-                disabled={flagSubmitting}
-                className="rounded-md border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Close
-              </button>
-            </div>
-            <p className="mt-2 text-sm text-gray-600">Select a reason and add any helpful notes.</p>
-
-            <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
-              {flaggingItem.question || "Question text not available."}
-            </div>
-
-            {flagSuccess && (
-              <div className="mt-3 rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-700">
-                ✓ Flag submitted successfully!
-              </div>
-            )}
-
-            {flagError && (
-              <div className="mt-3 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-                {flagError}
-              </div>
-            )}
-
-            <div className="mt-4">
-              <div className="text-xs font-semibold text-gray-700">Reason</div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {flagReasons.map((reason) => (
-                  <label
-                    key={reason.value}
-                    className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition ${
-                      flagDraft.reason === reason.value
-                        ? "border-[#704EE7] bg-[#704EE7]/10 text-[#704EE7]"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-[#704EE7]/60"
-                    } ${flagSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
-                  >
-                    <input
-                      type="radio"
-                      name="flag-reason"
-                      value={reason.value}
-                      checked={flagDraft.reason === reason.value}
-                      onChange={() => setFlagDraft((prev) => ({ ...prev, reason: reason.value }))}
-                      disabled={flagSubmitting}
-                      className="sr-only"
-                    />
-                    {reason.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="text-xs font-semibold text-gray-700">Notes (optional)</label>
-              <textarea
-                value={flagDraft.note}
-                onChange={(e) => setFlagDraft((prev) => ({ ...prev, note: e.target.value }))}
-                rows={3}
-                disabled={flagSubmitting}
-                className="mt-1 w-full rounded-md border border-gray-200 px-2 py-1 text-xs focus:border-[#704EE7] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="Add a quick note for admins"
-              />
-            </div>
-
-            <div className="mt-4 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={handleCancelFlag}
-                disabled={flagSubmitting}
-                className="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSubmitFlag(flaggingItem.id)}
-                disabled={!flagDraft.reason || flagSubmitting || flagSuccess}
-                className={`rounded-md px-3 py-1 text-xs font-semibold transition ${
-                  !flagDraft.reason || flagSubmitting || flagSuccess
-                    ? "cursor-not-allowed bg-gray-200 text-gray-400"
-                    : "bg-[#704EE7] text-white hover:bg-[#5a3fd0]"
-                }`}
-              >
-                {flagSubmitting ? "Submitting..." : flagSuccess ? "Submitted!" : "Submit Flag"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
