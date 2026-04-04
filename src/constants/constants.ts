@@ -16,7 +16,7 @@ export const PATHS = {
         label: "Login"
     },
     ADMIN_LOGIN: {
-        path: "/",
+        path: "/admin-login",
         label: "Admin Login"
     },
     REGISTER: {

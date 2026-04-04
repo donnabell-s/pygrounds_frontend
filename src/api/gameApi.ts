@@ -114,11 +114,13 @@ export const gameApi = {
 
   // ────────── Questions ──────────
   toggleQuestionFlag: async (
-    questionId: number
+    questionId: number,
+    note?: string
   ): Promise<{ success: boolean; is_flagged: boolean; message?: string } | null> => {
     try {
       const res = await client.post<{ success: boolean; is_flagged: boolean; message?: string }>(
-        `/question/${questionId}/toggle-flag/`
+        `/question/${questionId}/toggle-flag/`,
+        note ? { note } : {}
       );
       return res.data;
     } catch (err) {

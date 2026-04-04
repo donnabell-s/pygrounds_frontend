@@ -10,7 +10,6 @@ import flagApi, { type FlaggedQuestion } from "../../../../api/flagApi";
 type FlaggedQuestionRow = {
   id: number;
   question: string;
-  reason: string;
   game: string;
   flagged_by: string;
   notes: string | null;
@@ -63,8 +62,7 @@ function buildInitialPrompt(item: FlaggedQuestionRow): string {
   const optionsText = buildOptionsText(item.answer_options);
   const { buggyCodeText, correctCodeText } = buildCodeText(item);
   return [
-    `Reason for flagging: ${item.reason}`,
-    `\n\nQuestion to regenerate:\n${item.question}`,
+    `Question to regenerate:\n${item.question}`,
     optionsText,
     buggyCodeText,
     correctCodeText,
@@ -162,7 +160,6 @@ const FlaggedQuestions = () => {
           result.results.map((fq: FlaggedQuestion) => ({
             id: fq.id,
             question: fq.question_text,
-            reason: fq.flag_reason || "Unknown",
             game: fq.game_type,
             flagged_by: fq.flagged_by || "Anonymous",
             notes: fq.flag_notes || null,
@@ -295,11 +292,6 @@ const FlaggedQuestions = () => {
       <td className="px-3 py-3">
         <div className="line-clamp-2 text-sm max-w-[400px]">{item.question}</div>
       </td>
-      <td className="px-3 py-3 text-sm text-center">
-        <span className="px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800">
-          {item.reason}
-        </span>
-      </td>
       <td className="px-3 py-3 text-sm">
         {item.notes ? (
           <span className="text-xs text-gray-500 italic line-clamp-2 max-w-[200px]">
@@ -409,7 +401,7 @@ const FlaggedQuestions = () => {
         currentPage={flaggedPage}
         onPageChange={setFlaggedPage}
         itemsPerPage={10}
-        headerColumns={["", "ID", "Question", "Reason", "Notes", "Game", "Flagged By", "Actions"]}
+        headerColumns={["", "ID", "Question", "Notes", "Game", "Flagged By", "Actions"]}
         renderRow={renderFlaggedRow}
       />
 
@@ -457,15 +449,6 @@ const FlaggedQuestions = () => {
                   rows={5}
                   className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-gray-700">Flag Reason</label>
-                <p className="mt-1">
-                  <span className="px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800">
-                    {selectedQuestion.reason}
-                  </span>
-                </p>
               </div>
 
               {selectedQuestion.notes && (
@@ -608,10 +591,6 @@ const FlaggedQuestions = () => {
                               correct_answer={selectedQuestion.correct_answer}
                             />
                           </div>
-                        </div>
-                        <div>
-                          <label className="text-xs font-semibold text-orange-700">Flag Reason</label>
-                          <p className="mt-1 text-xs text-gray-700">{selectedQuestion.reason}</p>
                         </div>
                         {selectedQuestion.notes && (
                           <div>
