@@ -11,6 +11,7 @@ import {
   FaFolderOpen,
   FaFileUpload,
   FaUsers,
+  FaFlag,
 } from "react-icons/fa";
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -20,6 +21,7 @@ const iconMap: Record<string, React.ReactNode> = {
   topic: <FaSitemap />,
   subtopic: <FaSitemap />,
   view_questions: <FaFolderOpen />,
+  flagged_questions: <FaFlag />,
   content_upload: <FaFileUpload />,
   view_users: <FaUsers />,
 };

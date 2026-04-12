@@ -13,6 +13,7 @@ export const AppRoutes = () => {
         <Route path="/" element={<Navigate to={PATHS.LANDING.path} />} />
 
         <Route path={PATHS.LANDING.path} element={<Views.Landing />} />
+      
         
         <Route path={PATHS.LOGIN.path} element={<Views.Login />} />
         
@@ -49,6 +50,7 @@ export const AppRoutes = () => {
             <Route path={PATHS.ADMIN_VIEW.CONTENT_UPLOAD.path} element={<Views.ContentUpload />} />
             <Route path={PATHS.ADMIN_VIEW.USER_MANAGEMENT.VIEW_USERS.path} element={<Views.ViewUsers />} />
             <Route path={PATHS.ADMIN_VIEW.QUESTION_MANAGEMENT.VIEW_QUESTIONS.path} element={<Views.QuestionBank />} />
+            <Route path={PATHS.ADMIN_VIEW.QUESTION_MANAGEMENT.FLAGGED_QUESTIONS.path} element={<Views.FlaggedQuestions />} />
           </Route>
         </Route>
         

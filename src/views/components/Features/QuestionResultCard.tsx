@@ -62,12 +62,12 @@ const QuestionResultCard: React.FC<QuestionResultCardProps> = ({
     }
   };
 
-  const handleFlagSubmit = async (_comment: string) => {
+  const handleFlagSubmit = async (comment: string) => {
     if (!questionId) return;
-    
+
     setIsSubmitting(true);
     try {
-      const result = await gameApi.toggleQuestionFlag(questionId);
+      const result = await gameApi.toggleQuestionFlag(questionId, comment || undefined);
       if (result) {
         // Successfully flagged - backend returned 200
         // Update local state based on backend response

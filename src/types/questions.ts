@@ -298,3 +298,23 @@ export interface CancelGenerationResponse {
     };
     session_status: GenerationStatus | PreAssessmentGenerationStatus;
 }
+
+export interface RegenerationPreviewResponse {
+    status: 'preview';
+    question_id: number;
+    game_type: 'coding' | 'non_coding';
+    accepted_fields_available: string[];
+    current: Record<string, any>;
+    regenerated: Record<string, any>;
+}
+
+export interface RegenerationSuccessResponse {
+    status: 'success';
+    question_id: number;
+    applied_fields: string[];
+    regeneration_context: {
+        accepted_fields: string[];
+        regenerated_at: string;
+        regenerated_by: string;
+    };
+}

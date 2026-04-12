@@ -33,4 +33,27 @@
   background: #9ca3af;
 }
 
+/* Debugging game star twinkle animations */
+@keyframes twinkle1 {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(0.7); }
+}
+
+@keyframes twinkle2 {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.animate-twinkle1 {
+  animation: twinkle1 2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.animate-twinkle2 {
+  animation: twinkle2 3s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 

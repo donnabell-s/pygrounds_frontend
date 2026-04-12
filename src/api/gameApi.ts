@@ -114,11 +114,13 @@ export const gameApi = {
 
   // ────────── Questions ──────────
   toggleQuestionFlag: async (
-    questionId: number
+    questionId: number,
+    note?: string
   ): Promise<{ success: boolean; is_flagged: boolean; message?: string } | null> => {
     try {
       const res = await client.post<{ success: boolean; is_flagged: boolean; message?: string }>(
-        `/question/${questionId}/toggle-flag/`
+        `/question/${questionId}/toggle-flag/`,
+        note ? { note } : {}
       );
       return res.data;
     } catch (err) {
@@ -213,6 +215,20 @@ export const gameApi = {
       return res.data;
     } catch (err) {
       console.error("gameApi.getLeaderboard error", err);
+      return null;
+    }
+  },
+
+  // ────────── Question Flagging ──────────
+  flagQuestion: async (questionId: number, reason: string, note: string): Promise<{ status: string; message: string } | null> => {
+    try {
+      const res = await client.post<{ status: string; message: string }>(
+        `/question/${questionId}/toggle-flag/`,
+        { reason, note }
+      );
+      return res.data;
+    } catch (err) {
+      console.error("gameApi.flagQuestion error", err);
       return null;
     }
   },
