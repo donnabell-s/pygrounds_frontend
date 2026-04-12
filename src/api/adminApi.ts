@@ -1,20 +1,22 @@
 import client from './client';
 import type { PreAssessmentQuestion, AdminZone, AdminTopic, AdminSubtopic, UploadedDocument, PipelineResult, DocumentListResponse } from '../types/adaptive';
 import type { AdminUser } from '../types/admin';
-import type { 
-    BulkGenerationParams, 
-    SingleGenerationParams, 
-    BulkGenerationResponse, 
-    SingleGenerationResponse, 
-    GeneratedQuestion, 
-    QuestionListResponse, 
-    GenerationStatus, 
+import type {
+    BulkGenerationParams,
+    SingleGenerationParams,
+    BulkGenerationResponse,
+    SingleGenerationResponse,
+    GeneratedQuestion,
+    QuestionListResponse,
+    GenerationStatus,
     WorkersResponse,
     DifficultyCheckResponse,
     PreAssessmentBulkGenerationParams,
     PreAssessmentGenerationResponse,
     PreAssessmentGenerationStatus,
-    CancelGenerationResponse
+    CancelGenerationResponse,
+    RegenerationPreviewResponse,
+    RegenerationSuccessResponse
 } from '../types/questions';
 
 export const adminApi = {
@@ -245,6 +247,15 @@ bulkCheckDifficulty: async (payload: {
 
     deleteQuestion: async (questionId: number): Promise<void> => {
         await client.delete(`/admin/questions/${questionId}/`);
+    },
+
+    regenerateQuestion: async (questionId: number, data: {
+        llm_prompt: string;
+        regenerated?: Record<string, any>;
+        accepted_fields?: string[];
+    }): Promise<RegenerationPreviewResponse | RegenerationSuccessResponse> => {
+        const response = await client.post(`/question/${questionId}/regenerate/`, data);
+        return response.data;
     },
 
     getQuestionsBySubtopic: async (subtopicId: number, params?: {

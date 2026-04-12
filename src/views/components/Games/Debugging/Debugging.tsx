@@ -178,11 +178,11 @@ const Debugging: React.FC = () => {
           width={1920}
           height={1080}
           preserveAspectRatio="none"
-          style={{ imageRendering: 'pixelated', pointerEvents: 'none', mixBlendMode: 'screen' }}
+          style={{ imageRendering: 'crisp-edges', pointerEvents: 'none', mixBlendMode: 'color' }}
         />
 
         {/* Lives display */}
-        <foreignObject x={835} y={416} width={250} height={60} className="pointer-events-auto">
+        <foreignObject x={835} y={420} width={250} height={60} className="pointer-events-auto">
           <div className="flex gap-4 justify-center">
             {Array.from({ length: MAX_LIVES }).map((_, idx) => {
               const isLost = idx < lost;
@@ -206,43 +206,45 @@ const Debugging: React.FC = () => {
           <div className="relative flex h-full w-full items-end justify-center" style={{ overflow: 'visible' }}>
             {/* Left screen: Prompt & I/O */}
             <div
-              className="absolute bottom-0 bg-white text-gray-900 p-4 rounded-md shadow-lg overflow-auto pointer-events-auto"
-              style={{ 
-                width: '30.3%', 
-                height: '158%', 
-                left: '-10%', 
-                top: '-93%',
-                transform: 'skewY(18deg) skewX(4deg)'
+              className="absolute bottom-0 text-gray-100 p-4 rounded-md shadow-lg overflow-auto pointer-events-auto"
+              style={{
+                width: '31%',
+                height: '160%',
+                left: '-9.8%',
+                top: '-92%',
+                transform: 'skewY(13deg) skewX(2deg)',
+                backgroundColor: '#1e1e1e'
               }}
             >
               <p className="font-bold mb-2 text-base">Prompt &amp; I/O</p>
               <p className="text-base mb-2">{prompt}</p>
               <div className="text-sm">
                 <p className="font-semibold">Sample Input:</p>
-                <pre className="bg-gray-100 p-1 mt-1">{sampleInput}</pre>
+                <pre className="p-1 mt-1" style={{ backgroundColor: '#2d2d2d' }}>{sampleInput}</pre>
                 <p className="font-semibold mt-2">Expected Output:</p>
-                <pre className="bg-gray-100 p-1 mt-1">{sampleOutput}</pre>
+                <pre className="p-1 mt-1" style={{ backgroundColor: '#2d2d2d' }}>{sampleOutput}</pre>
               </div>
             </div>
 
             {/* Center screen: Code Editor */}
             <div className="absolute flex flex-col bg-gray-900 rounded-lg overflow-hidden shadow-xl z-10 pointer-events-auto" style={{ width: '48%', height: '138%', left: '26%', top: '-54%' }}>
-              <Editor height="100%" language="python" value={code} onChange={(val) => setCode(val || "")} theme="vs-light" options={{ fontSize: 16 }} />
+              <Editor height="100%" language="python" value={code} onChange={(val) => setCode(val || "")} theme="vs-dark" options={{ fontSize: 16 }} />
             </div>
 
             {/* Right screen: Execution Output */}
             <div
-              className="absolute bottom-0 bg-white text-gray-900 p-4 rounded-md shadow-lg overflow-auto pointer-events-auto"
-              style={{ 
-                width: '30.3%', 
-                height: '160%', 
-                right: '-10.2%', 
+              className="absolute bottom-0 text-gray-100 p-4 rounded-md shadow-lg overflow-auto pointer-events-auto"
+              style={{
+                width: '31%',
+                height: '160%',
+                right: '-9.8%',
                 top: '-92%',
-                transform: 'skewY(-12deg) skewX(-3deg)'
+                transform: 'skewY(-13deg) skewX(-2deg)',
+                backgroundColor: '#1e1e1e'
               }}
             >
               <p className="font-bold mb-2 text-base">Execution Output</p>
-              <pre className="text-sm whitespace-pre-wrap text-green-700">{output || "..."}</pre>
+              <pre className="text-sm whitespace-pre-wrap text-green-400">{output || "..."}</pre>
             </div>
           </div>
         </foreignObject>

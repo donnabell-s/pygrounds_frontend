@@ -12,14 +12,6 @@ type GameType = 'all' | 'coding' | 'non_coding';
 type ValidationStatus = 'all' | 'pending' | 'processed';
 type DifficultyFilter = 'all' | 'beginner' | 'intermediate' | 'advanced' | 'master';
 
-
-type BulkDifficultyCheckPayload = {
-  questionType: "minigame" | "preassessment";
-  gameType?: "coding" | "non_coding";
-  validationStatus?: "pending" | "processed";
-  difficultyFilter?: "beginner" | "intermediate" | "advanced" | "master";
-};
-
 type BulkDifficultyCheckResponse = {
   status: "success" | "error";
   message?: string;
@@ -620,6 +612,7 @@ const handleBulkDifficultyCheck = async () => {
                     Bulk Generate Questions
                 </button>
 
+
                 <button
                     onClick={handleBulkDifficultyCheck}
                     disabled={isCheckingDifficulty || loading}
@@ -993,13 +986,22 @@ const handleBulkDifficultyCheck = async () => {
 
                             if (gameType === 'non_coding') {
                                 updatedData.correct_answer = formData.get('correct_answer') as string;
+                                updatedData.game_data = {
+                                    explanation: formData.get('explanation') as string,
+                                };
                             }
-                            
+
                             if (gameType === 'coding') {
+                                let hidden_tests = editingMinigameQuestion?.game_data?.hidden_tests ?? [];
+                                try {
+                                    hidden_tests = JSON.parse(formData.get('hidden_tests') as string);
+                                } catch { /* keep existing value */ }
                                 updatedData.game_data = {
                                     correct_code: formData.get('correct_code') as string,
                                     sample_input: formData.get('sample_input') as string,
                                     sample_output: formData.get('sample_output') as string,
+                                    hidden_tests,
+                                    explanation: formData.get('explanation') as string,
                                     function_name: formData.get('function_name') as string,
                                     buggy_question_text: formData.get('buggy_question_text') as string,
                                     buggy_code: formData.get('buggy_code') as string,
@@ -1037,9 +1039,15 @@ const handleBulkDifficultyCheck = async () => {
 
                                 {/* Conditional Fields */}
                                 {editingMinigameQuestion.game_type === 'non_coding' ? (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Correct Answer</label>
-                                        <textarea name="correct_answer" defaultValue={editingMinigameQuestion.correct_answer || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md" rows={3} />
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Correct Answer</label>
+                                            <textarea name="correct_answer" defaultValue={editingMinigameQuestion.correct_answer || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md" rows={2} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Explanation</label>
+                                            <textarea name="explanation" defaultValue={editingMinigameQuestion.game_data?.explanation || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md" rows={3} placeholder="Brief concept note shown after the game (30–40 words)" />
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="space-y-6">
@@ -1052,8 +1060,8 @@ const handleBulkDifficultyCheck = async () => {
                                                     <input type="text" name="function_name" defaultValue={editingMinigameQuestion.game_data?.function_name || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Correct Code</label>
-                                                    <textarea name="correct_code" defaultValue={editingMinigameQuestion.game_data?.correct_code || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" rows={6} />
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Correct Code (clean_solution)</label>
+                                                    <textarea name="correct_code" defaultValue={editingMinigameQuestion.game_data?.correct_code || (editingMinigameQuestion.game_data as any)?.clean_solution || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" rows={6} />
                                                 </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div>
@@ -1064,6 +1072,14 @@ const handleBulkDifficultyCheck = async () => {
                                                         <label className="block text-sm font-medium text-gray-700 mb-1">Sample Output</label>
                                                         <input type="text" name="sample_output" defaultValue={editingMinigameQuestion.game_data?.sample_output || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" />
                                                     </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Hidden Tests <span className="text-gray-400 font-normal">(JSON array)</span></label>
+                                                    <textarea name="hidden_tests" defaultValue={JSON.stringify(editingMinigameQuestion.game_data?.hidden_tests ?? [], null, 2)} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" rows={4} placeholder='[{"input": "(1,)", "expected_output": "1"}]' />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Explanation <span className="text-gray-400 font-normal">(shown after Hangman)</span></label>
+                                                    <textarea name="explanation" defaultValue={editingMinigameQuestion.game_data?.explanation || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md" rows={3} placeholder="Cover what the function does, a common beginner mistake, and the key concept. 30–40 words." />
                                                 </div>
                                             </div>
                                         </div>
@@ -1077,12 +1093,12 @@ const handleBulkDifficultyCheck = async () => {
                                                     <textarea name="buggy_question_text" defaultValue={editingMinigameQuestion.game_data?.buggy_question_text || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md" rows={2} />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Buggy Code</label>
-                                                    <textarea name="buggy_code" defaultValue={editingMinigameQuestion.game_data?.buggy_code || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" rows={6} />
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Buggy Code (code_shown_to_student)</label>
+                                                    <textarea name="buggy_code" defaultValue={editingMinigameQuestion.game_data?.buggy_code || (editingMinigameQuestion.game_data as any)?.code_shown_to_student || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" rows={6} />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Buggy Code Correct Solution</label>
-                                                    <textarea name="buggy_correct_code" defaultValue={editingMinigameQuestion.game_data?.buggy_correct_code || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" rows={6} />
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Bug-Fixed Code (code_with_bug_fixed)</label>
+                                                    <textarea name="buggy_correct_code" defaultValue={editingMinigameQuestion.game_data?.buggy_correct_code || (editingMinigameQuestion.game_data as any)?.code_with_bug_fixed || ''} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" rows={6} />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">Buggy Code Explanation</label>
