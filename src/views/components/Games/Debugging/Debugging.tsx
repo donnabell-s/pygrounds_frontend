@@ -172,7 +172,7 @@ const Debugging: React.FC = () => {
 
         {/* Cockpit overlay — screen blend: black holes become transparent, frame stays */}
         <image
-          href="/images/cockpit_check.webp"
+          href="/images/cockpit_FINAL.webp"
           x={0}
           y={0}
           width={1920}
@@ -237,7 +237,7 @@ const Debugging: React.FC = () => {
               style={{
                 width: '31%',
                 height: '160%',
-                right: '-9.8%',
+                right: '-9%',
                 top: '-92%',
                 transform: 'skewY(-13deg) skewX(-2deg)',
                 backgroundColor: '#1e1e1e'
