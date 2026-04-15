@@ -78,25 +78,25 @@ const AchievementList = ({ userId }: Props) => {
   if (sessionExpired && !authLoading) return null;
   const [pageStart, setPageStart] = useState(0); // index of first achievement on current page
 
-  const fetchAchievements = async (id?: number) => {
+  const fetchAchievements = async (id?: number, forceRefresh = false) => {
     try {
-      const data = await getAchievements(id);
+      const data = await getAchievements(id, forceRefresh);
       setAchievements(data);
     } catch (error) {
       console.error("Failed to fetch achievements", error);
     }
   };
 
+  // On mount / userId change: use cached data if available (no flash, no extra call)
   useEffect(() => {
-    fetchAchievements(userId || undefined);
+    fetchAchievements(userId || undefined, false);
     setPageStart(0);
   }, [userId]);
 
-  // Keep achievements in sync when adaptive data refreshes (so progressbar and achievements match)
+  // After a minigame (or any explicit adaptive refresh): force a real API call
   useEffect(() => {
     if (!lastUpdated) return;
-    // re-fetch achievements when adaptive context updates
-    fetchAchievements(userId || undefined);
+    fetchAchievements(userId || undefined, true);
   }, [lastUpdated, userId]);
 
   const sortedAchievements = [...achievements].sort((a, b) => {

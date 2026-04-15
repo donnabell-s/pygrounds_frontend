@@ -30,6 +30,7 @@ const Crossword: React.FC = () => {
   const [selectedPlacement, setSelectedPlacement] = useState<ExtendedPlacement | null>(null);
 
   const storageKey = activeSession ? `crossword-letters-${activeSession.session_id}` : null;
+  const submittedKey = activeSession ? `submitted-${activeSession.session_id}` : null;
 
   const normalizePlacements = (raw: any[] = []): ExtendedPlacement[] => {
     const unique: ExtendedPlacement[] = [];
@@ -45,9 +46,10 @@ const Crossword: React.FC = () => {
   };
 
   useEffect(() => {
-    const stored = localStorage.getItem("submitted");
+    if (!submittedKey) return;
+    const stored = localStorage.getItem(submittedKey);
     if (stored === "true") setSubmitted(true);
-  }, []);
+  }, [submittedKey]);
 
   useEffect(() => {
     if (!activeSession) return;
@@ -242,7 +244,7 @@ const Crossword: React.FC = () => {
   const handleSubmit = async () => {
     if (!activeSession || submitted) return;
     setSubmitted(true);
-    localStorage.setItem("submitted", "true");
+    if (submittedKey) localStorage.setItem(submittedKey, "true");
 
     const used = new Set<number>();
     const answers: AnswerSubmission[] = placements
@@ -362,9 +364,9 @@ const Crossword: React.FC = () => {
         <div>
           <Component.ResultsModal
             onClose={() => {
+              if (submittedKey) localStorage.removeItem(submittedKey);
               clearActiveSession();
               resetGameEnd();
-              localStorage.removeItem("submitted");
               navigate(`/${user?.id}/home`);
             }}
           />
