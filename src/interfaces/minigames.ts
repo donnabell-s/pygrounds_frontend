@@ -16,6 +16,7 @@ export interface Minigame {
 import wordsearchImg from "../assets/images/wordsearch.png";
 import crosswordImg from "../assets/images/crossword.png";
 import hangmanImg from "../assets/images/hangman.png";
+import debuggingImg from "../assets/images/debugging.png";
 
 export const mockGames: Minigame[] = [
   {
@@ -52,6 +53,7 @@ export const mockGames: Minigame[] = [
     description:
       "Debug malfunctioning ship systems before time runs out or the ship explodes!",
     category: "Coding",
+    image: debuggingImg,
     instructions: [
       "You are a ship engineer tasked with stabilizing failing systems.",
       "Each round, you'll see buggy Python code.",

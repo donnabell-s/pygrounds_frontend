@@ -71,7 +71,7 @@ const Landing = () => {
             <h1 className="text-4xl lg:text-6xl font-bold leading-tight mb-6">
               Master Python Through{" "}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7053D0] to-[#482986]">
-                Interactive Gaming
+                <br></br>Game-Based Learning
               </span>
             </h1>
             <p className="text-lg text-gray-700/90 leading-relaxed mb-8">
