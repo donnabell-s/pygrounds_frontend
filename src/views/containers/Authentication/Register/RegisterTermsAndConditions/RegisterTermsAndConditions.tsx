@@ -73,7 +73,8 @@ const RegisterTermsAndConditions: React.FC = () => {
       const formattedAnswers = {
         answers: Object.entries(preTestAnswers).map(([id, answer]) => ({
           question_id: parseInt(id, 10),
-          user_answer: answer,
+          user_answer: answer.user_answer,
+          time_taken: answer.time_taken,
         })),
       };
 

@@ -1,5 +1,5 @@
 // src/pages/register/RegisterPreTest.tsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as Component from "../../../../components";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useNavigate, useOutletContext } from "react-router-dom";
@@ -12,32 +12,42 @@ const RegisterPreTest: React.FC = () => {
     useOutletContext<RegistrationContextType>();
   const { preAssessmentQuestions, isLoading, error, refresh } = useAdaptive();
 
-  // Local state to show warning if they click Next too early
-  const [showWarning, setShowWarning] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const questionStartTime = useRef<number>(Date.now());
 
-  // Mark all answered if every question id maps to a non-empty string
-  const allAnswered: boolean = useMemo(() => {
-    if (!preAssessmentQuestions) return false;
-    return preAssessmentQuestions.every(
-      (q) => typeof preTestAnswers[q.id] === "string" && preTestAnswers[q.id].trim() !== ""
-    );
-  }, [preAssessmentQuestions, preTestAnswers]);
+  // Reset the start timer whenever the displayed question changes
+  useEffect(() => {
+    questionStartTime.current = Date.now();
+  }, [currentIndex]);
 
-  const handleBack = () => navigate(-1);
+  const questions = preAssessmentQuestions ?? [];
+  const currentQuestion = questions[currentIndex];
+  const isLast = currentIndex === questions.length - 1;
+  const currentAnswer = currentQuestion ? preTestAnswers[currentQuestion.id] : undefined;
+  const canAdvance = !!currentAnswer;
+
+  const handleBack = () => {
+    if (currentIndex === 0) {
+      navigate(-1);
+    } else {
+      setCurrentIndex((i) => i - 1);
+    }
+  };
 
   const handleNext = () => {
-    if (!allAnswered) {
-      setShowWarning(true);
-      return;
+    if (!canAdvance) return;
+    if (isLast) {
+      navigate("/register/terms-and-conditions");
+    } else {
+      setCurrentIndex((i) => i + 1);
     }
-    navigate("/register/terms-and-conditions");
   };
 
   const handleAnswerChange = (questionId: number, answer: string) => {
-    setShowWarning(false);
+    const time_taken = Math.floor((Date.now() - questionStartTime.current) / 1000);
     setPreTestAnswers((prev) => ({
       ...prev,
-      [questionId]: answer,
+      [questionId]: { user_answer: answer, time_taken },
     }));
   };
 
@@ -55,28 +65,24 @@ const RegisterPreTest: React.FC = () => {
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-1.5">
-        Let’s See What You Already Know!
+        Let's See What You Already Know!
       </h1>
       <span className="mb-5 block">
         This quick test helps us match you with the right challenges based on
         your current Python skills.
       </span>
 
-      <div>
-        { (preAssessmentQuestions ?? []).map((q) => (
-          <Component.PreTestQuestionCard
-            key={q.id}
-            question={q}
-            selectedAnswer={preTestAnswers[q.id]}
-            onAnswerChange={handleAnswerChange}
-          />
-        ))}
-      </div>
+      <p className="text-sm text-gray-500 mb-4">
+        Question {currentIndex + 1} of {questions.length}
+      </p>
 
-      {showWarning && (
-        <p className="text-sm text-red-600 mb-4">
-          Please answer all questions before continuing.
-        </p>
+      {currentQuestion && (
+        <Component.PreTestQuestionCard
+          key={currentQuestion.id}
+          question={currentQuestion}
+          selectedAnswer={currentAnswer?.user_answer}
+          onAnswerChange={handleAnswerChange}
+        />
       )}
 
       <div className="flex justify-between mt-6">
@@ -89,16 +95,16 @@ const RegisterPreTest: React.FC = () => {
         </button>
         <button
           onClick={handleNext}
-          disabled={!allAnswered}
+          disabled={!canAdvance}
           className={`
             px-4 py-2 rounded-md flex items-center gap-2 text-sm transition cursor-pointer
-            ${allAnswered
+            ${canAdvance
               ? "bg-[#704EE7] text-white hover:brightness-110"
               : "bg-gray-300 text-gray-600 cursor-not-allowed"
             }
           `}
         >
-          Next
+          {isLast ? "Finish" : "Next"}
           <FaArrowRight size={11} />
         </button>
       </div>
