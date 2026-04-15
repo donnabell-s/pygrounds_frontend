@@ -67,6 +67,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setGameEnded(false);
     localStorage.removeItem("activeSession");
     localStorage.removeItem("gameEnded");
+    localStorage.removeItem("submitted"); // legacy key cleanup
   };
 
   const resetGameEnd = () => {
