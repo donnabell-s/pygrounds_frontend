@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../../../../api';
-import { SubtopicModal, AdminTable } from '../../../../views/components/UI';
+import { SubtopicModal, AdminTable, BackButton } from '../../../../views/components/UI';
 import SubtopicStatusTracker from '../../../components/Features/SubtopicStatusTracker';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import type { AdminSubtopic, AdminTopic } from '../../../../types/adaptive';
@@ -40,6 +41,7 @@ const ExpandableText: React.FC<ExpandableTextProps> = ({ text, maxLength = 100 }
 };
 
 const ViewSubtopic = () => {
+    const navigate = useNavigate();
     const [subtopics, setSubtopics] = useState<AdminSubtopic[]>([]);
     const [topics, setTopics] = useState<AdminTopic[]>([]);
     const [loading, setLoading] = useState(true);
@@ -130,7 +132,8 @@ const ViewSubtopic = () => {
     };
 
     return (
-        <>
+        <div className="space-y-4">
+            <BackButton onClick={() => navigate(-1)} />
             <AdminTable
                 title="Subtopic Management"
                 loading={loading}
@@ -214,7 +217,7 @@ const ViewSubtopic = () => {
                 title={editingSubtopic ? 'Edit Subtopic' : 'Create New Subtopic'}
                 topics={topics}
             />
-        </>
+        </div>
     );
 };
 

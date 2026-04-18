@@ -20,3 +20,30 @@ export interface AdminUserListResponse {
   previous: string | null;
   results: AdminUser[];
 }
+
+export interface AdminNotification {
+  id: number;
+  recipient: number | null;
+  recipient_username: string | null;
+  title: string;
+  message: string;
+  notification_type: 'general' | 'achievement' | 'system';
+  is_read: boolean;
+  is_broadcast: boolean;
+  created_at: string;
+}
+
+export interface AdminNotificationListResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: AdminNotification[];
+}
+
+export interface SendNotificationPayload {
+  title: string;
+  message: string;
+  notification_type: 'general' | 'achievement' | 'system';
+  is_broadcast: boolean;
+  recipient?: number;
+}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../../../../api';
-import { AdminTable, DocumentManagementModal } from '../../../components/UI';
+import { AdminTable, DocumentManagementModal, BackButton } from '../../../components/UI';
 import StatusBadge from '../../../components/UI/StatusBadge';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import { MdDelete } from 'react-icons/md';
@@ -13,6 +14,7 @@ import type { UploadedDocument } from '../../../../types/adaptive';
 type Document = UploadedDocument;
 
 export const ContentUpload = () => {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
     const [documents, setDocuments] = useState<Document[]>([]);
@@ -284,6 +286,7 @@ export const ContentUpload = () => {
 
     return (
   <div className="space-y-4">
+    <BackButton onClick={() => navigate(-1)} />
     {/* Header Section */}
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       {/* Left side: Title + Dropdown */}

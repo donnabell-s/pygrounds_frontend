@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../../../../api';
-import { TopicModal, AdminTable } from '../../../../views/components/UI';
+import { TopicModal, AdminTable, BackButton } from '../../../../views/components/UI';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import type { AdminTopic, AdminZone } from '../../../../types/adaptive';
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 const ViewTopic = () => {
+    const navigate = useNavigate();
     const [topics, setTopics] = useState<AdminTopic[]>([]);
     const [zones, setZones] = useState<AdminZone[]>([]);
     const [loading, setLoading] = useState(true);
@@ -103,7 +105,8 @@ const ViewTopic = () => {
     };
 
     return (
-        <>
+        <div className="space-y-4">
+            <BackButton onClick={() => navigate(-1)} />
             <AdminTable
                 title="Topic Management"
                 loading={loading}
@@ -156,7 +159,7 @@ const ViewTopic = () => {
                 title={editingTopic ? 'Edit Topic' : 'Create New Topic'}
                 zones={zones}
             />
-        </>
+        </div>
     );
 };
 
