@@ -254,7 +254,7 @@ bulkCheckDifficulty: async (payload: {
         regenerated?: Record<string, any>;
         accepted_fields?: string[];
     }): Promise<RegenerationPreviewResponse | RegenerationSuccessResponse> => {
-        const response = await client.post(`/question/${questionId}/regenerate/`, data);
+      const response = await client.post(`/question/${questionId}/regenerate/`, data, { timeout: 30000 });
         return response.data;
     },
 
