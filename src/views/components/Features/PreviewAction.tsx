@@ -125,12 +125,12 @@ const PreviewAction = ({ selectedGame }: PreviewActionProps) => {
           </div>
         </div>
 
-    <div className="w-full md:w-[380px] h-[230px] rounded-xl overflow-hidden shadow-md bg-white border border-[#E6EDF7] flex items-center justify-center" style={glowStyle}>
+    <div className="w-full md:w-[380px] h-[230px] rounded-xl overflow-hidden shadow-md bg-white border border-[#E6EDF7]" style={glowStyle}>
           {selectedGame.image ? (
             <img
               src={selectedGame.image}
               alt={`${selectedGame.title} thumbnail`}
-              className="max-w-full max-h-full object-contain"
+              className="w-full h-full object-cover"
             />
           ) : (
             // Fallback colored placeholder for games without images (e.g., Hangman, Ship Debugging)

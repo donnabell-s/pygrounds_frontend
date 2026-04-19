@@ -329,12 +329,20 @@ const FlaggedQuestions = () => {
         accepted_fields: acceptedFields,
       });
       if (result.status === "success") {
-        setRegenerateSuccess(
-          `Fields updated on question #${selectedQuestion.id}. It remains flagged — unflag it manually when ready.`
-        );
-        setRegeneratePreview(null);
-        // Refresh the list in-place (stay on current page) so updated text is visible
-        setRefreshKey((k) => k + 1);
+        // Automatically unflag the question upon successful apply
+        const unflagResult = await flagApi.dismissFlaggedQuestion(selectedQuestion.id);
+        
+        if (unflagResult) {
+          setRegenerateSuccess(`Fields updated on question #${selectedQuestion.id} and question successfully unflagged.`);
+          setRegeneratePreview(null);
+          // Set refresh key to update the list, the user will click Done to close the modal
+          setFlaggedPage(1);
+          setRefreshKey((k) => k + 1);
+        } else {
+          setRegenerateSuccess(`Fields updated on question #${selectedQuestion.id} but failed to unflag automatically.`);
+          setRegeneratePreview(null);
+          setRefreshKey((k) => k + 1);
+        }
       }
     } catch (err: any) {
       setRegenerateError(err.response?.data?.error || err.message || "Apply failed");
@@ -785,7 +793,13 @@ const FlaggedQuestions = () => {
                 <div className="rounded-md bg-green-50 border border-green-200 p-4 space-y-3">
                   <p className="text-xs text-green-800 font-medium">{regenerateSuccess}</p>
                   <div className="flex justify-end">
-                    <button type="button" onClick={closeRegenerateModal}
+                    <button type="button" onClick={() => {
+                        closeRegenerateModal();
+                        if (regenerateSuccess.includes("unflagged")) {
+                          setShowDetailModal(false);
+                          setSelectedQuestion(null);
+                        }
+                      }}
                       className="rounded-md bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700">
                       Done
                     </button>
