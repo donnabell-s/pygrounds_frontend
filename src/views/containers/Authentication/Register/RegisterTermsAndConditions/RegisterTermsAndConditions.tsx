@@ -6,6 +6,7 @@ import { useAuth } from "../../../../../context/AuthContext";
 import { useAdaptive } from "../../../../../context/AdaptiveContext";
 import { useGame } from "../../../../../context/GameContext";
 import type { RegistrationContextType } from "../RegisterMain/RegisterMain";
+import { REG_SIGNUP_KEY, REG_PRETEST_KEY } from "../RegisterMain/RegisterMain";
 
 const RegisterTermsAndConditions: React.FC = () => {
   const navigate = useNavigate();
@@ -85,6 +86,10 @@ const RegisterTermsAndConditions: React.FC = () => {
 
       // Refresh adaptive data after successful registration to ensure progress bar is updated
       refresh();
+
+      // Clear persisted registration data now that registration is complete
+      sessionStorage.removeItem(REG_SIGNUP_KEY);
+      sessionStorage.removeItem(REG_PRETEST_KEY);
 
       // Navigate onward
       navigate(`/${createdUser.id}/home`);
