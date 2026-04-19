@@ -1,12 +1,17 @@
 // src/pages/register/RegisterUserInfo.tsx
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useRef, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import type { RegistrationContextType } from "../RegisterMain/RegisterMain";
+import { authApi } from "../../../../../api/authApi";
 
 const RegisterUserInfo: React.FC = () => {
   const navigate = useNavigate();
   const { signupData, setSignupData } = useOutletContext<RegistrationContextType>();
+
+  const [usernameTaken, setUsernameTaken] = useState(false);
+  const [emailTaken, setEmailTaken]       = useState(false);
+  const [checking, setChecking]           = useState(false);
 
   // All required fields (including password2) must be non-blank
   const allFieldsFilled = useMemo(() => {
@@ -30,7 +35,44 @@ const RegisterUserInfo: React.FC = () => {
   // Must match exactly
   const passwordsMatch = signupData.password === signupData.password2;
 
-  const canProceed = allFieldsFilled && passwordsMatch;
+  const canProceed = allFieldsFilled && passwordsMatch && !usernameTaken && !emailTaken && !checking;
+
+  // Debounce availability check for username and email
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const username = signupData.username.trim();
+    const email    = signupData.email.trim();
+
+    if (!username && !email) {
+      setUsernameTaken(false);
+      setEmailTaken(false);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        setChecking(true);
+        const params: { username?: string; email?: string } = {};
+        if (username) params.username = username;
+        if (email)    params.email    = email;
+
+        const result = await authApi.checkAvailability(params);
+        setUsernameTaken(result.username_taken ?? false);
+        setEmailTaken(result.email_taken ?? false);
+      } catch {
+        // silently ignore network errors — don't block the user
+      } finally {
+        setChecking(false);
+      }
+    }, 600);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [signupData.username, signupData.email]);
 
   const handleNext = () => {
     if (!canProceed) return;
@@ -55,8 +97,13 @@ const RegisterUserInfo: React.FC = () => {
             onChange={(e) =>
               setSignupData((prev) => ({ ...prev, username: e.target.value }))
             }
-            className="bg-[#F1F5FA] border border-[#E4ECF7] rounded-lg px-2.5 py-1.5"
+            className={`bg-[#F1F5FA] border rounded-lg px-2.5 py-1.5 ${
+              usernameTaken ? "border-red-500" : "border-[#E4ECF7]"
+            }`}
           />
+          {usernameTaken && (
+            <p className="text-sm text-red-600 mt-1">Username is already taken</p>
+          )}
         </div>
 
         {/* First Name */}
@@ -106,8 +153,13 @@ const RegisterUserInfo: React.FC = () => {
             onChange={(e) =>
               setSignupData((prev) => ({ ...prev, email: e.target.value }))
             }
-            className="bg-[#F1F5FA] border border-[#E4ECF7] rounded-lg px-2.5 py-1.5"
+            className={`bg-[#F1F5FA] border rounded-lg px-2.5 py-1.5 ${
+              emailTaken ? "border-red-500" : "border-[#E4ECF7]"
+            }`}
           />
+          {emailTaken && (
+            <p className="text-sm text-red-600 mt-1">Email is already in use</p>
+          )}
         </div>
 
         {/* Password & Password2 */}

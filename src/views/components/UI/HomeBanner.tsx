@@ -8,7 +8,7 @@ const HomeBanner = () => {
   const { user } = useAuth();
 
   const viewProgressClick = () => {
-    if (user?.id) navigate(`/${user.id}/my-profile`);
+    if (user?.id) navigate(`/${user.id}/profile/${user.id}`);
   };
 
   return (
