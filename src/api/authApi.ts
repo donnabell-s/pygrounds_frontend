@@ -17,4 +17,9 @@ export const authApi = {
     const res = await client.get<User>("/user/profile/");
     return res.data;
   },
+
+  checkAvailability: async (params: { username?: string; email?: string }): Promise<{ username_taken?: boolean; email_taken?: boolean }> => {
+    const res = await client.get<{ username_taken?: boolean; email_taken?: boolean }>("/user/check-availability/", { params });
+    return res.data;
+  },
 };
