@@ -42,8 +42,11 @@ const Debugging: React.FC = () => {
 
       if (session) {
         setLives(normalizeInitialLives(session.remaining_lives));
-        const broken = session.session_questions?.[0]?.question?.game_data?.buggy_code;
-        setCode(broken || "");
+        const gameData = session.session_questions?.[0]?.question?.game_data;
+        const fnName = gameData?.function_name || "function_name";
+        const fallbackCode = `def ${fnName}():\n    # write code here\n    pass`;
+        const broken = gameData?.buggy_code || gameData?.code_shown_to_student || fallbackCode;
+        setCode(broken);
       }
       setLoading(false);
     })();
