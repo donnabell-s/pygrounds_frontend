@@ -18,7 +18,7 @@ const PreTestQuestionCard: React.FC<PreTestQuestionCardProps> = ({
       {/* Question header */}
       <div className="flex items-center mb-4">
         <div className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-[#704EE7]/10 text-[#704EE7] text-sm font-semibold mr-3">
-          {question.order+1}
+          {question.order}
         </div>
         <p className="text-lg font-semibold">
           {question.question_text}
