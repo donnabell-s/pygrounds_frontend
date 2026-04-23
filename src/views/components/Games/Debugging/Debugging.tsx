@@ -88,23 +88,12 @@ const Debugging: React.FC = () => {
     if (!activeSession || submitted) return;
     const result = await submitDebuggingCode(activeSession.session_id, code);
     if (!result) return;
-    const nextLives = clampLives(result.remaining_lives);
-    // Detect life loss to play sound, but not when reaching zero (game over)
-    const prev = prevLivesRef.current;
-    if (prev !== null && nextLives < prev && nextLives > 0) {
-      try {
-        if (loseLifeRef.current) {
-          loseLifeRef.current.currentTime = 0;
-          loseLifeRef.current.play().catch(() => {});
-        }
-      } catch {}
-    }
-    setLives(nextLives);
+    setLives(result.remaining_lives);
     setSubmitted(result.success || result.game_over);
     setOutput(
       result.success
-        ? `✅ Fixed! All tests passed.\nLives left: ${clampLives(result.remaining_lives)}`
-        : `❌ ${result.message}\nLives left: ${clampLives(result.remaining_lives)}`,
+        ? `✅ Fixed! All tests passed.\nLives left: ${result.remaining_lives}`
+        : `❌ ${result.message}\nLives left: ${result.remaining_lives}`,
     );
     if (result.traceback) setOutput((prev) => prev + `\n\nTraceback:\n${result.traceback}`);
   };
