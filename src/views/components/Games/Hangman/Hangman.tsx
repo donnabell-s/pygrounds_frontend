@@ -90,9 +90,9 @@ const Hangman: React.FC = () => {
       const fnName = question.game_data.function_name;
 
       let params = "";
-      const buggy = question.game_data.buggy_code || "";
-      const match = buggy.match(/def\s+\w+\s*\(([^)]*)\)/);
-      if (match) params = match[1].trim();
+      const firstLine = (question.correct_answer ?? "").split("\n")[0];
+      const answerMatch = firstLine.match(/def\s+\w+\s*\(([^)]*)\)/);
+      if (answerMatch) params = answerMatch[1].trim();
 
       setCode(`def ${fnName}(${params}):\n    # Write your code here`);
     }
