@@ -1,6 +1,6 @@
 import client from './client';
 import type { PreAssessmentQuestion, AdminZone, AdminTopic, AdminSubtopic, UploadedDocument, PipelineResult, DocumentListResponse } from '../types/adaptive';
-import type { AdminUser } from '../types/admin';
+import type { AdminUser, AdminNotification, AdminNotificationListResponse, SendNotificationPayload } from '../types/admin';
 import type {
     BulkGenerationParams,
     SingleGenerationParams,
@@ -685,5 +685,34 @@ bulkCheckDifficulty: async (payload: {
     activateUser: async (userId: number): Promise<AdminUser> => {
         const response = await client.patch<AdminUser>(`/user/admin/users/${userId}/activate/`);
         return response.data;
+    },
+
+
+    // NOTIFICATIONS
+
+    getAllNotifications: async (params?: {
+        page?: number;
+        page_size?: number;
+    }): Promise<AdminNotificationListResponse> => {
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.append('page', params.page.toString());
+        if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
+        const url = `/user/admin/notifications/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const response = await client.get<AdminNotificationListResponse>(url);
+        return response.data;
+    },
+
+    getNotification: async (id: number): Promise<AdminNotification> => {
+        const response = await client.get<AdminNotification>(`/user/admin/notifications/${id}/`);
+        return response.data;
+    },
+
+    sendNotification: async (payload: SendNotificationPayload): Promise<AdminNotification> => {
+        const response = await client.post<AdminNotification>('/user/admin/notifications/', payload);
+        return response.data;
+    },
+
+    deleteNotification: async (id: number): Promise<void> => {
+        await client.delete(`/user/admin/notifications/${id}/`);
     },
 };

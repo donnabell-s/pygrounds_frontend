@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../../../../api';
 import type { GeneratedQuestion, PreAssessmentQuestion, BulkGenerationParams, PreAssessmentBulkGenerationParams, QuestionListResponse } from '../../../../types/questions';
-import { AdminTable, BulkGenerationModal } from '../../../components/UI';
+import { AdminTable, BulkGenerationModal, BackButton } from '../../../components/UI';
 import StatusBadge from '../../../components/UI/StatusBadge';
 import MinigameBulkGeneration from './MinigameBulkGeneration';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
@@ -25,6 +26,7 @@ type BulkDifficultyCheckResponse = {
 
 
 const QuestionBank = () => {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -548,6 +550,7 @@ const handleBulkDifficultyCheck = async () => {
 
     return (
         <div className="space-y-4">
+            <BackButton onClick={() => navigate(-1)} />
             <div>
                 <h2 className="text-2xl font-semibold text-gray-800">Question Bank</h2>
                 <p className="text-sm text-gray-500">Manage and review minigame and pre-assessment questions.</p>

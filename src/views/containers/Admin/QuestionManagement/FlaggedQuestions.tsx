@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { AdminTable } from "../../../components/UI";
+import { useNavigate } from "react-router-dom";
+import { AdminTable, BackButton } from "../../../components/UI";
 import { FiEdit2, FiRefreshCw, FiX } from "react-icons/fi";
 import flagApi, { type FlaggedQuestion, type FlagCountByLevel } from "../../../../api/flagApi";
 import { adminApi } from "../../../../api/adminApi";
@@ -100,6 +101,7 @@ function buildInitialPrompt(item: FlaggedQuestionRow): string {
 // ============================================================
 
 const FlaggedQuestions = () => {
+  const navigate = useNavigate();
 
   // ── State ──────────────────────────────────────────────────
   const [flaggedPage, setFlaggedPage] = useState(1);
@@ -443,6 +445,7 @@ const FlaggedQuestions = () => {
   // ── Render ─────────────────────────────────────────────────
   return (
     <div className="space-y-4">
+      <BackButton onClick={() => navigate(-1)} />
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">

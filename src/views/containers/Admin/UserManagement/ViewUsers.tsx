@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react';
-import { AdminTable, AdminModal } from '../../../components/UI';
-import { FiEdit2, FiTrash2, FiUser, FiMail, FiCalendar } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { AdminTable, AdminModal, BackButton } from '../../../components/UI';
+import { FiEdit2, FiTrash2, FiUser, FiMail, FiCalendar, FiEye, FiShield, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
 import RegisterAdmin from '../../Authentication/Register/RegisterAdmin/RegisterAdmin';
 import { adminApi } from '../../../../api/adminApi';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import type { AdminUser, AdminUserListResponse } from '../../../../types/admin';
 
 const ViewUsers = () => {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
     const [usersData, setUsersData] = useState<AdminUserListResponse | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewingUser, setViewingUser] = useState<AdminUser | null>(null);
     const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
 
     useEffect(() => {
@@ -88,6 +92,11 @@ const ViewUsers = () => {
         }
     };
 
+    const handleView = (user: AdminUser) => {
+        setViewingUser(user);
+        setIsViewModalOpen(true);
+    };
+
     const handleEdit = (user: AdminUser) => {
         setEditingUser(user);
         setIsEditModalOpen(true);
@@ -139,6 +148,7 @@ const ViewUsers = () => {
 
     return (
         <div className="space-y-4">
+            <BackButton onClick={() => navigate(-1)} />
             <AdminTable
                 title="User Management"
                 loading={loading}
@@ -150,6 +160,7 @@ const ViewUsers = () => {
                 onAdd={() => setIsAddModalOpen(true)}
                 itemsPerPage={10}
                 headerColumns={['ID', 'User', 'Email', 'Role', 'Status', 'Joined', 'Actions']}
+
                 renderRow={(user: AdminUser) => (
                     <tr key={user.id} className={!user.is_active ? "opacity-50 bg-gray-50" : ""}>
                         <td className={`px-3 py-3 text-sm font-mono text-center ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
@@ -197,6 +208,13 @@ const ViewUsers = () => {
                         <td className="px-3 py-3 text-center">
                             <div className="flex justify-center space-x-1">
                                 <button
+                                    onClick={() => handleView(user)}
+                                    className={ADMIN_BUTTON_STYLES.ICON_SUCCESS}
+                                    title="View Details"
+                                >
+                                    <FiEye className="w-4 h-4" />
+                                </button>
+                                <button
                                     onClick={() => handleEdit(user)}
                                     className={ADMIN_BUTTON_STYLES.ICON_PRIMARY}
                                     title="Edit"
@@ -215,6 +233,93 @@ const ViewUsers = () => {
                     </tr>
                 )}
             />
+
+            {/* View User Modal */}
+            <AdminModal
+                isOpen={isViewModalOpen && !!viewingUser}
+                onClose={() => setIsViewModalOpen(false)}
+                title="User Details"
+            >
+                {viewingUser && (
+                    <div className="space-y-4">
+                        {/* Avatar + name */}
+                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                            <div className="w-14 h-14 rounded-full bg-[#7054D0] flex items-center justify-center text-white text-xl font-bold">
+                                {viewingUser.first_name?.[0] || viewingUser.username[0].toUpperCase()}
+                            </div>
+                            <div>
+                                <p className="font-semibold text-gray-800 text-lg">
+                                    {viewingUser.first_name} {viewingUser.last_name}
+                                </p>
+                                <p className="text-sm text-gray-500">@{viewingUser.username}</p>
+                            </div>
+                            <div className="ml-auto flex flex-col items-end gap-1">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleDisplay(viewingUser).color}`}>
+                                    {getRoleDisplay(viewingUser).text}
+                                </span>
+                                <span className={`px-2 py-1 rounded-full text-xs ${viewingUser.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                    {viewingUser.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Details grid */}
+                        <div className="grid grid-cols-1 gap-3">
+                            <div className="flex items-center gap-3 text-sm">
+                                <FiMail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <span className="text-gray-500 w-24">Email</span>
+                                <span className="text-gray-800 font-medium">{viewingUser.email || '—'}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm">
+                                <FiCalendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <span className="text-gray-500 w-24">Joined</span>
+                                <span className="text-gray-800 font-medium">{formatDate(viewingUser.date_joined)}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm">
+                                <FiCalendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <span className="text-gray-500 w-24">Last Login</span>
+                                <span className="text-gray-800 font-medium">{formatDate(viewingUser.last_login ?? null)}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm">
+                                <FiUser className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <span className="text-gray-500 w-24">User ID</span>
+                                <span className="text-gray-800 font-mono">{viewingUser.id}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm">
+                                <FiShield className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <span className="text-gray-500 w-24">Permissions</span>
+                                <div className="flex gap-2">
+                                    {viewingUser.is_staff && (
+                                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">Staff</span>
+                                    )}
+                                    {viewingUser.is_superuser && (
+                                        <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs">Superuser</span>
+                                    )}
+                                    {!viewingUser.is_staff && !viewingUser.is_superuser && (
+                                        <span className="text-gray-500 text-xs">Standard user</span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm">
+                                {viewingUser.is_active
+                                    ? <FiToggleRight className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                    : <FiToggleLeft className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                }
+                                <span className="text-gray-500 w-24">Account</span>
+                                <span className={`text-sm font-medium ${viewingUser.is_active ? 'text-green-600' : 'text-gray-400'}`}>
+                                    {viewingUser.is_active ? 'Active' : 'Deactivated'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end pt-2">
+                            <button onClick={() => setIsViewModalOpen(false)} className={ADMIN_BUTTON_STYLES.SECONDARY}>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </AdminModal>
 
             {/* Add Admin Modal */}
             <AdminModal 
