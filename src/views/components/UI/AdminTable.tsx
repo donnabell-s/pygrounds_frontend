@@ -34,21 +34,20 @@ const AdminTable = <T extends { id: number }>({
     const totalItems = total || items.length;
 
     return (
-        <div className="p-6 w-full mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
-                {onAdd && (
+        <div className="w-full mx-auto relative content-table-container">
+            {onAdd && (
+                <div className="flex justify-end items-center mb-4 sm:absolute sm:-top-12 sm:right-0 z-10 w-full sm:w-auto mt-2 sm:mt-0">
                     <button
                         onClick={onAdd}
                         className={ADMIN_BUTTON_STYLES.PRIMARY}
                     >
                         Add New {title.replace(' Management', '')}
                     </button>
-                )}
-            </div>
+                </div>
+            )}
 
             {error && (
-                <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
                     {error}
                 </div>
             )}
@@ -59,11 +58,11 @@ const AdminTable = <T extends { id: number }>({
                 <>
                     <div className="w-full overflow-x-auto rounded-lg border border-gray-200 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                         <table className="min-w-full table-auto divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                            <thead className="bg-[#6B4ECA]">
                                 <tr>
                                     {headerColumns.map((column, index) => {
                                         // Base styling for headers
-                                        let columnClass = "px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ";
+                                        let columnClass = "px-3 py-3 text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap ";
                                         let widthClass = "";
                                         
                                         // Center align specific column types

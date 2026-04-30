@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AdminTable, AdminModal, BackButton } from '../../../components/UI';
+import { AdminTable, AdminModal } from '../../../components/UI';
 import { FiEdit2, FiTrash2, FiUser, FiMail, FiCalendar, FiEye, FiShield, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
 import RegisterAdmin from '../../Authentication/Register/RegisterAdmin/RegisterAdmin';
 import { adminApi } from '../../../../api/adminApi';
@@ -8,7 +7,6 @@ import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import type { AdminUser, AdminUserListResponse } from '../../../../types/admin';
 
 const ViewUsers = () => {
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -147,8 +145,15 @@ const ViewUsers = () => {
     };
 
     return (
-        <div className="space-y-4">
-            <BackButton onClick={() => navigate(-1)} />
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+                <div className="flex items-start gap-3">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
+                        <p className="text-sm text-gray-500 mt-0.5">Manage platform users, roles, and status</p>
+                    </div>
+                </div>
+            </div>
             <AdminTable
                 title="User Management"
                 loading={loading}

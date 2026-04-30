@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../../../../api';
-import { ZoneModal, AdminTable, BackButton } from '../../../../views/components/UI';
+import { ZoneModal, AdminTable } from '../../../../views/components/UI';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import type { AdminZone } from '../../../../types/adaptive';
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 const ViewZone = () => {
-    const navigate = useNavigate();
     const [zones, setZones] = useState<AdminZone[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
@@ -137,8 +135,15 @@ const ViewZone = () => {
     };
 
     return (
-        <div className="space-y-4">
-            <BackButton onClick={() => navigate(-1)} />
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Zone Management</h1>
+                        <p className="text-sm text-gray-500 mt-0.5">Manage learning zones and their topics</p>
+                    </div>
+                </div>
+            </div>
             <AdminTable
                 title="Zone Management"
                 loading={loading}

@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../../../../api';
-import { TopicModal, AdminTable, BackButton } from '../../../../views/components/UI';
+import { TopicModal, AdminTable } from '../../../../views/components/UI';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import type { AdminTopic, AdminZone } from '../../../../types/adaptive';
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 const ViewTopic = () => {
-    const navigate = useNavigate();
     const [topics, setTopics] = useState<AdminTopic[]>([]);
     const [zones, setZones] = useState<AdminZone[]>([]);
     const [loading, setLoading] = useState(true);
@@ -105,8 +103,16 @@ const ViewTopic = () => {
     };
 
     return (
-        <div className="space-y-4">
-            <BackButton onClick={() => navigate(-1)} />
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-transparent mb-2">
+                <div className="flex items-start gap-3">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Topic Management</h1>
+                        <p className="text-sm text-gray-500 mt-0.5">Manage topics within learning zones</p>
+                    </div>
+                </div>
+            </div>
+
             <AdminTable
                 title="Topic Management"
                 loading={loading}
