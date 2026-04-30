@@ -95,7 +95,6 @@ const Notifications = () => {
         <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <BackButton onClick={() => navigate(-1)} />
             <div>
                     <h1 className="text-2xl font-bold text-gray-800">Notifications</h1>
                     <p className="text-sm text-gray-500 mt-0.5">Send and manage platform notifications</p>
