@@ -1,6 +1,15 @@
 // src/components/PreTestQuestionCard.tsx
-import React from "react";
+import React, { useMemo } from "react";
 import type { PreAssessmentQuestion } from "../../../types/adaptive";
+
+function shuffled<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
 type PreTestQuestionCardProps = {
   question: PreAssessmentQuestion;
@@ -13,6 +22,9 @@ const PreTestQuestionCard: React.FC<PreTestQuestionCardProps> = ({
   selectedAnswer,
   onAnswerChange,
 }) => {
+  // Shuffle once per question mount so options appear in a random order
+  const shuffledOptions = useMemo(() => shuffled(question.answer_options), [question.id]);
+
   return (
     <div className="mb-2 p-4">
       {/* Question header */}
@@ -36,7 +48,7 @@ const PreTestQuestionCard: React.FC<PreTestQuestionCardProps> = ({
 
       {/* Answer options */}
       <div className="grid grid-cols-2 gap-4">
-        {question.answer_options.map((option, idx) => {
+        {shuffledOptions.map((option, idx) => {
           const letter = String.fromCharCode(65 + idx).toLowerCase();; // A, B, C, D…
           const isSelected = selectedAnswer === option;
           return (

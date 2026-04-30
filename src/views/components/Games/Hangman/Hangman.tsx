@@ -10,6 +10,16 @@ import hangmanSadMp4 from "../../../../assets/images/hangman_animation/hangman_s
 import hangmanHappyMp4 from "../../../../assets/images/hangman_animation/hangman_happy.mp4";
 import hangmanLoseMp4 from "../../../../assets/images/hangman_animation/hangman_lose.mp4";
 import hangmanLoseStaticMp4 from "../../../../assets/images/hangman_animation/hangman_lose_static.mp4";
+import hangmanStaticBg from "../../../../assets/images/hangman_animation/hangman_static_bg.png";
+import hangmanStaticBgLost from "../../../../assets/images/hangman_animation/hangman_static_bg_lost.png";
+
+const VIDEO_CONFIGS = [
+  { src: hangmanHappyStaticMp4, loop: true },
+  { src: hangmanSadMp4, loop: false },
+  { src: hangmanHappyMp4, loop: false },
+  { src: hangmanLoseMp4, loop: false },
+  { src: hangmanLoseStaticMp4, loop: true },
+] as const;
 
 const Hangman: React.FC = () => {
   const navigate = useNavigate();
@@ -23,14 +33,28 @@ const Hangman: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"code" | "output">("code");
 
-  // Background animation state machine
-  const [bgMedia, setBgMedia] = useState<{ kind: "image" | "video"; src: string }>({ kind: "video", src: hangmanHappyStaticMp4 });
-  const sequenceRef = React.useRef<Array<{ kind: "image" | "video"; src: string; holdMs?: number }>>([]);
+  const sequenceRef = React.useRef<Array<{ src: string }>>([]);
   const timeoutRef = React.useRef<number | null>(null);
   const prevLivesRef = React.useRef<number | null>(null);
   const loseLifeRef = useRef<HTMLAudioElement>(null);
 
-  // Helper to clear any running sequence/timeouts
+  // All video elements are mounted at once; we switch by opacity + direct play()
+  const activeVideoSrcRef = useRef<string>(hangmanHappyStaticMp4);
+  const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
+
+  const switchToVideo = (src: string) => {
+    const prev = videoRefs.current.get(activeVideoSrcRef.current);
+    if (prev) prev.style.opacity = "0";
+
+    activeVideoSrcRef.current = src;
+    const next = videoRefs.current.get(src);
+    if (next) {
+      next.style.opacity = "1";
+      next.currentTime = 0;
+      next.play().catch(() => {});
+    }
+  };
+
   const resetSequence = () => {
     sequenceRef.current = [];
     if (timeoutRef.current) {
@@ -39,18 +63,10 @@ const Hangman: React.FC = () => {
     }
   };
 
-  // Advance to next media in the queued sequence
   const playNextInSequence = () => {
     const next = sequenceRef.current.shift();
     if (!next) return;
-    setBgMedia({ kind: next.kind, src: next.src });
-    if (next.kind === "image" && next.holdMs) {
-      // For images that should be shown briefly, schedule next step
-      timeoutRef.current = window.setTimeout(() => {
-        timeoutRef.current = null;
-        playNextInSequence();
-      }, next.holdMs);
-    }
+    switchToVideo(next.src);
   };
 
   useEffect(() => {
@@ -98,7 +114,6 @@ const Hangman: React.FC = () => {
     }
   }, [activeSession]);
 
-  // when new output arrives (e.g., after submit), show output tab by default
   useEffect(() => {
     if (output) setView("output");
   }, [output]);
@@ -115,21 +130,17 @@ const Hangman: React.FC = () => {
     return () => clearTimeout(timer);
   }, [activeSession, submitted]);
 
-  // Track lives changes to trigger animation sequences
   useEffect(() => {
     if (prevLivesRef.current === null) {
       prevLivesRef.current = lives;
-      // Ensure we start on happy static (looping video)
-      setBgMedia({ kind: "video", src: hangmanHappyStaticMp4 });
+      switchToVideo(hangmanHappyStaticMp4);
       return;
     }
 
     const prevLives = prevLivesRef.current;
     if (lives === prevLives) return;
 
-    // Only respond to life loss (ignore gains just in case)
     if (lives < prevLives) {
-      // Play lose-life sound only if not game over (avoid overlap with final lose sound)
       if (lives > 0) {
         try {
           if (loseLifeRef.current) {
@@ -141,21 +152,18 @@ const Hangman: React.FC = () => {
 
       resetSequence();
       if (lives <= 0) {
-        // All lives lost: sad -> lose -> lose static (loop)
         sequenceRef.current = [
-          { kind: "video", src: hangmanSadMp4 },
-          { kind: "video", src: hangmanLoseMp4 },
-          { kind: "video", src: hangmanLoseStaticMp4 },
+          { src: hangmanSadMp4 },
+          { src: hangmanLoseMp4 },
+          { src: hangmanLoseStaticMp4 },
         ];
       } else {
-        // Single life lost: sad -> happy -> back to happy static (loop)
         sequenceRef.current = [
-          { kind: "video", src: hangmanSadMp4 },
-          { kind: "video", src: hangmanHappyMp4 },
-          { kind: "video", src: hangmanHappyStaticMp4 },
+          { src: hangmanSadMp4 },
+          { src: hangmanHappyMp4 },
+          { src: hangmanHappyStaticMp4 },
         ];
       }
-      // Kick off the sequence
       playNextInSequence();
     }
 
@@ -172,40 +180,44 @@ const Hangman: React.FC = () => {
 
   return (
     <div className="flex justify-center my-6">
-      {/* audio: life lost */}
       <audio ref={loseLifeRef} preload="auto" src="/sounds/loselife.wav" />
-      {/* Game container: fixed size with static background */}
-      <div
-        className="relative w-[1080px] h-[665px] rounded-lg overflow-hidden shadow-lg"
-      >
-        {/* Background layer: plays static image or video animations */}
+      <div className="relative w-[1080px] h-[665px] rounded-lg overflow-hidden shadow-lg">
+        {/* All videos pre-mounted; only the active one is visible (opacity 1) */}
         <div className="absolute inset-0">
-          {bgMedia.kind === "image" ? (
-            <img
-              src={bgMedia.src}
-              alt="hangman background"
-              className="w-full h-full object-cover select-none pointer-events-none"
-            />
-          ) : (
+          <img
+            src={hangmanStaticBg}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: lives <= 0 ? 0 : 1, transition: "opacity 0.15s ease" }}
+          />
+          <img
+            src={hangmanStaticBgLost}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: lives <= 0 ? 1 : 0, transition: "opacity 0.15s ease" }}
+          />
+          {VIDEO_CONFIGS.map(({ src, loop }) => (
             <video
-              key={bgMedia.src}
-              src={bgMedia.src}
-              className="w-full h-full object-cover"
-              autoPlay
+              key={src}
+              ref={(el) => {
+                if (el) videoRefs.current.set(src, el);
+                else videoRefs.current.delete(src);
+              }}
+              src={src}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                opacity: src === hangmanHappyStaticMp4 ? 1 : 0,
+                transition: "opacity 0.15s ease",
+              }}
               muted
               playsInline
-              loop={bgMedia.kind === "video" && (bgMedia.src === hangmanHappyStaticMp4 || bgMedia.src === hangmanLoseStaticMp4)}
+              loop={loop}
               onEnded={() => {
-                // Advance once the current video finishes
-                playNextInSequence();
+                if (activeVideoSrcRef.current === src) playNextInSequence();
               }}
             />
-          )}
+          ))}
         </div>
 
-        {/* Overlay content (left lives + right editor) */}
         <div className="absolute inset-0 flex flex-row gap-6 p-6">
-          {/* Left overlay for lives and future animations (lives shown at top) */}
           <div className="w-1/3 flex flex-col items-center justify-start">
             <div className="flex flex-row items-center justify-center gap-3 mt-4">
               {Array.from({ length: 3 }).map((_, idx) => {
@@ -228,8 +240,7 @@ const Hangman: React.FC = () => {
             <div className="w-full h-44" />
           </div>
 
-          {/* Right overlay: content area */}
-          <div className="flex flex-col flex-1 gap-6 max-w-4xl">
+          <div className="flex flex-col flex-1 min-w-0 gap-6 max-w-4xl">
             <div className="bg-white p-5 rounded-md shadow-md text-sm">
               <p className="mb-4 text-lg">
                 <strong>Prompt:</strong> {prompt}
@@ -267,8 +278,7 @@ const Hangman: React.FC = () => {
               </button>
             </div>
 
-            {/* Editor / Output container: fixed height so output doesn't stretch the page */}
-            <div className="w-full h-[250px]">
+            <div className="w-full min-w-0 h-[250px]">
               {view === "output" ? (
                 <pre className="h-full overflow-auto bg-white border border-3 border-[#16A34A]/30 text-sm p-4 rounded whitespace-pre-wrap">{output || "No output yet."}</pre>
               ) : (
@@ -278,10 +288,10 @@ const Hangman: React.FC = () => {
 
             {!submitted && (
               <button
-              onClick={handleSubmit}
-              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#12803b] rounded-md text-white text-lg font-semibold shadow-lg cursor-pointer"
+                onClick={handleSubmit}
+                className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#12803b] rounded-md text-white text-lg font-semibold shadow-lg cursor-pointer"
               >
-              Submit Answers
+                Submit Answers
               </button>
             )}
           </div>
