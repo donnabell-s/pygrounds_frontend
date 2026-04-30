@@ -1,12 +1,13 @@
 import { Outlet } from 'react-router-dom';
 import * as Component from "../../../components";
+import PyGroundsAdminLogo from "../../../../assets/logo/PyGroundsAdmin.png";
 
 const AdminMain = () => {
   return (
     <div className="min-h-screen w-full flex flex-col bg-gray-100">
       {/* Top Bar */}
       <div className="fixed top-0 left-0 w-full h-16 bg-[#7054D0] shadow-md flex items-center px-6 z-30">
-        <h1 className="text-lg font-bold text-white">PyGrounds Admin</h1>
+        <img src={PyGroundsAdminLogo} alt="PyGrounds Admin" className="h-12 w-auto" />
       </div>
 
       {/* Main Section */}
