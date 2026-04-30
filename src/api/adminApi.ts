@@ -169,6 +169,7 @@ bulkCheckDifficulty: async (payload: {
         subtopic_id?: number;
         page?: number;
         page_size?: number;
+        search?: string;
     }): Promise<QuestionListResponse> => {
         const queryParams = new URLSearchParams();
         if (params?.game_type) queryParams.append('game_type', params.game_type);
@@ -178,6 +179,7 @@ bulkCheckDifficulty: async (payload: {
         if (params?.subtopic_id) queryParams.append('subtopic_id', params.subtopic_id.toString());
         if (params?.page) queryParams.append('page', params.page.toString());
         if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
+        if (params?.search) queryParams.append('search', params.search);
         
         const url = `/admin/questions/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
         const response = await client.get<QuestionListResponse>(url);

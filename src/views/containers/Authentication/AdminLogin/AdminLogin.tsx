@@ -75,20 +75,20 @@ const AdminLogin = () => {
     }
 };
     return (
-        <div className="bg-gray-100 w-screen h-screen flex items-start justify-center">
-            <div className="flex flex-col items-center w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-2/5 2xl:w-1/3 max-w-2xl mt-20 scale-[1.2]">
-                <div className="text-center mb-8">
+        <div className="bg-gray-100 min-h-screen w-full flex items-start justify-center px-4">
+            <div className="flex flex-col items-center w-full sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-2/5 2xl:w-1/3 max-w-2xl mt-12 md:mt-20">
+                <div className="text-center mb-6 md:mb-8">
                     <div className="mb-2">
                         <img 
                             src={Logo} 
                             alt="PyGrounds Logo"
-                            className="h-16 w-auto mx-auto"
+                            className="h-12 md:h-16 w-auto mx-auto"
                         />
                     </div>
-                    <h3 className="text-3xl font-medium text-purple-800">Login to Pygrounds Admin</h3>
+                    <h3 className="text-2xl md:text-3xl font-medium text-purple-800">Login to Pygrounds Admin</h3>
                 </div>
                 
-                <div className="bg-[#f6f8fa] w-2/3 px-10 pt-[5rem] pb-8 border-2 border-purple-800">
+                <div className="bg-[#f6f8fa] w-full sm:w-4/5 md:w-2/3 px-6 md:px-10 pt-10 md:pt-[5rem] pb-8 border-2 border-purple-800 rounded-lg">
                     {error && (
                         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-center">
                             {error}
@@ -98,12 +98,12 @@ const AdminLogin = () => {
                     <form className="space-y-6" onSubmit={handleLogin}>
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <label htmlFor="username" className="block font-medium text-xl text-purple-800">
+                                <label htmlFor="username" className="block font-medium text-lg md:text-xl text-purple-800">
                                     Username
                                 </label>
                                 <input 
                                     id="username"
-                                    className="w-full px-4 py-3 bg-white rounded placeholder-gray-500/60 border-2 border-purple-500"
+                                    className="w-full px-3 py-2 md:px-4 md:py-3 bg-white rounded placeholder-gray-500/60 border-2 border-purple-500"
                                     type="text" 
                                     name="username"
                                     value={username}
@@ -114,12 +114,12 @@ const AdminLogin = () => {
                             </div>
                             
                             <div className="space-y-2">
-                                <label htmlFor="password" className="block font-medium text-xl text-purple-800">
+                                <label htmlFor="password" className="block font-medium text-lg md:text-xl text-purple-800">
                                     Password
                                 </label>
                                 <input 
                                     id="password"
-                                    className="w-full px-4 py-3 bg-white rounded  placeholder-gray-500/60 border-2 border-purple-500"
+                                    className="w-full px-3 py-2 md:px-4 md:py-3 bg-white rounded placeholder-gray-500/60 border-2 border-purple-500"
                                     type="password" 
                                     name="password"
                                     value={password}
@@ -131,7 +131,7 @@ const AdminLogin = () => {
 
                             <div className="pt-2">
                                 <button 
-                                    className="w-full px-4 py-3 bg-[#7053D0] text-white font-bold rounded shadow" 
+                                    className="w-full px-4 py-2 md:py-3 bg-[#7053D0] text-white font-bold rounded shadow transition-colors hover:bg-purple-700" 
                                     type="submit"
                                 >
                                     Sign In

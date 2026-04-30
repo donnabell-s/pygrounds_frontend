@@ -234,16 +234,21 @@ export interface PreAssessmentGenerationResponse {
 
 export interface PreAssessmentGenerationStatus {
     session_id: string;
-    status: 'processing' | 'completed' | 'error';
+    status: 'processing' | 'completed' | 'error' | 'started' | 'initializing';
     type: 'pre_assessment';
+    start_time?: number;
+    last_updated?: number;
     step: string;
+    total_questions?: number;
     questions_generated: number;
     total_questions_requested: number;
-    questions_preview: {
+    questions_preview?: {
         question_text: string;
-        options: string[];
+        options?: string[];
+        choices?: string[];
         correct_answer: string;
-        estimated_difficulty: 'beginner' | 'intermediate' | 'advanced' | 'master';
+        estimated_difficulty?: string;
+        difficulty?: string;
     }[];
     topic_count: number;
     topics: {
@@ -251,6 +256,11 @@ export interface PreAssessmentGenerationStatus {
         name: string;
         questions_generated?: number;
     }[];
+    assessment_info?: Record<string, any>;
+    questions?: any[];
+    saved_questions?: any[];
+    topics_covered?: any[];
+    message?: string;
 }
 
 export interface QuestionGenerationResponse {

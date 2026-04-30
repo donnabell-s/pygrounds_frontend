@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { AdminTable, BackButton } from "../../../components/UI";
+import { AdminTable } from "../../../components/UI";
 import { FiEdit2, FiRefreshCw, FiX } from "react-icons/fi";
 import flagApi, { type FlaggedQuestion, type FlagCountByLevel } from "../../../../api/flagApi";
 import { adminApi } from "../../../../api/adminApi";
@@ -101,8 +100,6 @@ function buildInitialPrompt(item: FlaggedQuestionRow): string {
 // ============================================================
 
 const FlaggedQuestions = () => {
-  const navigate = useNavigate();
-
   // ── State ──────────────────────────────────────────────────
   const [flaggedPage, setFlaggedPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -329,20 +326,9 @@ const FlaggedQuestions = () => {
         accepted_fields: acceptedFields,
       });
       if (result.status === "success") {
-        // Automatically unflag the question upon successful apply
-        const unflagResult = await flagApi.dismissFlaggedQuestion(selectedQuestion.id);
-        
-        if (unflagResult) {
-          setRegenerateSuccess(`Fields updated on question #${selectedQuestion.id} and question successfully unflagged.`);
-          setRegeneratePreview(null);
-          // Set refresh key to update the list, the user will click Done to close the modal
-          setFlaggedPage(1);
-          setRefreshKey((k) => k + 1);
-        } else {
-          setRegenerateSuccess(`Fields updated on question #${selectedQuestion.id} but failed to unflag automatically.`);
-          setRegeneratePreview(null);
-          setRefreshKey((k) => k + 1);
-        }
+        setRegenerateSuccess(`Fields updated on question #${selectedQuestion.id}.`);
+        setRegeneratePreview(null);
+        setRefreshKey((k) => k + 1);
       }
     } catch (err: any) {
       setRegenerateError(err.response?.data?.error || err.message || "Apply failed");
@@ -444,8 +430,15 @@ const FlaggedQuestions = () => {
 
   // ── Render ─────────────────────────────────────────────────
   return (
-    <div className="space-y-4">
-      <BackButton onClick={() => navigate(-1)} />
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Flagged Questions</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Review and resolve reported questions</p>
+          </div>
+        </div>
+      </div>
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -454,7 +447,7 @@ const FlaggedQuestions = () => {
       )}
 
       {/* ── Filter Bar ── */}
-      <div className="flex flex-wrap gap-3 mb-4 items-center">
+      <div className="flex flex-wrap gap-2 mb-2 items-center">
         <select
           value={filterLevel}
           onChange={(e) => {
@@ -495,7 +488,7 @@ const FlaggedQuestions = () => {
 
       {/* ── Bulk Action Bar ── */}
       {selectedIds.size > 0 && (
-        <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 flex items-center justify-between">
+        <div className="rounded-lg border border-purple-200 bg-purple-50 p-3 mb-2 flex items-center justify-between">
           <span className="text-sm font-medium text-purple-900">
             {selectedIds.size} question{selectedIds.size !== 1 ? "s" : ""} selected
           </span>
@@ -537,17 +530,19 @@ const FlaggedQuestions = () => {
       )}
 
       {/* ── Table ── */}
-      <AdminTable
-        title="Flagged Questions"
-        loading={loading}
-        items={flaggedQuestions}
-        total={total}
-        currentPage={flaggedPage}
-        onPageChange={setFlaggedPage}
-        itemsPerPage={10}
-        headerColumns={["", "ID", "Question", "Notes", "Game", "Flagged By", "Actions"]}
-        renderRow={renderFlaggedRow}
-      />
+      <div className="mt-4">
+        <AdminTable
+          title="Flagged Questions"
+          loading={loading}
+          items={flaggedQuestions}
+          total={total}
+          currentPage={flaggedPage}
+          onPageChange={setFlaggedPage}
+          itemsPerPage={10}
+          headerColumns={["", "ID", "Question", "Notes", "Game", "Flagged By", "Actions"]}
+          renderRow={renderFlaggedRow}
+        />
+      </div>
 
       {/* ── Detail / Edit Modal ── */}
       {showDetailModal && selectedQuestion && (
@@ -755,9 +750,9 @@ const FlaggedQuestions = () => {
 
       {/* ── Regenerate Modal ── */}
       {showRegenerateModal && selectedQuestion && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-5xl rounded-lg bg-white shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
+          <div className="w-full max-w-5xl rounded-lg bg-white shadow-xl flex flex-col h-[90vh] max-h-full">
+            <div className="shrink-0 rounded-t-lg bg-white border-b border-gray-200 p-6 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Regenerate Question</h3>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -770,17 +765,16 @@ const FlaggedQuestions = () => {
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1 flex flex-col">
               {/* Prompt */}
               {!regenerateSuccess && (
-                <div>
-                  <label className="text-xs font-semibold text-gray-700">LLM Regeneration Prompt (Editable)</label>
+                <div className={`flex flex-col shrink-0 ${!regeneratePreview ? 'flex-1 min-h-[200px]' : 'h-[25vh] min-h-[120px]'}`}>
+                  <label className="text-xs font-semibold text-gray-700 shrink-0">LLM Regeneration Prompt (Editable)</label>
                   <textarea
                     value={llmPrompt}
                     onChange={(e) => setLlmPrompt(e.target.value)}
-                    rows={6}
                     disabled={regenerating}
-                    className="mt-2 w-full rounded-md border border-purple-200 px-3 py-2 text-xs bg-purple-50 focus:border-purple-500 focus:outline-none disabled:opacity-50 font-mono"
+                    className="mt-2 w-full flex-1 resize-none rounded-md border border-purple-200 px-3 py-2 text-xs bg-purple-50 focus:border-purple-500 focus:outline-none disabled:opacity-50 font-mono"
                   />
                 </div>
               )}
@@ -809,7 +803,7 @@ const FlaggedQuestions = () => {
 
               {/* Step 1: no preview yet */}
               {!regeneratePreview && !regenerateSuccess && (
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 shrink-0">
                   <button type="button" onClick={closeRegenerateModal} disabled={regenerating}
                     className="rounded-md border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50">
                     Cancel
@@ -828,16 +822,16 @@ const FlaggedQuestions = () => {
 
               {/* Step 2: preview table */}
               {regeneratePreview && !regenerateSuccess && (
-                <>
-                  <p className="text-xs text-gray-500">Check the fields you want to apply. Uncheck any you want to keep as-is.</p>
-                  <div className="overflow-x-auto">
+                <div className="flex flex-col flex-1 min-h-[300px] mb-2">
+                  <p className="text-xs text-gray-500 shrink-0 mb-2">Check the fields you want to apply. Uncheck any you want to keep as-is.</p>
+                  <div className="overflow-auto border border-gray-200 rounded-md flex-1 bg-white">
                     <table className="w-full text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50">
-                          <th className="text-left px-3 py-2 border border-gray-200 w-8">Apply</th>
-                          <th className="text-left px-3 py-2 border border-gray-200 w-36">Field</th>
-                          <th className="text-left px-3 py-2 border border-gray-200">Current</th>
-                          <th className="text-left px-3 py-2 border border-gray-200">Regenerated</th>
+                      <thead className="sticky top-0 z-10 outline outline-1 outline-gray-200">
+                        <tr>
+                          <th className="text-left px-3 py-2 border-b border-gray-200 w-8 bg-gray-50">Apply</th>
+                          <th className="text-left px-3 py-2 border-b border-gray-200 w-36 bg-gray-50">Field</th>
+                          <th className="text-left px-3 py-2 border-b border-gray-200 bg-gray-50">Current</th>
+                          <th className="text-left px-3 py-2 border-b border-gray-200 bg-gray-50">Regenerated</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -895,7 +889,7 @@ const FlaggedQuestions = () => {
                     </table>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-200">
+                  <div className="flex items-center justify-between gap-2 pt-4 mt-4 shrink-0 border-t border-gray-200">
                     <button type="button" onClick={handleRegeneratePreview} disabled={!llmPrompt.trim() || regenerating}
                       className="rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50">
                       {regenerating ? "Generating..." : "← Re-generate Preview"}
@@ -916,7 +910,7 @@ const FlaggedQuestions = () => {
                       </button>
                     </div>
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>

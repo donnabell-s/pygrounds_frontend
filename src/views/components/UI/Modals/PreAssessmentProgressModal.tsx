@@ -81,38 +81,50 @@ const PreAssessmentProgressModal: React.FC<PreAssessmentProgressModalProps> = ({
                                     {status.status}
                                 </span>
                             </div>
-                            <p className="text-blue-700 mb-2">{status.step}</p>
-                            <div className="flex items-center gap-4 text-sm text-blue-600">
-                                <span>Generated: {status.questions_generated}</span>
-                                <span>Requested: {status.total_questions_requested}</span>
-                                <span>Topics: {status.topic_count}</span>
+                            <p className="text-blue-700 mb-2">
+                                {status.status === 'processing' ? 'LLM is thinking...' : status.step}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-blue-600">
+                                <span>Requested: {status.total_questions_requested || status.total_questions}</span>
+                                {status.questions_generated > 0 && <span>Generated: {status.questions_generated}</span>}
+                                {status.assessment_info?.questions_saved !== undefined && (
+                                    <span className="text-green-700 font-medium">
+                                        Saved To DB: {status.assessment_info.questions_saved}
+                                    </span>
+                                )}
+                                <span>Topics: {status.topic_count || status.assessment_info?.topics_covered}</span>
+                                {status.assessment_info?.subtopics_total && <span>Subtopics: {status.assessment_info.subtopics_total}</span>}
                             </div>
                             
-                            {/* Progress Bar */}
+                            {status.message && status.status !== 'processing' && (
+                                <div className="mt-2 text-sm italic text-gray-700 bg-white/50 p-2 rounded">
+                                    {status.message}
+                                </div>
+                            )}
+
+                            {/* Progress Area */}
                             <div className="mt-3">
-                                <div className="flex justify-between text-xs text-blue-600 mb-1">
-                                    <span>Progress</span>
-                                    <span>{Math.round((status.questions_generated / status.total_questions_requested) * 100)}%</span>
-                                </div>
-                                <div className="w-full bg-blue-200 rounded-full h-2">
-                                    <div 
-                                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                        style={{ 
-                                            width: `${Math.min((status.questions_generated / status.total_questions_requested) * 100, 100)}%` 
-                                        }}
-                                    />
-                                </div>
+                                {status.status === 'processing' && (
+                                    <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden relative">
+                                        <div className="bg-blue-600 h-2 rounded-full absolute left-0 top-0 w-1/4 animate-ping-pong" />
+                                    </div>
+                                )}
+                                {status.status === 'completed' && (
+                                    <div className="w-full bg-blue-200 rounded-full h-2">
+                                        <div className="bg-green-500 h-2 rounded-full w-full" />
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Topics Information */}
-                        {status.topics && status.topics.length > 0 && (
+                        {(status.topics && status.topics.length > 0) || (status.topics_covered && status.topics_covered.length > 0) ? (
                             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                                 <h4 className="font-medium text-green-900 mb-3">
-                                    Topics Being Processed ({status.topics.length})
+                                    Topics Processed ({status.topics_covered?.length || status.topics?.length || 0})
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                    {status.topics.map((topic) => (
+                                    {(status.topics_covered || status.topics).map((topic: any) => (
                                         <div key={topic.id} className="bg-white border border-green-200 rounded p-2">
                                             <div className="flex justify-between items-center">
                                                 <span className="text-sm font-medium text-green-900">
@@ -124,39 +136,44 @@ const PreAssessmentProgressModal: React.FC<PreAssessmentProgressModalProps> = ({
                                                     </span>
                                                 )}
                                             </div>
+                                            {topic.subtopics && topic.subtopics.length > 0 && (
+                                                <div className="mt-1 text-xs text-gray-500">
+                                                    Subtopics: {topic.subtopics.join(', ')}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                        )}
+                        ) : null}
 
                         {/* Questions Preview */}
-                        {status.questions_preview && status.questions_preview.length > 0 && (
+                        {((status.questions_preview && status.questions_preview.length > 0) || (status.questions && status.questions.length > 0)) && (
                             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                                 <h4 className="font-medium text-gray-900 mb-3">
-                                    Question Preview ({status.questions_preview.length} generated)
+                                    Question Preview ({((status.questions_preview || status.questions) ?? []).length} generated)
                                 </h4>
                                 <div className="space-y-3 max-h-60 overflow-y-auto">
-                                    {status.questions_preview.map((question, index) => (
+                                    {((status.questions_preview || status.questions) ?? []).map((question, index) => (
                                         <div key={index} className="bg-white border border-gray-200 rounded p-3">
                                             <div className="flex justify-between items-start mb-2">
                                                 <p className="text-sm font-medium text-gray-900 flex-1">
                                                     {question.question_text}
                                                 </p>
                                                 <span className={`ml-2 px-2 py-1 text-xs rounded ${
-                                                    question.estimated_difficulty === 'beginner' 
+                                                    (question.estimated_difficulty || question.difficulty) === 'beginner' 
                                                         ? 'bg-green-100 text-green-700'
-                                                        : question.estimated_difficulty === 'intermediate'
+                                                        : (question.estimated_difficulty || question.difficulty) === 'intermediate'
                                                         ? 'bg-yellow-100 text-yellow-700'
-                                                        : question.estimated_difficulty === 'advanced'
+                                                        : (question.estimated_difficulty || question.difficulty) === 'advanced'
                                                         ? 'bg-orange-100 text-orange-700'
                                                         : 'bg-red-100 text-red-700'
                                                 }`}>
-                                                    {question.estimated_difficulty}
+                                                    {question.estimated_difficulty || question.difficulty || 'unknown'}
                                                 </span>
                                             </div>
                                             <div className="text-xs text-gray-600 space-y-1">
-                                                {question.options.map((option, optIndex) => (
+                                                {(question.options || question.choices || []).map((option: string, optIndex: number) => (
                                                     <div key={optIndex} className={`${
                                                         option === question.correct_answer 
                                                             ? 'font-medium text-green-700' 

@@ -1,20 +1,17 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../../../../api';
-import { AdminTable, DocumentManagementModal, BackButton } from '../../../components/UI';
+import { AdminTable, DocumentManagementModal } from '../../../components/UI';
 import StatusBadge from '../../../components/UI/StatusBadge';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import { MdDelete } from 'react-icons/md';
 import { BsFillPlayFill } from 'react-icons/bs';
 import { FiSquare } from 'react-icons/fi';
-import ReadingMaterialSelector from "./ReadingMaterialSelector";
 import ReadingMaterial from "../../../components/Features/ReadingMaterial";
 
 import type { UploadedDocument } from '../../../../types/adaptive';
 type Document = UploadedDocument;
 
 export const ContentUpload = () => {
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
     const [documents, setDocuments] = useState<Document[]>([]);
@@ -285,56 +282,31 @@ export const ContentUpload = () => {
     };
 
     return (
-  <div className="space-y-4">
-    <BackButton onClick={() => navigate(-1)} />
+  <div className="space-y-6">
     {/* Header Section */}
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      {/* Left side: Title + Dropdown */}
-      <div className="flex items-center space-x-3">
-        <h2 className="text-lg font-semibold text-gray-800"></h2>
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-transparent">
+      <div className="flex items-start gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Content Upload</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Manage documents and reading materials</p>
+        </div>
+      </div>
+    </div>
 
-        {/* Dropdown Selector beside title */}
-        <div className="relative inline-block">
-  <select
-    onChange={(e) => setViewType(e.target.value as "documents" | "reading")}
-    value={viewType}
-    className="block w-56 appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 
-               shadow-sm focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] focus:outline-none focus-visible:ring-[#2563EB] 
-               transition duration-150"
-  >
-    <option value="documents">Uploaded Files</option>
-    <option value="reading">Reading Materials</option>
-  </select>
-
-  {/* custom arrow icon */}
-  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-    <svg
-      className="h-4 w-4 text-gray-500"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-    </svg>
-  </div>
-</div>
-</div>
-        
-
-      {/* Right side: Add New Button */}
-      {viewType === "documents" && (
-        <button
-          onClick={() => setIsUploadModalOpen(true)}
-          className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-colors"
-        >
-          Add New Content
-        </button>
-      )}
+    {/* Filters Row */}
+    <div className="flex flex-wrap gap-4 items-center mb-2">
+      <select
+        onChange={(e) => setViewType(e.target.value as "documents" | "reading")}
+        value={viewType}
+        className="rounded-md border border-gray-300 p-2 min-w-[180px]"
+      >
+        <option value="documents">Uploaded Files</option>
+        <option value="reading">Reading Materials</option>
+      </select>
     </div>
 
     {/* Main Table or Reading Material Section */}
-    <div className="flex items-center space-x-3 mt-1">
+    <div>
       {viewType === "documents" ? (
         <AdminTable
           title="Content Management"
@@ -344,6 +316,7 @@ export const ContentUpload = () => {
           total={totalDocuments}
           currentPage={currentPage}
           onPageChange={setCurrentPage}
+          onAdd={() => setIsUploadModalOpen(true)}
           headerColumns={["Name", "Status", "Difficulty", "Created At", "Actions"]}
           renderRow={(document: Document) => (
             <tr key={document.id}>
