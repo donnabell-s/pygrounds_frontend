@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../../../../api';
 import type { GeneratedQuestion, PreAssessmentQuestion, BulkGenerationParams, PreAssessmentBulkGenerationParams, QuestionListResponse } from '../../../../types/questions';
-import { AdminTable, BulkGenerationModal, BackButton } from '../../../components/UI';
+import { AdminTable, BulkGenerationModal } from '../../../components/UI';
 import StatusBadge from '../../../components/UI/StatusBadge';
 import MinigameBulkGeneration from './MinigameBulkGeneration';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
-import { FiEdit2, FiTrash2, FiCheck } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiCheck, FiSearch } from 'react-icons/fi';
 
 type QuestionType = 'minigame' | 'preassessment';
 type GameType = 'all' | 'coding' | 'non_coding';
@@ -24,12 +23,11 @@ type BulkDifficultyCheckResponse = {
   };
 };
 
-
 const QuestionBank = () => {
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
     const [questionType, setQuestionType] = useState<QuestionType>('minigame');
     const [gameType, setGameType] = useState<GameType>('all');
     const [validationStatus, setValidationStatus] = useState<ValidationStatus>('all');
@@ -49,6 +47,27 @@ const QuestionBank = () => {
     const [editingMinigameQuestion, setEditingMinigameQuestion] = useState<GeneratedQuestion | null>(null);
     const [isMinigameEditModalOpen, setIsMinigameEditModalOpen] = useState(false);
     const [showMinigameBulkGeneration, setShowMinigameBulkGeneration] = useState(false);
+    const [topicMap, setTopicMap] = useState<Record<number, string>>({});
+    const [subtopicMap, setSubtopicMap] = useState<Record<number, string>>({});
+
+    // Load topic + subtopic name maps once so PreAssessment IDs can be rendered as text
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const [topics, subtopics] = await Promise.all([
+                    adminApi.getAllTopicsNoPagination(),
+                    adminApi.getAllSubtopicsNoPagination(),
+                ]);
+                if (cancelled) return;
+                setTopicMap(Object.fromEntries(topics.map(t => [t.id, t.name])));
+                setSubtopicMap(Object.fromEntries(subtopics.map(s => [s.id, s.name])));
+            } catch (err) {
+                console.warn('Failed to load topic/subtopic name maps', err);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
 
 
 
@@ -113,7 +132,7 @@ const QuestionBank = () => {
             setMinigameGenerationStatus('Minigame generation in progress...');
             pollMinigameGenerationStatus(savedMinigameSession);
         }
-        }, [questionType, gameType, validationStatus, difficultyFilter]);    // Separate effect for page changes to avoid infinite loops
+        }, [questionType, gameType, validationStatus, difficultyFilter, searchQuery]);    // Separate effect for page changes to avoid infinite loops
     useEffect(() => {
         fetchQuestions();
     }, [currentPage]);
@@ -130,7 +149,8 @@ const QuestionBank = () => {
                     validation_status: validationStatus === 'all' ? undefined : validationStatus as 'pending' | 'processed',
                     difficulty: difficultyFilter === 'all' ? undefined : difficultyFilter,
                     page: currentPage,
-                    page_size: 10
+                    page_size: 10,
+                    search: searchQuery || undefined
                 });
                 setQuestionsData(response);
                 
@@ -143,7 +163,8 @@ const QuestionBank = () => {
             } else {
                 const response = await adminApi.getPreAssessmentQuestions({
                     page: currentPage,
-                    page_size: 10
+                    page_size: 10,
+                    search: searchQuery || undefined
                 });
                 setPreassessmentData(response);
                 setPreassessmentQuestions(response.results);
@@ -325,8 +346,8 @@ const handleBulkDifficultyCheck = async () => {
                 const status = await adminApi.getPreAssessmentGenerationStatus(sessionId);
                 console.log('Pre-assessment status response:', status);
                 
-                // Update message with progress
-                setGenerationSuccess(`Pre-assessment generation: ${status.questions_generated} questions generated...`);
+                // Update message with progress (use backend step text)
+                setGenerationSuccess(status.step || 'Pre-assessment generation in progress...');
 
                 // Refresh table when backend reports new questions
                 if (status.questions_generated > lastSeenQuestionsGenerated) {
@@ -549,14 +570,31 @@ const handleBulkDifficultyCheck = async () => {
     }
 
     return (
-        <div className="space-y-4">
-            <BackButton onClick={() => navigate(-1)} />
-            <div>
-                <h2 className="text-2xl font-semibold text-gray-800">Question Bank</h2>
-                <p className="text-sm text-gray-500">Manage and review minigame and pre-assessment questions.</p>
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-transparent">
+                <div className="flex items-start gap-3">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Question Bank</h1>
+                        <p className="text-sm text-gray-500 mt-0.5">Manage minigame and pre-assessment questions</p>
+                    </div>
+                </div>
+                
+                <div className="w-full md:w-auto relative flex-1 max-w-md md:ml-4">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FiSearch className="text-gray-600" />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search IDs or text..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full md:w-96 bg-white rounded-full border border-gray-300 py-2 pl-10 pr-4 text-base text-gray-900 placeholder-gray-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all font-medium"
+                    />
+                </div>
             </div>
+            
             {/* Filters and Action Buttons Container - Responsive Layout */}
-            <div className="flex flex-wrap gap-3 mb-4 items-center">
+            <div className="flex flex-wrap gap-4 items-center">
                 <select
                     value={questionType}
                     onChange={(e) => setQuestionType(e.target.value as QuestionType)}
@@ -664,7 +702,7 @@ const handleBulkDifficultyCheck = async () => {
                             // Get initial status immediately
                             try {
                                 const initialStatus = await adminApi.getPreAssessmentGenerationStatus(response.session_id);
-                                setGenerationSuccess(`Pre-assessment generation: ${initialStatus.questions_generated} questions generated...`);
+                                setGenerationSuccess(initialStatus.step || 'Pre-assessment generation in progress...');
                             } catch (err) {
                                 console.warn('Could not get initial status, will start polling anyway');
                             }
@@ -691,9 +729,9 @@ const handleBulkDifficultyCheck = async () => {
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
                 itemsPerPage={10}
-                headerColumns={questionType === 'minigame' 
+                headerColumns={questionType === 'minigame'
                     ? ['ID', 'Question', 'Topic', 'Subtopic', 'Type', 'Difficulty', 'Status', 'Actions']
-                    : ['ID', 'Question', 'Topics', 'Difficulty', 'Order', 'Actions']
+                    : ['ID', 'Question', 'Topics', 'Subtopics', 'Difficulty', 'Order', 'Actions']
                 }
                 renderRow={(item: GeneratedQuestion | PreAssessmentQuestion) => {
                     if (questionType === 'minigame') {
@@ -708,10 +746,34 @@ const handleBulkDifficultyCheck = async () => {
                                     <div className="line-clamp-2 text-sm max-w-[400px]">{question.question_preview || question.question_text || 'No question text'}</div>
                                 </td>
                                 <td className="px-3 py-3 text-sm">
-                                    <div className="line-clamp-1 max-w-[150px]">{question.topic?.name || 'Unknown Topic'}</div>
+                                    <div className="flex flex-wrap gap-0.5 max-w-[180px]">
+                                        {question.topic?.name
+                                            ? (
+                                                <span
+                                                    title={question.topic.id != null ? `ID ${question.topic.id}` : ''}
+                                                    className="px-1.5 py-0 rounded-full bg-blue-50 text-blue-800 text-[10px] leading-4 whitespace-nowrap"
+                                                >
+                                                    {question.topic.name}
+                                                </span>
+                                            )
+                                            : <span className="text-gray-400 italic">Unknown Topic</span>
+                                        }
+                                    </div>
                                 </td>
                                 <td className="px-3 py-3 text-sm">
-                                    <div className="line-clamp-1 max-w-[150px]">{question.subtopic?.name || 'Unknown Subtopic'}</div>
+                                    <div className="flex flex-wrap gap-0.5 max-w-[180px]">
+                                        {question.subtopic?.name
+                                            ? (
+                                                <span
+                                                    title={question.subtopic.id != null ? `ID ${question.subtopic.id}` : ''}
+                                                    className="px-1.5 py-0 rounded-full bg-purple-50 text-purple-800 text-[10px] leading-4 whitespace-nowrap"
+                                                >
+                                                    {question.subtopic.name}
+                                                </span>
+                                            )
+                                            : <span className="text-gray-400 italic">Unknown Subtopic</span>
+                                        }
+                                    </div>
                                 </td>
                                 <td className="px-3 py-3 text-sm text-center">
                                     <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
@@ -768,9 +830,36 @@ const handleBulkDifficultyCheck = async () => {
                                 <td className="px-3 py-3">
                                     <div className="line-clamp-2 text-sm max-w-[400px]">{question.question_text || 'No question text'}</div>
                                 </td>
-                                <td className="px-3 py-3">
-                                    <div className="line-clamp-1 text-sm max-w-[200px]">
-                                        {question.topic_ids?.join(', ') || 'No topics'}
+                                <td className="px-3 py-3 text-sm">
+                                    <div className="flex flex-wrap gap-0.5 max-w-[180px]">
+                                        {question.topic_ids?.length
+                                            ? question.topic_ids.map(id => (
+                                                <span
+                                                    key={id}
+                                                    title={`ID ${id}`}
+                                                    className="px-1.5 py-0 rounded-full bg-blue-50 text-blue-800 text-[10px] leading-4 whitespace-nowrap"
+                                                >
+                                                    {topicMap[id] || `Topic #${id}`}
+                                                </span>
+                                            ))
+                                            : <span className="text-gray-400 italic">No topics</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td className="px-3 py-3 text-sm">
+                                    <div className="flex flex-wrap gap-0.5 max-w-[180px]">
+                                        {question.subtopic_ids?.length
+                                            ? question.subtopic_ids.map(id => (
+                                                <span
+                                                    key={id}
+                                                    title={`ID ${id}`}
+                                                    className="px-1.5 py-0 rounded-full bg-purple-50 text-purple-800 text-[10px] leading-4 whitespace-nowrap"
+                                                >
+                                                    {subtopicMap[id] || `Subtopic #${id}`}
+                                                </span>
+                                            ))
+                                            : <span className="text-gray-400 italic">No subtopics</span>
+                                        }
                                     </div>
                                 </td>
                                 <td className="px-3 py-3 text-sm text-center">

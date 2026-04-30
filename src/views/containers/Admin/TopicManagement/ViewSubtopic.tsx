@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../../../../api';
-import { SubtopicModal, AdminTable, BackButton } from '../../../../views/components/UI';
+import { SubtopicModal, AdminTable } from '../../../../views/components/UI';
 import SubtopicStatusTracker from '../../../components/Features/SubtopicStatusTracker';
 import { ADMIN_BUTTON_STYLES } from '../../../components/Layout';
 import type { AdminSubtopic, AdminTopic } from '../../../../types/adaptive';
@@ -41,7 +40,6 @@ const ExpandableText: React.FC<ExpandableTextProps> = ({ text, maxLength = 100 }
 };
 
 const ViewSubtopic = () => {
-    const navigate = useNavigate();
     const [subtopics, setSubtopics] = useState<AdminSubtopic[]>([]);
     const [topics, setTopics] = useState<AdminTopic[]>([]);
     const [loading, setLoading] = useState(true);
@@ -132,8 +130,16 @@ const ViewSubtopic = () => {
     };
 
     return (
-        <div className="space-y-4">
-            <BackButton onClick={() => navigate(-1)} />
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-transparent mb-2">
+                <div className="flex items-start gap-3">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Subtopic Management</h1>
+                        <p className="text-sm text-gray-500 mt-0.5">Manage subtopics and their embedding status</p>
+                    </div>
+                </div>
+            </div>
+
             <AdminTable
                 title="Subtopic Management"
                 loading={loading}
