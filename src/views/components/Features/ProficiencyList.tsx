@@ -30,10 +30,15 @@ const hexToRgba = (hex: string, opacity: number) => {
 };
 
 // 🔎 Zone helpers (reads directly from topic.zone)
-type ZoneShape = { number?: number; id?: number; name?: string } | number | string | null | undefined;
+type ZoneShape = { number?: number; id?: number; name?: string; order?: number } | number | string | null | undefined;
 
 const getZoneNumber = (zone: ZoneShape): number => {
   if (zone && typeof zone === "object") return Number(zone.number ?? zone.id ?? 0);
+  return Number(zone ?? 0);
+};
+
+const getZoneOrder = (zone: ZoneShape): number => {
+  if (zone && typeof zone === "object") return Number(zone.order ?? zone.number ?? zone.id ?? 0);
   return Number(zone ?? 0);
 };
 
@@ -111,14 +116,16 @@ const ProficiencyList = ({ user }: ProficiencyListProps) => {
 
   // Build available zones from topic.zone
   const zones = useMemo(() => {
-    const m = new Map<number, string>();
+    const m = new Map<number, { label: string; order: number }>();
     for (const p of sortedTopics) {
       const zn = getZoneNumber(p.topic.zone);
       const lbl = getZoneLabel(p.topic.zone);
-      if (zn) m.set(zn, lbl);
+      const ord = getZoneOrder(p.topic.zone);
+      if (zn) m.set(zn, { label: lbl, order: ord });
     }
-    // Don't add default Zone 0 if no real zones exist
-    return Array.from(m.entries()).sort((a, b) => a[0] - b[0]); // [zoneNumber, label][]
+    return Array.from(m.entries())
+      .sort((a, b) => a[1].order - b[1].order)
+      .map(([zn, { label }]) => [zn, label] as [number, string]);
   }, [sortedTopics]);
 
   const [activeZone, setActiveZone] = useState<number | null>(null);
