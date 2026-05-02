@@ -684,6 +684,30 @@ const handleBulkDifficultyCheck = async () => {
                 )}
             </div>
 
+            {generationSuccess && (
+                <div className="bg-green-100 text-green-700 p-3 rounded-md">
+                    <span>{generationSuccess}</span>
+                </div>
+            )}
+
+            {minigameGenerationStatus && (
+                <div className="bg-blue-100 text-blue-700 p-3 rounded-md">
+                    <span>{minigameGenerationStatus}</span>
+                </div>
+            )}
+
+            {difficultyCheckResult && (
+                <div className="bg-orange-100 text-orange-700 p-3 rounded-md">
+                    {difficultyCheckResult}
+                    <button
+                        onClick={() => setDifficultyCheckResult('')}
+                        className="ml-2 text-orange-500 hover:text-orange-700"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+
                 <BulkGenerationModal
                 isOpen={isBulkModalOpen}
                 onClose={() => setIsBulkModalOpen(false)}
@@ -898,31 +922,6 @@ const handleBulkDifficultyCheck = async () => {
                     }
                 }}
             />
-
-            {generationSuccess && (
-                <div className="mb-4 bg-green-100 text-green-700 p-3 rounded-md">
-                    <span>{generationSuccess}</span>
-                </div>
-            )}
-
-            {minigameGenerationStatus && (
-                <div className="mb-4 bg-blue-100 text-blue-700 p-3 rounded-md">
-                    <span>{minigameGenerationStatus}</span>
-                </div>
-            )}
-
-            {difficultyCheckResult && (
-                <div className="mb-4 bg-orange-100 text-orange-700 p-3 rounded-md">
-                    {difficultyCheckResult}
-                    <button 
-                        onClick={() => setDifficultyCheckResult('')}
-                        className="ml-2 text-orange-500 hover:text-orange-700"
-                    >
-                        ×
-                    </button>
-                </div>
-            )}
-
 
             {/* Edit Pre-Assessment Question Modal */}
             {isEditModalOpen && editingQuestion && (
