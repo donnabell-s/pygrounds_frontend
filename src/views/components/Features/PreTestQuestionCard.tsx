@@ -1,5 +1,5 @@
 // src/components/PreTestQuestionCard.tsx
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import type { PreAssessmentQuestion } from "../../../types/adaptive";
 
 function shuffled<T>(arr: T[]): T[] {
@@ -25,6 +25,18 @@ const PreTestQuestionCard: React.FC<PreTestQuestionCardProps> = ({
   // Shuffle once per question mount so options appear in a random order
   const shuffledOptions = useMemo(() => shuffled(question.answer_options), [question.id]);
 
+  // Track by index so duplicate-text options don't all highlight at once
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(() => {
+    if (selectedAnswer == null) return null;
+    const idx = shuffledOptions.findIndex((opt) => opt === selectedAnswer);
+    return idx >= 0 ? idx : null;
+  });
+
+  const handleSelect = (idx: number) => {
+    setSelectedIndex(idx);
+    onAnswerChange(question.id, shuffledOptions[idx]);
+  };
+
   return (
     <div className="mb-2 p-4">
       {/* Question header */}
@@ -37,24 +49,15 @@ const PreTestQuestionCard: React.FC<PreTestQuestionCardProps> = ({
         </p>
       </div>
 
-      {/* (Optional) Code snippet block, if you have one on your question object */}
-      {/*
-      {question.codeSnippet && (
-        <pre className="bg-gray-900 text-gray-100 font-mono p-4 rounded mb-4 overflow-auto">
-          {question.codeSnippet}
-        </pre>
-      )}
-      */}
-
       {/* Answer options */}
       <div className="grid grid-cols-2 gap-4">
         {shuffledOptions.map((option, idx) => {
-          const letter = String.fromCharCode(65 + idx).toLowerCase();; // A, B, C, D…
-          const isSelected = selectedAnswer === option;
+          const letter = String.fromCharCode(65 + idx).toLowerCase();
+          const isSelected = idx === selectedIndex;
           return (
             <label
-              key={option}
-              className={`flex items-center border border-[#95B7D2] rounded-lg p-3 cursor-pointer transition 
+              key={idx}
+              className={`flex items-center border border-[#95B7D2] rounded-lg p-3 cursor-pointer transition
                 ${isSelected ? "border-[#704EE7] bg-[#704EE7]/10" : "border-gray-300 hover:border-blue-300"}`}
             >
               <input
@@ -62,7 +65,7 @@ const PreTestQuestionCard: React.FC<PreTestQuestionCardProps> = ({
                 name={`q-${question.id}`}
                 value={option}
                 checked={isSelected}
-                onChange={() => onAnswerChange(question.id, option)}
+                onChange={() => handleSelect(idx)}
                 className="sr-only peer"
               />
               <div className="ml-3 flex items-center gap-2">
