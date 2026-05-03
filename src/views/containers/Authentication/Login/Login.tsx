@@ -17,6 +17,11 @@ const Login = () => {
     setError(""); // Clear previous errors
     try {
       const loggedInUser = await login(username, password);
+      const isAdmin = (loggedInUser as any).role === 'admin' || (loggedInUser as any).is_staff || (loggedInUser as any).is_superuser;
+      if (isAdmin) {
+        navigate(`/admin/${loggedInUser.id}`);
+        return;
+      }
       // Refresh adaptive data after successful login to ensure progress bar is updated
       await refresh();
       navigate(`/${loggedInUser.id}/home`);
