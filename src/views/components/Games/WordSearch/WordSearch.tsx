@@ -54,6 +54,9 @@ const WordSearch: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const doSubmitRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  useEffect(() => { doSubmitRef.current = doSubmit; });
+
   const placedQuestions = useMemo(() => {
     const all = activeSession?.session_questions ?? [];
     const set = new Set(placedIds);
@@ -125,13 +128,13 @@ const WordSearch: React.FC = () => {
     const startMs = new Date(activeSession.start_time).getTime();
     const endMs = startMs + activeSession.time_limit * 1000;
     const wait = Math.max(0, endMs - Date.now());
-    const t = setTimeout(() => doSubmit(), wait);
+    const t = setTimeout(() => doSubmitRef.current(), wait);
     return () => clearTimeout(t);
   }, [activeSession, submitted, gameEnded]);
 
   useEffect(() => {
     if (gameEnded && !submitted && activeSession?.status === "active") {
-      doSubmit();
+      doSubmitRef.current();
     }
   }, [gameEnded, submitted, activeSession]);
 

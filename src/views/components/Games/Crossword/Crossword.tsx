@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
 import { useGame } from "../../../../context/GameContext";
@@ -31,6 +31,9 @@ const Crossword: React.FC = () => {
 
   const storageKey = activeSession ? `crossword-letters-${activeSession.session_id}` : null;
   const submittedKey = activeSession ? `submitted-${activeSession.session_id}` : null;
+
+  const handleSubmitRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  useEffect(() => { handleSubmitRef.current = handleSubmit; });
 
   const normalizePlacements = (raw: any[] = []): ExtendedPlacement[] => {
     const unique: ExtendedPlacement[] = [];
@@ -68,7 +71,7 @@ const Crossword: React.FC = () => {
     const end = start + duration;
     const now = Date.now();
     const timeout = Math.max(0, end - now);
-    const timer = setTimeout(() => handleSubmit(), timeout);
+    const timer = setTimeout(() => handleSubmitRef.current(), timeout);
     return () => clearTimeout(timer);
   }, [activeSession, submitted, gameEnded]);
 
@@ -86,7 +89,7 @@ const Crossword: React.FC = () => {
 
   useEffect(() => {
     if (gameEnded && !submitted && activeSession && activeSession.status === "active") {
-      handleSubmit();
+      handleSubmitRef.current();
     }
   }, [gameEnded, submitted, activeSession]);
 
