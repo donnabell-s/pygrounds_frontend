@@ -20,6 +20,12 @@ const Login = ({ onSuccess }: LoginProps) => {
     e.preventDefault();
     try {
       const loggedInUser = await login(username, password);
+      const isAdmin = (loggedInUser as any).role === 'admin' || (loggedInUser as any).is_staff || (loggedInUser as any).is_superuser;
+      if (isAdmin) {
+        if (onSuccess) onSuccess();
+        navigate(`/admin/${loggedInUser.id}`);
+        return;
+      }
       // Refresh adaptive data after successful login to ensure progress bar is updated
       refresh();
       if (onSuccess) onSuccess(); // ✅ close modal if in modal

@@ -5,7 +5,7 @@ import { useAdaptive } from '../../../../context/AdaptiveContext';
 import Logo from "../../../../assets/logo/PyGrounds_Logo.png";
 
 const AdminLogin = () => {
-    const { login } = useAuth();
+    const { login, logout } = useAuth();
     const { refresh } = useAdaptive();
     const navigate = useNavigate();
 
@@ -46,6 +46,7 @@ const AdminLogin = () => {
         const hasAdminAccess = adminUser.role === 'admin' || adminUser.is_staff || adminUser.is_superuser;
         
         if (!hasAdminAccess) {
+            logout();
             setError("Access denied. Admin privileges required.");
             console.log('❌ Access denied - user lacks admin privileges');
             return;
